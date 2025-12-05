@@ -127,6 +127,9 @@ model User {
   @@index([role])
   @@index([status])
   @@index([stripeAccountId])
+  
+  // Composite indexes for optimized queries
+  @@index([role, status])  // Find verified Extras quickly
 }
 
 // =============================================================================
@@ -437,6 +440,10 @@ model ReliefMission {
   @@index([postalCode])
   @@index([latitude, longitude])
   @@index([jobTitle])
+  
+  // Composite indexes for SOS Renfort
+  @@index([status, urgencyLevel])  // Filter urgent open missions
+  @@index([city, status])          // Geo + status filter
 }
 
 // =============================================================================
@@ -593,8 +600,12 @@ model Post {
   @@index([postalCode])
   @@index([latitude, longitude])
   @@index([isActive])
-  @@index([createdAt])
   @@index([validUntil])
+  
+  // Composite indexes for Wall feed
+  @@index([type, isActive])        // Filter by type + active
+  @@index([city, isActive])        // Geo filter + active
+  @@index([createdAt(sort: Desc)], map: "Post_createdAt_desc_idx") // Chronological sort
 }
 
 // =============================================================================
