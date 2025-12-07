@@ -43,6 +43,8 @@ RUN adduser --system --uid 1001 nestjs
 # Copy dependencies
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
+# Copy shared packages explicitly to ensure availability at runtime
+COPY --from=builder /app/packages ./packages
 
 # Copy built application
 COPY --from=builder /app/apps/api/dist ./dist
