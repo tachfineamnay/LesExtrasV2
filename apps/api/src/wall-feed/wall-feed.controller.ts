@@ -27,7 +27,7 @@ export class WallFeedController {
     @Get('feed')
     @ApiOperation({ summary: 'Obtenir le fil d\'actualité mixte (Posts + Missions)' })
     @ApiResponse({ status: 200, description: 'Liste paginée des éléments du fil' })
-    async getFeed(@Query() filters: GetFeedDto) {
+    async getFeed(@Query() filters: GetFeedDto): Promise<any> {
         return this.wallService.getFeed(filters);
     }
 
@@ -39,13 +39,13 @@ export class WallFeedController {
     async createPost(
         @CurrentUser() user: CurrentUserPayload,
         @Body() dto: CreatePostDto,
-    ) {
+    ): Promise<any> {
         return this.wallService.createPost(user.id, dto);
     }
 
     @Get('posts/:id')
     @ApiOperation({ summary: 'Obtenir le détail d\'une annonce' })
-    async getPost(@Param('id') id: string) {
+    async getPost(@Param('id') id: string): Promise<any> {
         return this.wallService.getPost(id);
     }
 

@@ -93,7 +93,7 @@ export class WallFeedService {
             // Fetch ReliefMissions if requested
             if (type === FeedItemType.ALL || type === FeedItemType.MISSION) {
                 const { missions, count: missionCount } = await this.fetchMissions({
-                    locationFilter,
+                    locationFilter: locationFilter as any,
                     tags,
                     skip: type === FeedItemType.MISSION ? skip : 0,
                     take: type === FeedItemType.MISSION ? limit : Math.ceil(limit / 2),
@@ -274,7 +274,7 @@ export class WallFeedService {
 
         // Tags filtering using JSON contains (PostgreSQL)
         if (tags && tags.length > 0) {
-            where.tags = { hasSome: tags };
+            where.tags = { hasSome: tags } as any;
         }
 
         const [posts, count] = await Promise.all([
