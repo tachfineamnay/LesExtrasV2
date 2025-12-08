@@ -29,10 +29,13 @@ export async function createReliefMission(
     input: CreateMissionInput
 ): Promise<CreateMissionResult> {
     try {
-        const apiUrl = process.env.API_URL || 'http://localhost:4000';
+        const apiBase = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || 'http://localhost:4000';
+        const normalizedApi = apiBase.endsWith('/api/v1')
+            ? apiBase.replace(/\/+$/, '')
+            : `${apiBase.replace(/\/+$/, '')}/api/v1`;
 
         // 1. Create the mission via API
-        const missionResponse = await fetch(`${apiUrl}/api/v1/missions`, {
+        const missionResponse = await fetch(`${normalizedApi}/missions`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -79,7 +82,7 @@ export async function createReliefMission(
 
         // 2. Trigger matching engine
         const matchingResponse = await fetch(
-            `${apiUrl}/api/v1/matching/missions/${mission.id}/candidates`,
+            `${normalizedApi}/matching/missions/${mission.id}/candidates`,
             {
                 method: 'GET',
                 headers: {
