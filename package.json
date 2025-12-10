@@ -11,15 +11,13 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "db:sync": "prisma db push && prisma generate",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "api:dev": "cd apps/api && npm run dev",
-    "api:build": "cd apps/api && npm run build",
-    "health:api": "tsx scripts/health-check.ts"
+    "api:build": "cd apps/api && npm run build"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -28,16 +26,15 @@
     "@hookform/resolvers": "^3.3.0",
     "@lesextras/types": "*",
     "@prisma/client": "^5.22.0",
-    "@stripe/react-stripe-js": "^5.4.1",
-    "@stripe/stripe-js": "^8.5.3",
+    "@types/js-cookie": "^3.0.6",
     "bcrypt": "^5.1.1",
     "framer-motion": "^12.23.25",
+    "js-cookie": "^3.0.5",
     "lucide-react": "^0.556.0",
     "next": "14.0.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-hook-form": "^7.49.0",
-    "react-signature-canvas": "^1.1.0-alpha.2",
     "zod": "^3.22.0"
   },
   "devDependencies": {
