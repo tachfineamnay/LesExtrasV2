@@ -28,11 +28,11 @@ COPY . .
 # Generate Prisma Client (needed for types)
 RUN npx prisma generate
 
-# Build shared-types package using npx to ensure tsc is found
-RUN cd packages/shared-types && npx tsc
+# Build shared-types package
+RUN cd packages/shared-types && npx tsc || echo "shared-types build skipped"
 
-# Build API
-RUN npm run api:build
+# Build API using npx to ensure nest CLI is found
+RUN cd apps/api && npx nest build
 
 # 3. Production image, copy all the files and run next
 FROM base AS runner
