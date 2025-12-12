@@ -11,15 +11,36 @@ async function bootstrap() {
     // Global prefix
     app.setGlobalPrefix('api/v1');
 
-    // CORS
-    const corsOrigins = (process.env.FRONTEND_URL || process.env.FRONTEND_URLS || 'http://localhost:3000')
+    // CORS - Dynamic origin support for development and production
+    const isDev = process.env.NODE_ENV !== 'production';
+    const allowedOrigins = (process.env.FRONTEND_URL || process.env.FRONTEND_URLS || 'http://localhost:3000')
         .split(',')
         .map((o) => o.trim())
         .filter(Boolean);
 
     app.enableCors({
-        origin: corsOrigins,
+        origin: (origin, callback) => {
+            // Allow requests with no origin (mobile apps, Postman, etc.)
+            if (!origin) {
+                return callback(null, true);
+            }
+
+            // Check if origin is in allowed list
+            if (allowedOrigins.includes(origin)) {
+                return callback(null, true);
+            }
+
+            // In dev mode, allow localhost and sslip.io domains
+            if (isDev || origin.includes('localhost') || origin.includes('sslip.io')) {
+                return callback(null, true);
+            }
+
+            // Reject other origins
+            callback(new Error('Not allowed by CORS'));
+        },
         credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
     });
 
     // Global Exception Filter - standardized error responses
