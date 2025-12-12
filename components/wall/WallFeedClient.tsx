@@ -15,8 +15,18 @@ import {
     ChevronRight,
     Clock,
     Star,
-    Bell
+    Bell,
+    Home,
+    Siren,
+    Calendar,
+    MessageCircle,
+    User,
+    Plus,
+    TrendingUp,
+    Sparkles,
+    ArrowRight
 } from 'lucide-react';
+import Link from 'next/link';
 import { NeedCard, OfferCard } from '@/components/wall';
 import { getFeed, createPost, type CreatePostPayload } from '@/app/services/wall.service';
 import { ToastContainer, useToasts } from '@/components/ui/Toast';
@@ -110,6 +120,15 @@ const FILTER_BADGES = [
     { id: 'visio', label: 'Visio', icon: Video, color: 'text-purple-500' },
     { id: 'bien-etre', label: 'Bien-etre', icon: Heart, color: 'text-pink-500' },
     { id: 'art', label: 'Art', icon: Palette, color: 'text-orange-500' },
+];
+
+// Desktop navigation items
+const NAV_ITEMS = [
+    { href: '/', label: 'Wall', icon: Home, active: true },
+    { href: '/dashboard/relief', label: 'SOS Renfort', icon: Siren, highlight: true },
+    { href: '/bookings', label: 'Agenda', icon: Calendar },
+    { href: '/messages', label: 'Messages', icon: MessageCircle, badge: 3 },
+    { href: '/profile', label: 'Profil', icon: User },
 ];
 
 // Animation variants
@@ -224,6 +243,7 @@ export function WallFeedClient({ initialFeed, talentPool, activity }: WallFeedCl
     const [newPostType, setNewPostType] = useState<'OFFER' | 'NEED'>('OFFER');
     const [searchQuery, setSearchQuery] = useState('');
     const [activeFilters, setActiveFilters] = useState<string[]>([]);
+    const [showPublishForm, setShowPublishForm] = useState(false);
 
     useEffect(() => {
         setPosts(initialFeed);
@@ -378,32 +398,55 @@ export function WallFeedClient({ initialFeed, talentPool, activity }: WallFeedCl
             {/* Header Sticky */}
             <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-100">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="py-4">
-                        {/* Top Row: Logo + Search + Notifications */}
-                        <div className="flex items-center gap-4 mb-4">
-                            {/* Logo */}
-                            <div className="flex-shrink-0">
-                                <h1 className="text-xl font-bold text-slate-900">
-                                    Les<span className="text-gradient">Extras</span>
-                                </h1>
-                            </div>
+                    {/* Desktop Navigation Row */}
+                    <div className="hidden lg:flex items-center justify-between py-3 border-b border-slate-100/50">
+                        {/* Logo */}
+                        <Link href="/" className="flex-shrink-0">
+                            <h1 className="text-xl font-bold text-slate-900">
+                                Les<span className="text-gradient">Extras</span>
+                            </h1>
+                        </Link>
 
-                            {/* Search Bar */}
-                            <div className="flex-1 max-w-xl">
-                                <div className="relative">
-                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                                    <input
-                                        type="text"
-                                        placeholder="Rechercher un professionnel, une mission, un service..."
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        className="input-premium pl-12 pr-4"
-                                        aria-label="Rechercher"
-                                    />
-                                </div>
-                            </div>
+                        {/* Desktop Nav Links */}
+                        <nav className="flex items-center gap-1">
+                            {NAV_ITEMS.map((item) => {
+                                const Icon = item.icon;
+                                if (item.highlight) {
+                                    return (
+                                        <Link
+                                            key={item.href}
+                                            href={item.href}
+                                            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-red-500 to-orange-500 text-white font-medium text-sm hover:shadow-lg hover:shadow-red-500/25 transition-all"
+                                        >
+                                            <Icon className="w-4 h-4" />
+                                            {item.label}
+                                        </Link>
+                                    );
+                                }
+                                return (
+                                    <Link
+                                        key={item.href}
+                                        href={item.href}
+                                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors relative ${
+                                            item.active
+                                                ? 'bg-coral-50 text-coral-600'
+                                                : 'text-slate-600 hover:bg-slate-100'
+                                        }`}
+                                    >
+                                        <Icon className="w-4 h-4" />
+                                        {item.label}
+                                        {item.badge && (
+                                            <span className="absolute -top-1 -right-1 w-5 h-5 bg-coral-500 text-white text-xs rounded-full flex items-center justify-center">
+                                                {item.badge}
+                                            </span>
+                                        )}
+                                    </Link>
+                                );
+                            })}
+                        </nav>
 
-                            {/* Notifications */}
+                        {/* User Actions */}
+                        <div className="flex items-center gap-3">
                             <button
                                 aria-label="Notifications"
                                 className="relative p-2 rounded-xl hover:bg-slate-100 transition-colors"
@@ -411,6 +454,48 @@ export function WallFeedClient({ initialFeed, talentPool, activity }: WallFeedCl
                                 <Bell className="w-5 h-5 text-slate-600" />
                                 <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-coral-500 rounded-full" />
                             </button>
+                            <Link
+                                href="/profile"
+                                className="w-9 h-9 rounded-full bg-gradient-to-br from-coral-100 to-orange-100 flex items-center justify-center"
+                            >
+                                <User className="w-4 h-4 text-coral-600" />
+                            </Link>
+                        </div>
+                    </div>
+
+                    {/* Mobile Header */}
+                    <div className="lg:hidden py-4">
+                        <div className="flex items-center gap-4 mb-4">
+                            <div className="flex-shrink-0">
+                                <h1 className="text-xl font-bold text-slate-900">
+                                    Les<span className="text-gradient">Extras</span>
+                                </h1>
+                            </div>
+                            <button
+                                aria-label="Notifications"
+                                className="relative p-2 rounded-xl hover:bg-slate-100 transition-colors ml-auto"
+                            >
+                                <Bell className="w-5 h-5 text-slate-600" />
+                                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-coral-500 rounded-full" />
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Search + Filters Row */}
+                    <div className="py-4 lg:py-3">
+                        {/* Search Bar */}
+                        <div className="mb-4">
+                            <div className="relative max-w-2xl">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Rechercher un professionnel, une mission, un service..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="input-premium pl-12 pr-4 w-full"
+                                    aria-label="Rechercher"
+                                />
+                            </div>
                         </div>
 
                         {/* Filter Badges */}
@@ -426,9 +511,9 @@ export function WallFeedClient({ initialFeed, talentPool, activity }: WallFeedCl
                                         key={filter.id}
                                         onClick={() => toggleFilter(filter.id)}
                                         className={`
-                      pill-btn flex-shrink-0 flex items-center gap-1.5
-                      ${isActive ? 'pill-btn-active' : 'pill-btn-inactive'}
-                    `}
+                                            pill-btn flex-shrink-0 flex items-center gap-1.5
+                                            ${isActive ? 'pill-btn-active' : 'pill-btn-inactive'}
+                                        `}
                                     >
                                         <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : filter.color}`} />
                                         {filter.label}
@@ -442,68 +527,116 @@ export function WallFeedClient({ initialFeed, talentPool, activity }: WallFeedCl
 
             <ToastContainer toasts={toasts} onRemove={removeToast} />
 
+            {/* Hero Section - Welcome & Quick Stats */}
+            <section className="bg-gradient-to-r from-slate-50 to-white border-b border-slate-100">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                        {/* Welcome Message */}
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-coral-500 to-orange-500 flex items-center justify-center shadow-lg shadow-coral-500/25">
+                                <Sparkles className="w-6 h-6 text-white" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-semibold text-slate-900">Bienvenue sur le Wall</h2>
+                                <p className="text-sm text-slate-500">Decouvrez les dernieres offres et besoins du secteur medico-social</p>
+                            </div>
+                        </div>
+
+                        {/* Quick Stats Pills */}
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white shadow-soft border border-slate-100">
+                                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                                <span className="text-sm font-medium text-slate-700">{posts.filter(p => p.type === 'NEED').length} Besoins actifs</span>
+                            </div>
+                            <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white shadow-soft border border-slate-100">
+                                <TrendingUp className="w-4 h-4 text-coral-500" />
+                                <span className="text-sm font-medium text-slate-700">{posts.filter(p => p.type === 'OFFER').length} Offres</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             {/* Main Content */}
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 <div className="flex gap-6">
                     {/* Feed Grid - Masonry */}
                     <div className="flex-1 space-y-4">
-                        <div className="bg-white rounded-2xl p-5 shadow-soft">
-                            <div className="flex items-center justify-between gap-3 mb-3">
-                                <div>
-                                    <h2 className="font-semibold text-slate-900">Publier sur le Wall</h2>
-                                    <p className="text-sm text-slate-500">Partage un besoin ou une offre</p>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setNewPostType('NEED')}
-                                        className={`pill-btn ${newPostType === 'NEED' ? 'pill-btn-active' : 'pill-btn-inactive'}`}
-                                    >
-                                        Besoin
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setNewPostType('OFFER')}
-                                        className={`pill-btn ${newPostType === 'OFFER' ? 'pill-btn-active' : 'pill-btn-inactive'}`}
-                                    >
-                                        Offre
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div className="grid gap-3">
-                                <input
-                                    value={newPostTitle}
-                                    onChange={(e) => setNewPostTitle(e.target.value)}
-                                    placeholder="Titre de l'annonce"
-                                    className="input-premium"
-                                />
-                                <textarea
-                                    value={newPostContent}
-                                    onChange={(e) => setNewPostContent(e.target.value)}
-                                    placeholder="Decris ton annonce"
-                                    className="input-premium min-h-[120px]"
-                                />
-                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                                    <input
-                                        value={newPostCity}
-                                        onChange={(e) => setNewPostCity(e.target.value)}
-                                        placeholder="Ville (optionnel)"
-                                        className="input-premium sm:flex-1"
-                                    />
-                                    <div className="flex justify-end gap-2 sm:w-auto">
-                                        <button
-                                            type="button"
-                                            onClick={handlePublish}
-                                            disabled={isPublishDisabled}
-                                            className={`inline-flex items-center justify-center px-4 py-2 rounded-xl font-semibold text-white bg-coral-500 hover:bg-coral-600 transition-colors ${isPublishDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
-                                        >
-                                            {isSubmitting ? 'Publication...' : 'Publier'}
-                                        </button>
+                        {/* Publish Card - Collapsible */}
+                        <motion.div 
+                            className="bg-white rounded-2xl shadow-soft overflow-hidden"
+                            initial={false}
+                            animate={{ height: showPublishForm ? 'auto' : '64px' }}
+                        >
+                            <button
+                                onClick={() => setShowPublishForm(!showPublishForm)}
+                                className="w-full flex items-center justify-between gap-3 p-4 hover:bg-slate-50 transition-colors"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-coral-100 to-orange-100 flex items-center justify-center">
+                                        <Plus className="w-5 h-5 text-coral-600" />
+                                    </div>
+                                    <div className="text-left">
+                                        <p className="font-medium text-slate-900">Publier sur le Wall</p>
+                                        <p className="text-sm text-slate-500">Partage un besoin ou une offre</p>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
+                                <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${showPublishForm ? 'rotate-90' : ''}`} />
+                            </button>
+                            
+                            {showPublishForm && (
+                                <div className="px-5 pb-5 pt-2 border-t border-slate-100">
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <button
+                                            type="button"
+                                            onClick={() => setNewPostType('NEED')}
+                                            className={`pill-btn ${newPostType === 'NEED' ? 'pill-btn-active' : 'pill-btn-inactive'}`}
+                                        >
+                                            Besoin
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setNewPostType('OFFER')}
+                                            className={`pill-btn ${newPostType === 'OFFER' ? 'pill-btn-active' : 'pill-btn-inactive'}`}
+                                        >
+                                            Offre
+                                        </button>
+                                    </div>
+
+                                    <div className="grid gap-3">
+                                        <input
+                                            value={newPostTitle}
+                                            onChange={(e) => setNewPostTitle(e.target.value)}
+                                            placeholder="Titre de l'annonce"
+                                            className="input-premium"
+                                        />
+                                        <textarea
+                                            value={newPostContent}
+                                            onChange={(e) => setNewPostContent(e.target.value)}
+                                            placeholder="Decris ton annonce"
+                                            className="input-premium min-h-[100px]"
+                                        />
+                                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                                            <input
+                                                value={newPostCity}
+                                                onChange={(e) => setNewPostCity(e.target.value)}
+                                                placeholder="Ville (optionnel)"
+                                                className="input-premium sm:flex-1"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={handlePublish}
+                                                disabled={isPublishDisabled}
+                                                className={`inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-white bg-coral-500 hover:bg-coral-600 transition-colors ${isPublishDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
+                                            >
+                                                {isSubmitting ? 'Publication...' : 'Publier'}
+                                                <ArrowRight className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </motion.div>
 
                         {showSkeleton ? (
                             <div className="columns-1 md:columns-2 xl:columns-3 gap-4 space-y-4">
@@ -673,6 +806,22 @@ export function WallFeedClient({ initialFeed, talentPool, activity }: WallFeedCl
                     </aside>
                 </div>
             </main>
+
+            {/* Mobile FAB - Floating Action Button */}
+            <motion.button
+                onClick={() => {
+                    setShowPublishForm(true);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="lg:hidden fixed bottom-20 right-4 z-30 w-14 h-14 rounded-full bg-gradient-to-br from-coral-500 to-orange-500 text-white shadow-xl shadow-coral-500/30 flex items-center justify-center"
+                whileTap={{ scale: 0.9 }}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.5 }}
+                aria-label="Publier une annonce"
+            >
+                <Plus className="w-6 h-6" />
+            </motion.button>
         </div>
     );
 }
