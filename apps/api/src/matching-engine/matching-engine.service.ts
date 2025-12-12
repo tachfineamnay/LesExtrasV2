@@ -5,7 +5,7 @@ import {
     Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service';
-import { FindCandidatesDto, CandidateResultDto, MatchingResultDto } from './dto';
+import { FindCandidatesDto, CandidateResultDto, MatchingResultDto, CreateMissionDto } from './dto';
 
 interface GeoPoint {
     latitude: number;
@@ -17,6 +17,48 @@ export class MatchingEngineService {
     private readonly logger = new Logger(MatchingEngineService.name);
 
     constructor(private readonly prisma: PrismaService) { }
+
+    /**
+     * Create a relief mission (SOS Renfort)
+     */
+    async createMission(dto: CreateMissionDto, clientId: string) {
+        try {
+            const startDate = new Date(dto.startDate);
+            const endDate = dto.endDate
+                ? new Date(dto.endDate)
+                : new Date(startDate.getTime() + 8 * 60 * 60 * 1000);
+
+            const mission = await this.prisma.reliefMission.create({
+                data: {
+                    clientId,
+                    title: dto.title || `Renfort - ${dto.jobTitle}`,
+                    description: dto.description || '',
+                    jobTitle: dto.jobTitle,
+                    hourlyRate: dto.hourlyRate,
+                    isNightShift: dto.isNightShift || false,
+                    urgencyLevel: dto.urgencyLevel || 'HIGH',
+                    startDate,
+                    endDate,
+                    city: dto.city,
+                    postalCode: dto.postalCode,
+                    address: dto.address || dto.city,
+                    latitude: dto.latitude,
+                    longitude: dto.longitude,
+                    radiusKm: dto.radiusKm || 30,
+                    requiredSkills: dto.requiredSkills || [],
+                    requiredDiplomas: dto.requiredDiplomas || [],
+                    status: 'OPEN',
+                },
+            });
+
+            this.logger.log(`Mission created: ${mission.id} by client ${clientId}`);
+
+            return mission;
+        } catch (error) {
+            this.logger.error(`createMission failed: ${error.message}`);
+            throw new InternalServerErrorException('Erreur lors de la création de la mission');
+        }
+    }
 
     /**
      * Find candidates for a relief mission

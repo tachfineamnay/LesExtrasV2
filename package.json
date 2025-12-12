@@ -11,13 +11,15 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "db:sync": "prisma db push && prisma generate",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "api:dev": "cd apps/api && npm run dev",
-    "api:build": "cd apps/api && npm run build"
+    "api:build": "cd apps/api && npm run build",
+    "health:api": "tsx scripts/health-check.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

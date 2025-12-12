@@ -15,7 +15,7 @@ import {
     ApiParam,
 } from '@nestjs/swagger';
 import { MatchingEngineService } from './matching-engine.service';
-import { FindCandidatesDto, MatchingResultDto } from './dto';
+import { FindCandidatesDto, MatchingResultDto, CreateMissionDto } from './dto';
 import { JwtAuthGuard, RolesGuard } from '../common/guards';
 import { Roles, CurrentUser, CurrentUserPayload } from '../common/decorators';
 
@@ -25,6 +25,17 @@ import { Roles, CurrentUser, CurrentUserPayload } from '../common/decorators';
 @ApiBearerAuth()
 export class MatchingEngineController {
     constructor(private readonly matchingService: MatchingEngineService) { }
+
+    @Post('missions')
+    @Roles('CLIENT', 'ADMIN')
+    @ApiOperation({ summary: 'Créer une mission SOS' })
+    @ApiResponse({ status: 201, description: 'Mission créée' })
+    async createMission(
+        @CurrentUser() user: CurrentUserPayload,
+        @Body() dto: CreateMissionDto,
+    ) {
+        return this.matchingService.createMission(dto, user.id);
+    }
 
     @Get('missions/:missionId/candidates')
     @Roles('CLIENT', 'ADMIN')

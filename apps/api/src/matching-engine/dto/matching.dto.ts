@@ -87,3 +87,80 @@ export class MatchingResultDto {
     @ApiProperty()
     missionId: string;
 }
+
+export class CreateMissionDto {
+    @ApiProperty({ description: 'Intitulé du poste' })
+    @IsString()
+    jobTitle: string;
+
+    @ApiPropertyOptional({ description: 'Titre personnalisé de la mission' })
+    @IsOptional()
+    @IsString()
+    title?: string;
+
+    @ApiProperty({ description: 'Taux horaire en EUR' })
+    @IsNumber()
+    hourlyRate: number;
+
+    @ApiPropertyOptional({ description: 'Mission de nuit', default: false })
+    @IsOptional()
+    isNightShift?: boolean;
+
+    @ApiProperty({ enum: MissionUrgency, default: MissionUrgency.HIGH })
+    @IsEnum(MissionUrgency)
+    urgencyLevel: MissionUrgency;
+
+    @ApiPropertyOptional({ description: 'Description de la mission' })
+    @IsOptional()
+    @IsString()
+    description?: string;
+
+    @ApiProperty({ description: 'Date de début (ISO)' })
+    @IsString()
+    startDate: string;
+
+    @ApiPropertyOptional({ description: 'Date de fin (ISO)' })
+    @IsOptional()
+    @IsString()
+    endDate?: string;
+
+    @ApiProperty({ description: 'Ville' })
+    @IsString()
+    city: string;
+
+    @ApiProperty({ description: 'Code postal' })
+    @IsString()
+    postalCode: string;
+
+    @ApiPropertyOptional({ description: 'Adresse complète' })
+    @IsOptional()
+    @IsString()
+    address?: string;
+
+    @ApiPropertyOptional({ description: 'Latitude' })
+    @IsOptional()
+    @IsNumber()
+    latitude?: number;
+
+    @ApiPropertyOptional({ description: 'Longitude' })
+    @IsOptional()
+    @IsNumber()
+    longitude?: number;
+
+    @ApiPropertyOptional({ description: 'Rayon de recherche', default: 30 })
+    @IsOptional()
+    @IsNumber()
+    radiusKm?: number;
+
+    @ApiPropertyOptional({ description: 'Compétences requises', type: [String] })
+    @IsOptional()
+    @IsArray()
+    @IsString({ each: true })
+    requiredSkills?: string[];
+
+    @ApiPropertyOptional({ description: 'Diplômes requis', type: [String] })
+    @IsOptional()
+    @IsArray()
+    @IsString({ each: true })
+    requiredDiplomas?: string[];
+}

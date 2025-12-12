@@ -12,6 +12,10 @@ import { AuthModule } from './auth/auth.module';
 import { MatchingEngineModule } from './matching-engine/matching-engine.module';
 import { VideoBookingModule } from './video-booking/video-booking.module';
 import { WallFeedModule } from './wall-feed/wall-feed.module';
+import { ContractsModule } from './contracts/contracts.module';
+import { MessagesModule } from './messages/messages.module';
+import { PaymentsModule } from './payments/payments.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
     imports: [
@@ -49,6 +53,10 @@ import { WallFeedModule } from './wall-feed/wall-feed.module';
         MatchingEngineModule,
         VideoBookingModule,
         WallFeedModule,
+        ContractsModule,
+        MessagesModule,
+        PaymentsModule,
+        HealthModule,
     ],
     providers: [
         {
