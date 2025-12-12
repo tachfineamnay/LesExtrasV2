@@ -27,6 +27,7 @@ import {
     ArrowRight
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { NeedCard, OfferCard } from '@/components/wall';
 import { getFeed, createPost, type CreatePostPayload } from '@/app/services/wall.service';
 import { ToastContainer, useToasts } from '@/components/ui/Toast';
@@ -232,6 +233,7 @@ const mapApiItemToFeedItem = (item: ApiFeedItem | FeedItem): FeedItem | null => 
 };
 
 export function WallFeedClient({ initialFeed, talentPool, activity }: WallFeedClientProps) {
+    const router = useRouter();
     const [posts, setPosts] = useState<FeedItem[]>(initialFeed);
     const [isLoading, setIsLoading] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -675,7 +677,7 @@ export function WallFeedClient({ initialFeed, talentPool, activity }: WallFeedCl
                                                 startDate={item.startDate}
                                                 isNightShift={item.isNightShift}
                                                 tags={item.tags}
-                                                onClick={() => console.log('Need clicked:', item.id)}
+                                                onClick={() => router.push(`/wall/need/${item.id}`)}
                                             />
                                         ) : (
                                             <OfferCard
@@ -694,7 +696,7 @@ export function WallFeedClient({ initialFeed, talentPool, activity }: WallFeedCl
                                                 basePrice={item.basePrice}
                                                 imageUrl={item.imageUrl}
                                                 tags={item.tags}
-                                                onClick={() => console.log('Offer clicked:', item.id)}
+                                                onClick={() => router.push(`/wall/offer/${item.id}`)}
                                             />
                                         )}
                                     </motion.div>
