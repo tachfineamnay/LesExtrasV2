@@ -32,8 +32,6 @@ const emptyStateConfig: Record<EmptyStateType, {
     titleOwn: string;
     description: string;
     descriptionOwn: string;
-    iconBg: string;
-    iconColor: string;
 }> = {
     missions: {
         icon: Sprout,
@@ -41,8 +39,6 @@ const emptyStateConfig: Record<EmptyStateType, {
         titleOwn: 'Votre parcours commence ici',
         description: 'Soyez le premier à collaborer avec eux.',
         descriptionOwn: 'Complétez votre première mission pour construire votre réputation.',
-        iconBg: 'bg-green-100',
-        iconColor: 'text-green-600',
     },
     reviews: {
         icon: Handshake,
@@ -50,8 +46,6 @@ const emptyStateConfig: Record<EmptyStateType, {
         titleOwn: 'Aucun avis pour le moment',
         description: 'Soyez le premier à partager votre expérience avec ce profil.',
         descriptionOwn: 'Les avis apparaîtront ici après vos premières collaborations.',
-        iconBg: 'bg-blue-100',
-        iconColor: 'text-blue-600',
     },
     profile: {
         icon: Sparkles,
@@ -59,8 +53,6 @@ const emptyStateConfig: Record<EmptyStateType, {
         titleOwn: 'Complétez votre profil',
         description: 'Ce membre n\'a pas encore complété son profil.',
         descriptionOwn: 'Ajoutez vos compétences et expériences pour attirer plus de missions.',
-        iconBg: 'bg-coral-100',
-        iconColor: 'text-coral-600',
     },
 };
 
@@ -96,7 +88,7 @@ export function EmptyState({
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="py-12 px-6 text-center"
+            className="py-12 px-6 flex flex-col items-center text-center border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50"
         >
             {/* Animated Icon Container */}
             <motion.div
@@ -105,12 +97,9 @@ export function EmptyState({
                 transition={{ delay: 0.1 }}
                 className="relative inline-flex mb-6"
             >
-                {/* Background Glow */}
-                <div className={`absolute inset-0 ${config.iconBg} rounded-full blur-xl opacity-50`} />
-                
-                {/* Icon Circle */}
-                <div className={`relative w-20 h-20 rounded-full ${config.iconBg} flex items-center justify-center`}>
-                    <Icon className={`w-10 h-10 ${config.iconColor}`} />
+                {/* Icon Circle - White background with shadow */}
+                <div className="relative bg-white rounded-full p-4 shadow-sm">
+                    <Icon className="w-16 h-16 text-slate-300" />
                 </div>
 
                 {/* Decorative Sparkles */}
@@ -135,7 +124,7 @@ export function EmptyState({
                 initial={{ y: 10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.2 }}
-                className="text-lg font-semibold text-slate-900 mb-2"
+                className="text-lg font-semibold text-slate-800"
             >
                 {userName && !isOwnProfile ? title.replace('Ce profil', userName) : title}
             </motion.h3>
@@ -145,21 +134,21 @@ export function EmptyState({
                 initial={{ y: 10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.3 }}
-                className="text-sm text-slate-500 max-w-xs mx-auto mb-6"
+                className="text-sm text-slate-500 max-w-xs mt-2"
             >
                 {description}
             </motion.p>
 
-            {/* Action Button */}
+            {/* Action Button - Pill style */}
             {onAction && actionLabel && (
                 <motion.button
                     initial={{ y: 10, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.4 }}
-                    whileHover={{ scale: 1.02 }}
+                    whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={onAction}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-coral-500 text-white font-medium text-sm hover:bg-coral-600 transition-colors shadow-lg shadow-coral-500/25"
+                    className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-coral-500 text-white font-medium text-sm hover:bg-coral-600 transition-all duration-200 shadow-lg shadow-coral-500/25 border border-transparent hover:border-coral-400"
                 >
                     {type === 'missions' && <Briefcase className="w-4 h-4" />}
                     {type === 'reviews' && <Star className="w-4 h-4" />}
@@ -168,16 +157,16 @@ export function EmptyState({
                 </motion.button>
             )}
 
-            {/* Encouragement for new profiles */}
+            {/* Encouragement badge for new profiles */}
             {type === 'missions' && !isOwnProfile && (
                 <motion.div
                     initial={{ y: 10, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.5 }}
-                    className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-50 border border-green-100"
+                    className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 shadow-sm"
                 >
-                    <Sprout className="w-4 h-4 text-green-600" />
-                    <span className="text-xs font-medium text-green-700">
+                    <Sprout className="w-4 h-4 text-green-500" />
+                    <span className="text-xs font-medium text-slate-600">
                         Nouveau membre • Inscrit récemment
                     </span>
                 </motion.div>

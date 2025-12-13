@@ -56,10 +56,10 @@ export function MobileActionBar({
                 initial={{ y: 100, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30, delay: 0.3 }}
-                className="lg:hidden fixed bottom-0 left-0 right-0 z-40"
+                className="lg:hidden fixed bottom-0 left-0 right-0 z-50"
             >
-                {/* Glass Background */}
-                <div className="absolute inset-0 bg-white/90 backdrop-blur-xl border-t border-slate-200" />
+                {/* Glass Background - Glassmorphism effect */}
+                <div className="absolute inset-0 bg-white/90 backdrop-blur-md border-t border-slate-200" />
                 
                 {/* Safe Area Padding for iPhone */}
                 <div className="relative px-4 py-3 pb-safe">
