@@ -1,0 +1,223 @@
+'use client';
+
+import { motion } from 'framer-motion';
+import { 
+    MessageCircle, 
+    Send, 
+    Phone,
+    Heart,
+    Share2
+} from 'lucide-react';
+
+export interface MobileActionBarProps {
+    /** User role being viewed */
+    role: 'EXTRA' | 'CLIENT' | 'ADMIN';
+    /** Whether this is the current user's own profile */
+    isOwnProfile?: boolean;
+    /** Whether the user is in favorites */
+    isFavorite?: boolean;
+    /** Primary CTA click handler */
+    onPrimaryAction?: () => void;
+    /** Secondary action (message) click handler */
+    onMessageClick?: () => void;
+    /** Favorite toggle handler */
+    onFavoriteToggle?: () => void;
+    /** Share profile handler */
+    onShare?: () => void;
+}
+
+export function MobileActionBar({
+    role,
+    isOwnProfile = false,
+    isFavorite = false,
+    onPrimaryAction,
+    onMessageClick,
+    onFavoriteToggle,
+    onShare,
+}: MobileActionBarProps) {
+    // Don't show action bar on own profile
+    if (isOwnProfile) return null;
+
+    // Role-specific CTA text
+    // EXTRA profile = propose a mission, CLIENT profile = send application
+    const primaryCTA = role === 'EXTRA' 
+        ? 'Proposer une mission' 
+        : 'Envoyer une candidature';
+    
+    const PrimaryIcon = Send;
+
+    return (
+        <>
+            {/* Spacer to prevent content being hidden behind fixed bar */}
+            <div className="lg:hidden h-20" />
+
+            {/* Fixed Bottom Action Bar - Mobile Only */}
+            <motion.div
+                initial={{ y: 100, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30, delay: 0.3 }}
+                className="lg:hidden fixed bottom-0 left-0 right-0 z-40"
+            >
+                {/* Glass Background */}
+                <div className="absolute inset-0 bg-white/90 backdrop-blur-xl border-t border-slate-200" />
+                
+                {/* Safe Area Padding for iPhone */}
+                <div className="relative px-4 py-3 pb-safe">
+                    <div className="flex items-center gap-3">
+                        {/* Secondary Actions */}
+                        <div className="flex items-center gap-2">
+                            {/* Favorite Button */}
+                            <motion.button
+                                whileTap={{ scale: 0.9 }}
+                                onClick={onFavoriteToggle}
+                                className={`
+                                    w-11 h-11 rounded-xl flex items-center justify-center
+                                    border transition-colors
+                                    ${isFavorite 
+                                        ? 'bg-coral-50 border-coral-200 text-coral-500' 
+                                        : 'bg-white border-slate-200 text-slate-500 hover:text-coral-500'
+                                    }
+                                `}
+                                aria-label={isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+                            >
+                                <Heart 
+                                    className={`w-5 h-5 ${isFavorite ? 'fill-coral-500' : ''}`} 
+                                />
+                            </motion.button>
+
+                            {/* Share Button */}
+                            <motion.button
+                                whileTap={{ scale: 0.9 }}
+                                onClick={onShare}
+                                className="w-11 h-11 rounded-xl flex items-center justify-center bg-white border border-slate-200 text-slate-500 hover:text-coral-500 transition-colors"
+                                aria-label="Partager le profil"
+                            >
+                                <Share2 className="w-5 h-5" />
+                            </motion.button>
+
+                            {/* Message Button */}
+                            <motion.button
+                                whileTap={{ scale: 0.9 }}
+                                onClick={onMessageClick}
+                                className="w-11 h-11 rounded-xl flex items-center justify-center bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200 transition-colors"
+                                aria-label="Envoyer un message"
+                            >
+                                <MessageCircle className="w-5 h-5" />
+                            </motion.button>
+                        </div>
+
+                        {/* Primary CTA Button */}
+                        <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={onPrimaryAction}
+                            className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-coral-500 to-orange-500 text-white font-semibold shadow-lg shadow-coral-500/30 hover:shadow-xl hover:shadow-coral-500/40 transition-all"
+                        >
+                            <PrimaryIcon className="w-5 h-5" />
+                            <span>{primaryCTA}</span>
+                        </motion.button>
+                    </div>
+                </div>
+            </motion.div>
+        </>
+    );
+}
+
+/**
+ * Desktop Action Buttons (inline in profile)
+ * Use this inside the profile content area on desktop
+ */
+export interface DesktopActionsProps {
+    role: 'EXTRA' | 'CLIENT' | 'ADMIN';
+    isOwnProfile?: boolean;
+    isFavorite?: boolean;
+    onPrimaryAction?: () => void;
+    onMessageClick?: () => void;
+    onFavoriteToggle?: () => void;
+    onShare?: () => void;
+    onCall?: () => void;
+}
+
+export function DesktopActions({
+    role,
+    isOwnProfile = false,
+    isFavorite = false,
+    onPrimaryAction,
+    onMessageClick,
+    onFavoriteToggle,
+    onShare,
+    onCall,
+}: DesktopActionsProps) {
+    if (isOwnProfile) return null;
+
+    // EXTRA profile = propose a mission, CLIENT profile = send application
+    const primaryCTA = role === 'EXTRA' ? 'Proposer une mission' : 'Envoyer une candidature';
+    const PrimaryIcon = Send;
+
+    return (
+        <div className="hidden lg:flex items-center gap-3 mt-6">
+            {/* Primary CTA */}
+            <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={onPrimaryAction}
+                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-coral-500 to-orange-500 text-white font-semibold shadow-lg shadow-coral-500/25 hover:shadow-xl transition-all"
+            >
+                <PrimaryIcon className="w-5 h-5" />
+                {primaryCTA}
+            </motion.button>
+
+            {/* Message Button */}
+            <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={onMessageClick}
+                className="flex items-center gap-2 px-5 py-3 rounded-xl bg-slate-100 text-slate-700 font-medium hover:bg-slate-200 transition-colors"
+            >
+                <MessageCircle className="w-5 h-5" />
+                Contacter
+            </motion.button>
+
+            {/* Call Button (if phone available) */}
+            {onCall && (
+                <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={onCall}
+                    className="w-11 h-11 rounded-xl flex items-center justify-center bg-green-100 text-green-700 hover:bg-green-200 transition-colors"
+                    aria-label="Appeler"
+                >
+                    <Phone className="w-5 h-5" />
+                </motion.button>
+            )}
+
+            {/* Favorite Button */}
+            <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={onFavoriteToggle}
+                className={`
+                    w-11 h-11 rounded-xl flex items-center justify-center transition-colors
+                    ${isFavorite 
+                        ? 'bg-coral-100 text-coral-500' 
+                        : 'bg-slate-100 text-slate-500 hover:text-coral-500'
+                    }
+                `}
+                aria-label={isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+            >
+                <Heart className={`w-5 h-5 ${isFavorite ? 'fill-coral-500' : ''}`} />
+            </motion.button>
+
+            {/* Share Button */}
+            <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={onShare}
+                className="w-11 h-11 rounded-xl flex items-center justify-center bg-slate-100 text-slate-500 hover:text-coral-500 transition-colors"
+                aria-label="Partager"
+            >
+                <Share2 className="w-5 h-5" />
+            </motion.button>
+        </div>
+    );
+}
