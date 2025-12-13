@@ -1,20 +1,20 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { 
-    CheckCircle2, 
-    Clock, 
-    XCircle, 
+import {
+    CheckCircle2,
+    Clock,
+    XCircle,
     Building2,
     Briefcase,
     Calendar
 } from 'lucide-react';
 import { EmptyState } from './EmptyState';
 
-export type MissionHistoryStatus = 
-    | 'COMPLETED' 
-    | 'IN_PROGRESS' 
-    | 'CANCELLED' 
+export type MissionHistoryStatus =
+    | 'COMPLETED'
+    | 'IN_PROGRESS'
+    | 'CANCELLED'
     | 'FILLED'    // For client: mission pourvue
     | 'OPEN';
 
@@ -111,13 +111,13 @@ function formatDate(date: Date | string): { day: string; month: string } {
     };
 }
 
-export function MissionHistory({ 
-    missions, 
-    role, 
+export function MissionHistory({
+    missions,
+    role,
     userName,
     isOwnProfile = false,
     emptyMessage,
-    onEmptyAction 
+    onEmptyAction
 }: MissionHistoryProps) {
     if (missions.length === 0) {
         return (
@@ -127,7 +127,7 @@ export function MissionHistory({
                 isOwnProfile={isOwnProfile}
                 customMessage={emptyMessage}
                 onAction={onEmptyAction}
-                actionLabel={isOwnProfile 
+                actionLabel={isOwnProfile
                     ? (role === 'EXTRA' ? 'Trouver des missions' : 'Publier une mission')
                     : 'Collaborer maintenant'
                 }
@@ -156,7 +156,7 @@ export function MissionHistory({
                         <motion.div
                             key={mission.id}
                             variants={itemVariants}
-                            className="relative flex items-start gap-4 py-3 px-4 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer group"
+                            className="relative flex items-start gap-4 py-4 px-4 rounded-2xl hover:bg-slate-50/80 transition-all cursor-pointer group"
                         >
                             {/* Date Column */}
                             <div className="flex-shrink-0 w-12 sm:w-14 text-center">
@@ -172,10 +172,10 @@ export function MissionHistory({
                             <div className="relative flex-shrink-0 z-10">
                                 <div className={`
                                     w-3 h-3 rounded-full border-2 border-white shadow-sm
-                                    ${mission.status === 'COMPLETED' ? 'bg-green-500' : 
-                                      mission.status === 'IN_PROGRESS' ? 'bg-blue-500' :
-                                      mission.status === 'CANCELLED' ? 'bg-red-400' :
-                                      'bg-slate-300'
+                                    ${mission.status === 'COMPLETED' ? 'bg-green-500' :
+                                        mission.status === 'IN_PROGRESS' ? 'bg-blue-500' :
+                                            mission.status === 'CANCELLED' ? 'bg-red-400' :
+                                                'bg-slate-300'
                                     }
                                 `} />
                             </div>
@@ -226,8 +226,8 @@ export function MissionHistory({
 
             {/* View More Link */}
             {missions.length >= 5 && (
-                <div className="mt-4 text-center">
-                    <button className="text-sm text-coral-600 font-medium hover:text-coral-700 transition-colors">
+                <div className="mt-6 text-center">
+                    <button className="btn-secondary">
                         Voir tout l'historique →
                     </button>
                 </div>

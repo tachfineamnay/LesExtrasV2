@@ -1,9 +1,9 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { 
-    MessageCircle, 
-    Send, 
+import {
+    MessageCircle,
+    Send,
     Phone,
     Heart,
     Share2
@@ -40,16 +40,16 @@ export function MobileActionBar({
 
     // Role-specific CTA text
     // EXTRA profile = propose a mission, CLIENT profile = send application
-    const primaryCTA = role === 'EXTRA' 
-        ? 'Proposer une mission' 
+    const primaryCTA = role === 'EXTRA'
+        ? 'Proposer une mission'
         : 'Envoyer une candidature';
-    
+
     const PrimaryIcon = Send;
 
     return (
         <>
             {/* Spacer to prevent content being hidden behind fixed bar */}
-            <div className="lg:hidden h-20" />
+            <div className="lg:hidden h-24" />
 
             {/* Fixed Bottom Action Bar - Mobile Only */}
             <motion.div
@@ -58,9 +58,9 @@ export function MobileActionBar({
                 transition={{ type: 'spring', stiffness: 300, damping: 30, delay: 0.3 }}
                 className="lg:hidden fixed bottom-0 left-0 right-0 z-50"
             >
-                {/* Glass Background - Glassmorphism effect */}
-                <div className="absolute inset-0 bg-white/90 backdrop-blur-md border-t border-slate-200" />
-                
+                {/* Glass Background - Enhanced Glassmorphism */}
+                <div className="absolute inset-0 bg-white/80 backdrop-blur-xl border-t border-slate-200/80" />
+
                 {/* Safe Area Padding for iPhone */}
                 <div className="relative px-4 py-3 pb-safe">
                     <div className="flex items-center gap-3">
@@ -71,17 +71,16 @@ export function MobileActionBar({
                                 whileTap={{ scale: 0.9 }}
                                 onClick={onFavoriteToggle}
                                 className={`
-                                    w-11 h-11 rounded-xl flex items-center justify-center
-                                    border transition-colors
-                                    ${isFavorite 
-                                        ? 'bg-coral-50 border-coral-200 text-coral-500' 
-                                        : 'bg-white border-slate-200 text-slate-500 hover:text-coral-500'
+                                    btn-social !w-11 !h-11
+                                    ${isFavorite
+                                        ? 'bg-coral-50 border-coral-200 text-coral-500'
+                                        : ''
                                     }
                                 `}
                                 aria-label={isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
                             >
-                                <Heart 
-                                    className={`w-5 h-5 ${isFavorite ? 'fill-coral-500' : ''}`} 
+                                <Heart
+                                    className={`w-5 h-5 ${isFavorite ? 'fill-coral-500' : ''}`}
                                 />
                             </motion.button>
 
@@ -89,7 +88,7 @@ export function MobileActionBar({
                             <motion.button
                                 whileTap={{ scale: 0.9 }}
                                 onClick={onShare}
-                                className="w-11 h-11 rounded-xl flex items-center justify-center bg-white border border-slate-200 text-slate-500 hover:text-coral-500 transition-colors"
+                                className="btn-social !w-11 !h-11"
                                 aria-label="Partager le profil"
                             >
                                 <Share2 className="w-5 h-5" />
@@ -99,7 +98,7 @@ export function MobileActionBar({
                             <motion.button
                                 whileTap={{ scale: 0.9 }}
                                 onClick={onMessageClick}
-                                className="w-11 h-11 rounded-xl flex items-center justify-center bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200 transition-colors"
+                                className="btn-secondary !w-11 !h-11 !p-0"
                                 aria-label="Envoyer un message"
                             >
                                 <MessageCircle className="w-5 h-5" />
@@ -111,7 +110,7 @@ export function MobileActionBar({
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={onPrimaryAction}
-                            className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-coral-500 to-orange-500 text-white font-semibold shadow-lg shadow-coral-500/30 hover:shadow-xl hover:shadow-coral-500/40 transition-all"
+                            className="btn-primary flex-1 !py-3 shadow-lg shadow-coral-500/30"
                         >
                             <PrimaryIcon className="w-5 h-5" />
                             <span>{primaryCTA}</span>
@@ -161,7 +160,7 @@ export function DesktopActions({
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={onPrimaryAction}
-                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-coral-500 to-orange-500 text-white font-semibold shadow-lg shadow-coral-500/25 hover:shadow-xl transition-all"
+                className="btn-primary !py-3 shadow-lg shadow-coral-500/25"
             >
                 <PrimaryIcon className="w-5 h-5" />
                 {primaryCTA}
@@ -172,7 +171,7 @@ export function DesktopActions({
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={onMessageClick}
-                className="flex items-center gap-2 px-5 py-3 rounded-xl bg-slate-100 text-slate-700 font-medium hover:bg-slate-200 transition-colors"
+                className="btn-secondary !py-3"
             >
                 <MessageCircle className="w-5 h-5" />
                 Contacter
@@ -184,7 +183,7 @@ export function DesktopActions({
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={onCall}
-                    className="w-11 h-11 rounded-xl flex items-center justify-center bg-green-100 text-green-700 hover:bg-green-200 transition-colors"
+                    className="btn-social !w-11 !h-11 !bg-green-100 !text-green-700 hover:!bg-green-200"
                     aria-label="Appeler"
                 >
                     <Phone className="w-5 h-5" />
@@ -197,10 +196,10 @@ export function DesktopActions({
                 whileTap={{ scale: 0.95 }}
                 onClick={onFavoriteToggle}
                 className={`
-                    w-11 h-11 rounded-xl flex items-center justify-center transition-colors
-                    ${isFavorite 
-                        ? 'bg-coral-100 text-coral-500' 
-                        : 'bg-slate-100 text-slate-500 hover:text-coral-500'
+                    btn-social !w-11 !h-11
+                    ${isFavorite
+                        ? '!bg-coral-100 !text-coral-500'
+                        : ''
                     }
                 `}
                 aria-label={isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
@@ -213,7 +212,7 @@ export function DesktopActions({
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={onShare}
-                className="w-11 h-11 rounded-xl flex items-center justify-center bg-slate-100 text-slate-500 hover:text-coral-500 transition-colors"
+                className="btn-social !w-11 !h-11"
                 aria-label="Partager"
             >
                 <Share2 className="w-5 h-5" />

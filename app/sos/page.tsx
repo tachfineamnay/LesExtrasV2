@@ -345,11 +345,12 @@ export default function SOSPage() {
                                 <div className="space-y-4">
                                     {/* Date */}
                                     <div>
-                                        <label className="label-sm block mb-2">
+                                        <label htmlFor="sos-date" className="label-sm block mb-2">
                                             <Calendar className="w-4 h-4 inline mr-1" />
                                             Date de début
                                         </label>
                                         <input
+                                            id="sos-date"
                                             type="date"
                                             value={formData.date}
                                             onChange={(e) => setFormData({ ...formData, date: e.target.value })}

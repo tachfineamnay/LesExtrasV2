@@ -55,7 +55,7 @@ export function UserProfile({
     onEditAvatar,
 }: UserProfileProps) {
     return (
-        <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100">
+        <div className="card-surface overflow-hidden border border-slate-100">
             {/* Profile Header (Cover + Avatar + Name) */}
             <ProfileHeader
                 firstName={profile.firstName}

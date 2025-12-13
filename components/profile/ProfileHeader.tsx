@@ -1,10 +1,10 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { 
-    BadgeCheck, 
-    Camera, 
-    MapPin, 
+import {
+    BadgeCheck,
+    Camera,
+    MapPin,
     Calendar,
     Edit3
 } from 'lucide-react';
@@ -52,12 +52,12 @@ export function ProfileHeader({
 }: ProfileHeaderProps) {
     const fullName = `${firstName} ${lastName}`;
     const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
-    
-    const formattedDate = memberSince 
-        ? new Date(memberSince).toLocaleDateString('fr-FR', { 
-            month: 'long', 
-            year: 'numeric' 
-          })
+
+    const formattedDate = memberSince
+        ? new Date(memberSince).toLocaleDateString('fr-FR', {
+            month: 'long',
+            year: 'numeric'
+        })
         : null;
 
     const roleLabel = role === 'EXTRA' ? 'Professionnel' : role === 'CLIENT' ? 'Établissement' : 'Admin';
@@ -67,25 +67,25 @@ export function ProfileHeader({
             {/* Cover Image / Gradient Background */}
             <div className="relative h-48 overflow-hidden rounded-t-3xl">
                 {coverUrl ? (
-                    <img 
-                        src={coverUrl} 
-                        alt="Couverture" 
+                    <img
+                        src={coverUrl}
+                        alt="Couverture"
                         className="w-full h-full object-cover"
                     />
                 ) : (
                     <div className="w-full h-full bg-gradient-to-r from-coral-50 via-slate-50 to-coral-100" />
                 )}
-                
+
                 {/* Gradient overlay for better text readability */}
                 <div className="absolute inset-0 bg-gradient-to-t from-white/60 via-transparent to-transparent" />
-                
+
                 {/* Edit Cover Button (own profile only) */}
                 {isOwnProfile && (
                     <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={onEditCover}
-                        className="absolute top-4 right-4 flex items-center gap-2 px-3 py-2 rounded-xl bg-white/80 backdrop-blur-sm text-slate-700 text-sm font-medium shadow-soft hover:bg-white transition-colors"
+                        className="absolute top-4 right-4 btn-secondary !px-3 !py-2 bg-white/80 backdrop-blur-sm shadow-soft"
                     >
                         <Camera className="w-4 h-4" />
                         <span className="hidden sm:inline">Modifier</span>
@@ -108,8 +108,8 @@ export function ProfileHeader({
                             {/* Avatar Circle */}
                             <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg overflow-hidden bg-gradient-to-br from-coral-100 to-coral-200">
                                 {avatarUrl ? (
-                                    <img 
-                                        src={avatarUrl} 
+                                    <img
+                                        src={avatarUrl}
                                         alt={fullName}
                                         className="w-full h-full object-cover"
                                     />
@@ -151,7 +151,7 @@ export function ProfileHeader({
                         <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
                             {fullName}
                         </h1>
-                        
+
                         {/* Verification Badge */}
                         {isVerified && (
                             <motion.div
@@ -177,7 +177,7 @@ export function ProfileHeader({
                             <motion.button
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
-                                className="ml-auto hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 transition-colors"
+                                className="ml-auto hidden sm:flex btn-secondary"
                             >
                                 <Edit3 className="w-4 h-4" />
                                 Modifier le profil

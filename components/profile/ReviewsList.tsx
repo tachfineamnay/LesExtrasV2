@@ -1,9 +1,9 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { 
-    Star, 
-    BadgeCheck, 
+import {
+    Star,
+    BadgeCheck,
     ThumbsUp,
     MessageCircle,
     MoreHorizontal,
@@ -93,8 +93,8 @@ function StarRating({ rating, size = 'sm' }: { rating: number; size?: 'sm' | 'md
                     key={star}
                     className={`
                         ${sizeClasses[size]}
-                        ${star <= rating 
-                            ? 'text-amber-400 fill-amber-400' 
+                        ${star <= rating
+                            ? 'text-amber-400 fill-amber-400'
                             : 'text-slate-200 fill-slate-200'
                         }
                     `}
@@ -113,11 +113,11 @@ function formatReviewDate(date: Date | string): string {
     if (diffDays === 1) return 'Hier';
     if (diffDays < 7) return `Il y a ${diffDays} jours`;
     if (diffDays < 30) return `Il y a ${Math.floor(diffDays / 7)} semaines`;
-    
-    return d.toLocaleDateString('fr-FR', { 
-        day: 'numeric', 
-        month: 'long', 
-        year: d.getFullYear() !== now.getFullYear() ? 'numeric' : undefined 
+
+    return d.toLocaleDateString('fr-FR', {
+        day: 'numeric',
+        month: 'long',
+        year: d.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
     });
 }
 
@@ -132,7 +132,7 @@ function ReviewCard({ review }: { review: ReviewItem }) {
     return (
         <motion.article
             variants={itemVariants}
-            className="p-5 bg-white rounded-2xl border border-slate-100 shadow-soft hover:shadow-soft-lg transition-shadow"
+            className="card-surface p-6 hover:shadow-soft-lg transition-shadow"
         >
             {/* Header: Reviewer + Date + Rating */}
             <div className="flex items-start justify-between gap-3 mb-4">
@@ -140,8 +140,8 @@ function ReviewCard({ review }: { review: ReviewItem }) {
                     {/* Avatar */}
                     <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-coral-100 to-orange-100 flex items-center justify-center overflow-hidden">
                         {review.reviewerAvatar ? (
-                            <img 
-                                src={review.reviewerAvatar} 
+                            <img
+                                src={review.reviewerAvatar}
                                 alt={review.reviewerName}
                                 className="w-full h-full object-cover"
                             />
@@ -226,7 +226,10 @@ function ReviewCard({ review }: { review: ReviewItem }) {
                     <ThumbsUp className="w-3.5 h-3.5" />
                     Utile {review.helpfulCount ? `(${review.helpfulCount})` : ''}
                 </button>
-                <button className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
+                <button
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                    aria-label="Plus d'options"
+                >
                     <MoreHorizontal className="w-4 h-4" />
                 </button>
             </div>
@@ -234,8 +237,8 @@ function ReviewCard({ review }: { review: ReviewItem }) {
     );
 }
 
-export function ReviewsList({ 
-    reviews, 
+export function ReviewsList({
+    reviews,
     averageRating,
     totalReviews,
     showSummary = true,
@@ -252,7 +255,7 @@ export function ReviewsList({
                 isOwnProfile={isOwnProfile}
                 customMessage={emptyMessage}
                 onAction={onEmptyAction}
-                actionLabel={isOwnProfile 
+                actionLabel={isOwnProfile
                     ? 'Compléter mon profil'
                     : 'Laisser un avis'
                 }
@@ -278,9 +281,9 @@ export function ReviewsList({
                             <div className="text-4xl font-bold text-slate-900">
                                 {(averageRating ?? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)}
                             </div>
-                            <StarRating 
-                                rating={Math.round(averageRating ?? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length)} 
-                                size="md" 
+                            <StarRating
+                                rating={Math.round(averageRating ?? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length)}
+                                size="md"
                             />
                             <p className="text-xs text-slate-500 mt-1">
                                 {totalReviews ?? reviews.length} avis
@@ -324,7 +327,7 @@ export function ReviewsList({
             {/* Load More */}
             {reviews.length >= 5 && (
                 <div className="mt-6 text-center">
-                    <button className="px-6 py-2.5 rounded-xl bg-slate-100 text-slate-700 text-sm font-medium hover:bg-slate-200 transition-colors">
+                    <button className="btn-secondary">
                         Voir plus d'avis
                     </button>
                 </div>
