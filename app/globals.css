@@ -65,6 +65,88 @@
 }
 
 /* ========================================
+   Components - Design System
+   ======================================== */
+
+@layer components {
+  /* Premium Input Fields */
+  .input-premium {
+    @apply w-full px-4 py-3 rounded-xl border border-slate-200 
+           bg-white text-slate-900 placeholder:text-slate-400
+           focus:ring-2 focus:ring-coral-200 focus:border-coral-400
+           transition-all duration-200 outline-none;
+  }
+
+  /* Card Surface */
+  .card-surface {
+    @apply bg-white rounded-2xl shadow-soft 
+           hover:shadow-soft-lg transition-shadow duration-300;
+  }
+
+  /* Primary Button - Coral (for Detail Pages) */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 
+           px-4 py-2.5 rounded-xl bg-coral-500 text-white 
+           font-semibold text-sm
+           hover:bg-coral-600 active:scale-[0.98]
+           transition-all duration-200;
+  }
+
+  /* Secondary Button - Outline (for Feed) */
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 
+           px-4 py-2.5 rounded-xl border border-slate-200 
+           text-slate-700 font-medium text-sm
+           hover:bg-slate-50 hover:border-slate-300 
+           active:scale-[0.98] transition-all duration-200;
+  }
+
+  /* Social Action Button */
+  .btn-social {
+    @apply inline-flex items-center justify-center 
+           w-9 h-9 rounded-full border border-slate-200 
+           text-slate-500 hover:text-coral-500 hover:border-coral-200
+           hover:bg-coral-50 active:scale-95 transition-all duration-200;
+  }
+
+  /* Pattern Hero for cards without images */
+  .pattern-hero {
+    @apply relative h-36 overflow-hidden rounded-t-2xl;
+    background: linear-gradient(135deg, 
+      #FFF1F1 0%,   /* coral-50 */
+      #F8FAFC 50%,  /* slate-50 */
+      #FFE4E4 100%  /* coral-100 */
+    );
+  }
+
+  .pattern-hero::before {
+    content: '';
+    @apply absolute inset-0 opacity-30;
+    background-image: radial-gradient(circle at 2px 2px, #FEC8C8 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  /* Need Card Pattern (Blue-themed for establishments) */
+  .pattern-hero-need {
+    @apply relative h-36 overflow-hidden rounded-t-2xl;
+    background: linear-gradient(135deg, 
+      #EFF6FF 0%,   /* blue-50 */
+      #F8FAFC 50%,  /* slate-50 */
+      #DBEAFE 100%  /* blue-100 */
+    );
+  }
+
+  .pattern-hero-need::before {
+    content: '';
+    @apply absolute inset-0 opacity-20;
+    background-image: 
+      linear-gradient(30deg, transparent 49.5%, #93C5FD 49.5%, #93C5FD 50.5%, transparent 50.5%),
+      linear-gradient(-30deg, transparent 49.5%, #93C5FD 49.5%, #93C5FD 50.5%, transparent 50.5%);
+    background-size: 20px 35px;
+  }
+}
+
+/* ========================================
    Scrollbar - Minimal
    ======================================== */
 ::-webkit-scrollbar {
