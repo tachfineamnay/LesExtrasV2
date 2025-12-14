@@ -29,8 +29,8 @@ const MOCK_PROFILES: Record<string, Partial<UserProfileData>> = {
     }
 };
 
-export default function PublicProfilePage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = use(params);
+export default function PublicProfilePage({ params }: { params: { id: string } }) {
+    const { id } = params;
     const router = useRouter();
     const [isFavorite, setIsFavorite] = useState(false);
 

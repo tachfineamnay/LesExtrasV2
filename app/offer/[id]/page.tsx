@@ -4,8 +4,8 @@ import { use } from 'react';
 import { useRouter } from 'next/navigation';
 import { OfferCard } from '@/components/wall';
 
-export default function OfferDetailPage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = use(params);
+export default function OfferDetailPage({ params }: { params: { id: string } }) {
+    const { id } = params;
     const router = useRouter();
 
     // Mock single offer data

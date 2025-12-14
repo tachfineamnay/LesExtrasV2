@@ -4,8 +4,8 @@ import { use } from 'react';
 import { useRouter } from 'next/navigation';
 import { NeedCard } from '@/components/wall';
 
-export default function NeedDetailPage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = use(params);
+export default function NeedDetailPage({ params }: { params: { id: string } }) {
+    const { id } = params;
     const router = useRouter();
 
     // Mock single need data
