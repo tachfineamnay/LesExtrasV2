@@ -107,7 +107,7 @@ export default function ServiceVideoDetailPage() {
                                         ) : (
                                             <div className="w-full h-full bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center">
                                                 <span className="text-3xl font-bold text-white">
-                                                    {provider.name.charAt(0)}
+                                                    {(provider.name || '?').charAt(0)}
                                                 </span>
                                             </div>
                                         )}

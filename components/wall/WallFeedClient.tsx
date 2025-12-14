@@ -429,11 +429,10 @@ export function WallFeedClient({ initialFeed, talentPool, activity }: WallFeedCl
                                     <Link
                                         key={item.href}
                                         href={item.href}
-                                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors relative ${
-                                            item.active
+                                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors relative ${item.active
                                                 ? 'bg-coral-50 text-coral-600'
                                                 : 'text-slate-600 hover:bg-slate-100'
-                                        }`}
+                                            }`}
                                     >
                                         <Icon className="w-4 h-4" />
                                         {item.label}
@@ -565,7 +564,7 @@ export function WallFeedClient({ initialFeed, talentPool, activity }: WallFeedCl
                     {/* Feed Grid - Masonry */}
                     <div className="flex-1 space-y-4">
                         {/* Publish Card - Collapsible */}
-                        <motion.div 
+                        <motion.div
                             className="bg-white rounded-2xl shadow-soft overflow-hidden"
                             initial={false}
                             animate={{ height: showPublishForm ? 'auto' : '64px' }}
@@ -585,7 +584,7 @@ export function WallFeedClient({ initialFeed, talentPool, activity }: WallFeedCl
                                 </div>
                                 <ChevronRight className={`w-5 h-5 text-slate-400 transition-transform ${showPublishForm ? 'rotate-90' : ''}`} />
                             </button>
-                            
+
                             {showPublishForm && (
                                 <div className="px-5 pb-5 pt-2 border-t border-slate-100">
                                     <div className="flex items-center gap-2 mb-4">
@@ -742,7 +741,7 @@ export function WallFeedClient({ initialFeed, talentPool, activity }: WallFeedCl
                                     >
                                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-coral-100 to-orange-100 flex items-center justify-center">
                                             <span className="text-sm font-semibold text-coral-600">
-                                                {talent.name.charAt(0)}
+                                                {(talent.name || '?').charAt(0)}
                                             </span>
                                         </div>
                                         <div className="flex-1 min-w-0">

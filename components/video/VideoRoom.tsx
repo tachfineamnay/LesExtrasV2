@@ -118,7 +118,7 @@ export function VideoRoom({
                                     <img src={participantAvatar} alt={participantName} className="w-full h-full rounded-full object-cover" />
                                 ) : (
                                     <span className="text-5xl font-bold text-white">
-                                        {participantName.charAt(0)}
+                                        {(participantName || '?').charAt(0)}
                                     </span>
                                 )}
                             </div>

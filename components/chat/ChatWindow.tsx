@@ -89,12 +89,12 @@ export function ChatWindow({ conversation, onBack }: ChatWindowProps) {
                             {otherUser.avatar ? (
                                 <img
                                     src={otherUser.avatar}
-                                    alt={otherUser.name}
+                                    alt={otherUser.name || ''}
                                     className="w-full h-full object-cover"
                                 />
                             ) : (
                                 <span className="text-sm font-semibold text-coral-600">
-                                    {otherUser.name.charAt(0)}
+                                    {(otherUser.name || '?').charAt(0)}
                                 </span>
                             )}
                         </div>

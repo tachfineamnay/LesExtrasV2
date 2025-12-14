@@ -129,7 +129,7 @@ export function WaitingRoom({ expertName, expertAvatar, onReady }: WaitingRoomPr
                         ) : (
                             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-500 to-indigo-500">
                                 <span className="text-xl font-bold text-white">
-                                    {expertName.charAt(0)}
+                                    {(expertName || '?').charAt(0)}
                                 </span>
                             </div>
                         )}

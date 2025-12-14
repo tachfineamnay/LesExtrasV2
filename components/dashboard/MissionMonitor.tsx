@@ -216,7 +216,7 @@ export function MissionMonitor({ initialMissions = [], onRefresh }: MissionMonit
                                                     }
                         `}>
                                                     <span className="text-sm font-bold">
-                                                        {mission.jobTitle.charAt(0)}
+                                                        {(mission.jobTitle || '?').charAt(0)}
                                                     </span>
                                                 </div>
                                                 <div>
@@ -261,11 +261,11 @@ export function MissionMonitor({ initialMissions = [], onRefresh }: MissionMonit
 
                                         {/* Candidate */}
                                         <td className="px-6 py-4">
-                        {mission.candidateName ? (
-                            <div className="flex items-center gap-2">
+                                            {mission.candidateName ? (
+                                                <div className="flex items-center gap-2">
                                                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-coral-100 to-orange-100 flex items-center justify-center">
                                                         <span className="text-xs font-semibold text-coral-600">
-                                                            {mission.candidateName.charAt(0)}
+                                                            {(mission.candidateName || '?').charAt(0)}
                                                         </span>
                                                     </div>
                                                     <span className="text-sm font-medium text-slate-900">

@@ -50,8 +50,8 @@ export function ProfileHeader({
     onEditCover,
     onEditAvatar,
 }: ProfileHeaderProps) {
-    const fullName = `${firstName} ${lastName}`;
-    const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+    const fullName = `${firstName || ''} ${lastName || ''}`;
+    const initials = `${(firstName || '').charAt(0)}${(lastName || '').charAt(0)}`.toUpperCase();
 
     const formattedDate = memberSince
         ? new Date(memberSince).toLocaleDateString('fr-FR', {

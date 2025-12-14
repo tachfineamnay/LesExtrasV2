@@ -70,7 +70,7 @@ export function FeedSidebar({ talentPool, activity }: FeedSidebarProps) {
                                     />
                                 ) : (
                                     <span className="text-sm font-semibold text-coral-600">
-                                        {talent.name.charAt(0)}
+                                        {(talent.name || '?').charAt(0)}
                                     </span>
                                 )}
                             </div>

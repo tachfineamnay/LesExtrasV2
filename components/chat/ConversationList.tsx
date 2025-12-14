@@ -107,7 +107,7 @@ export function ConversationList({
                                                     />
                                                 ) : (
                                                     <span className="text-lg font-semibold text-coral-600">
-                                                        {otherUser.name.charAt(0)}
+                                                        {(otherUser.name || '?').charAt(0)}
                                                     </span>
                                                 )}
                                             </div>
