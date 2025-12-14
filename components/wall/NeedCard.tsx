@@ -58,7 +58,7 @@ export function NeedCard({
     onFavoriteToggle,
     onShare,
 }: NeedCardProps) {
-    const urgency = urgencyConfig[urgencyLevel];
+    const urgency = urgencyConfig[urgencyLevel] || urgencyConfig.MEDIUM;
     const isUrgent = urgencyLevel === 'HIGH' || urgencyLevel === 'CRITICAL';
     const router = useRouter();
 

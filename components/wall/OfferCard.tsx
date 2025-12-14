@@ -114,7 +114,7 @@ export function OfferCard({
                         <img src={providerAvatar} alt={providerName} className="w-full h-full object-cover" />
                     ) : (
                         <span className="text-xl font-bold text-coral-600">
-                            {providerName.charAt(0).toUpperCase()}
+                            {(providerName || '?').charAt(0).toUpperCase()}
                         </span>
                     )}
                 </div>
@@ -163,7 +163,7 @@ export function OfferCard({
                             <img src={providerAvatar} alt={providerName} className="w-full h-full object-cover" />
                         ) : (
                             <span className="text-sm font-semibold text-coral-600">
-                                {providerName.charAt(0).toUpperCase()}
+                                {(providerName || '?').charAt(0).toUpperCase()}
                             </span>
                         )}
                     </div>
