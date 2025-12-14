@@ -61,3 +61,54 @@ export async function createPost(payload: CreatePostPayload) {
 
     return response.json();
 }
+
+// Helper to map API items to FeedItem format
+export function mapApiItemToFeedItem(item: any): any {
+    if (!item) return null;
+
+    const authorId = item.authorId || item?.author?.id || undefined;
+    const normalizedTags = Array.isArray(item.tags) ? item.tags.filter(Boolean) : [];
+
+    // Helper for date conversion
+    const toIsoString = (value: any) => {
+        if (!value) return new Date().toISOString();
+        const date = typeof value === 'string' ? new Date(value) : value;
+        return isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
+    };
+
+    if (item.type === 'MISSION' || item.postType === 'NEED' || item.type === 'NEED') {
+        const startDate = item.validUntil || item.startDate;
+        return {
+            id: item.id,
+            authorId,
+            type: 'NEED',
+            title: item.title || 'Annonce',
+            establishment: item.establishment || item.authorName || 'Établissement',
+            city: item.city || '',
+            description: item.content || item.description || '',
+            urgencyLevel: item.urgencyLevel || 'MEDIUM',
+            hourlyRate: item.hourlyRate ?? 0,
+            jobTitle: item.category || 'Mission',
+            startDate: toIsoString(startDate),
+            isNightShift: Boolean(item.isNightShift),
+            tags: normalizedTags,
+        };
+    }
+
+    return {
+        id: item.id,
+        authorId,
+        type: 'OFFER',
+        title: item.title || 'Offre',
+        providerName: item.providerName || item.authorName || 'Prestataire',
+        providerRating: item.providerRating ?? 0,
+        providerReviews: item.providerReviews ?? 0,
+        city: item.city || '',
+        description: item.content || item.description || '',
+        serviceType: item.serviceType || 'WORKSHOP',
+        category: item.category || undefined,
+        basePrice: item.basePrice ?? item.hourlyRate ?? undefined,
+        imageUrl: item.imageUrl || (Array.isArray(item.imageUrls) ? item.imageUrls[0] : undefined),
+        tags: normalizedTags,
+    };
+}

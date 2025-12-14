@@ -26,7 +26,7 @@ import {
     type TalentPoolItem,
     type ActivityItem,
 } from '@/components/feed';
-import { getFeed, createPost, type CreatePostPayload } from '@/app/services/wall.service';
+import { getFeed, createPost, mapApiItemToFeedItem, type CreatePostPayload } from '@/app/services/wall.service';
 import { ToastContainer, useToasts } from '@/components/ui/Toast';
 
 // ===========================================
@@ -182,8 +182,11 @@ export default function HomePage() {
             const response = await getFeed();
             const data = response as any;
             const rawItems = Array.isArray(data) ? data : data?.items || data?.feed || [];
-            if (rawItems.length > 0) {
-                setPosts(rawItems as FeedItem[]);
+
+            const mappedItems = (rawItems as any[]).map(mapApiItemToFeedItem).filter(Boolean);
+
+            if (mappedItems.length > 0) {
+                setPosts(mappedItems as FeedItem[]);
             }
         } catch (error) {
             console.error('Error loading feed:', error);
@@ -302,8 +305,8 @@ export default function HomePage() {
                                         key={item.href}
                                         href={item.href}
                                         className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors relative ${item.active
-                                                ? 'bg-coral-50 text-coral-600'
-                                                : 'text-slate-600 hover:bg-slate-100'
+                                            ? 'bg-coral-50 text-coral-600'
+                                            : 'text-slate-600 hover:bg-slate-100'
                                             }`}
                                     >
                                         <Icon className="w-4 h-4" />
