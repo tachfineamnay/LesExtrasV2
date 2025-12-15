@@ -306,24 +306,25 @@ async function main() {
 
     // Create a Service for marketplace testing
     console.log('🛍️ Creating Services...');
-    await prisma.service.create({
-        data: {
-            profileId: extras[2].profile!.id || extras[2].id, // Ensure we have profile ID. Actually extras[2] is User. Getting profile ID via connect is better locally but we need the ID.
-            // Wait, creating nested connects is complex if we don't have the ID handy. 
-            // Let's refetch extra 2 with profile to get the ID.
-            // Or just use connect on create.
-            // However, for service creation, we need profileId as literal string according to schema? 
-            // Checking schema: profileId String. And profile Relation.
-            // Correct approach:
-            profile: { connect: { userId: extras[2].id } },
-            name: "Atelier Art-Thérapie",
-            slug: "atelier-art-therapie-lyon",
-            description: "Un atelier pour s'exprimer par l'art.",
-            type: ServiceType.WORKSHOP,
-            basePrice: 150.0,
-            isActive: true
-        }
-    })
+    // CORRECTION : Récupérer le profil explicitement avant de créer le service
+    const profileForService = await prisma.profile.findUnique({
+        where: { userId: extras[2].id }
+    });
+
+    if (profileForService) {
+        await prisma.service.create({
+            data: {
+                profileId: profileForService.id,
+                name: "Atelier Mémoire",
+                slug: "atelier-memoire",
+                description: "Stimulation cognitive pour seniors",
+                type: ServiceType.WORKSHOP,
+                basePrice: 50,
+                minParticipants: 3,
+                maxParticipants: 10
+            }
+        });
+    }
 
     console.log('✅ Seeding completed.');
 }
