@@ -19,11 +19,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.api
-    restart: always
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-lesextras}
-      JWT_SECRET: ${JWT_SECRET:-supersecret}
-      FRONTEND_URL: http://localhost:3000
+      DATABASE_URL: ${DATABASE_URL}
+      # Suppression du fallback :-supersecret pour forcer la config via .env
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      PORT: ${PORT:-4000}
     ports:
       - "4000:4000"
     depends_on:

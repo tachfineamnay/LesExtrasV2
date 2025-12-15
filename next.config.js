@@ -1,8 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     output: "standalone",
-    typescript: {
-        ignoreBuildErrors: true,
+    reactStrictMode: true,
+    // ignoreBuildErrors SUPPRIMÉ pour garantir la qualité du code
+    images: {
+        remotePatterns: [
+            {
+                protocol: 'https',
+                hostname: '**', // À restreindre en production
+            },
+        ],
     },
 };
 
