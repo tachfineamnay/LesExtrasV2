@@ -77,3 +77,50 @@ export async function createPaymentIntent(
     return handleResponse(response) as Promise<{ clientSecret: string }>;
 }
 
+export async function createPaymentIntentForBooking(bookingId: string) {
+    const response = await fetch(`${getApiBase()}/payments/create-intent/${bookingId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeaders(),
+        },
+        cache: 'no-store',
+    });
+
+    return handleResponse(response) as Promise<{
+        clientSecret: string;
+        paymentIntentId: string;
+        amount: number;
+    }>;
+}
+
+export async function confirmMockPayment(bookingId: string) {
+    const response = await fetch(`${getApiBase()}/payments/confirm-mock/${bookingId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeaders(),
+        },
+        cache: 'no-store',
+    });
+
+    return handleResponse(response) as Promise<{
+        success: boolean;
+        bookingId: string;
+        status: string;
+    }>;
+}
+
+export async function getBookingForCheckout(bookingId: string) {
+    const response = await fetch(`${getApiBase()}/payments/booking/${bookingId}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeaders(),
+        },
+        cache: 'no-store',
+    });
+
+    return handleResponse(response);
+}
+
