@@ -272,7 +272,7 @@ export function WallFeedClient({
                     {/* Badge "Les Extras Hub vivant" directement sous les boutons */}
                     <div className="inline-flex items-center gap-2 rounded-full bg-white/70 backdrop-blur-md border border-white/60 px-4 py-2 text-sm font-semibold text-slate-700 shadow-soft">
                         <Sparkles className="h-4 w-4 text-[#FF6B6B]" />
-                        LES EXTRAS • Hub vivant
+                        LES EXTRAS • Hub du social
                     </div>
                 </div>
 
