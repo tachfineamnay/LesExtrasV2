@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Sparkles, Video } from 'lucide-react';
+import { ArrowRight, Calendar, MapPin, MessageCircle, Siren, Sparkles, Video } from 'lucide-react';
 import { getFeed } from '@/app/services/wall.service';
+import Link from 'next/link';
 import { BentoFeed } from './BentoFeed';
 import { SmartSearchBar, type FloatingAvatar } from './SmartSearchBar';
 import type { DiscoveryMode } from './SmartCard';
@@ -43,6 +44,33 @@ const MODE_OPTIONS = [
         accentClass: 'text-indigo-500',
     },
 ];
+
+const QUICK_ACTIONS = [
+    {
+        href: '/dashboard/relief',
+        label: 'SOS Renfort',
+        description: 'Créer une mission urgente en 30 sec',
+        icon: Siren,
+        iconClass: 'text-[#FF6B6B]',
+        bgClass: 'from-[#FF6B6B]/18 via-orange-500/12 to-white/40',
+    },
+    {
+        href: '/bookings',
+        label: 'Agenda',
+        description: 'Vos réservations et prochains créneaux',
+        icon: Calendar,
+        iconClass: 'text-slate-800',
+        bgClass: 'from-slate-900/5 via-white/40 to-white/60',
+    },
+    {
+        href: '/messages',
+        label: 'Messages',
+        description: 'Reprendre une conversation',
+        icon: MessageCircle,
+        iconClass: 'text-indigo-500',
+        bgClass: 'from-indigo-500/14 via-indigo-500/8 to-white/55',
+    },
+] as const;
 
 const isMissionItem = (item: any) =>
     String(item?.type || '').toUpperCase() === 'MISSION' || Boolean(item?.urgencyLevel);
@@ -235,6 +263,43 @@ export function WallFeedClient({
 
                     <div className="mx-auto mt-10 w-full max-w-3xl">
                         <SmartSearchBar value={searchTerm} onChange={setSearchTerm} avatars={heroAvatars} />
+                    </div>
+
+                    <div className="mx-auto mt-8 w-full max-w-5xl">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left">
+                            {QUICK_ACTIONS.map((action) => {
+                                const Icon = action.icon;
+                                return (
+                                    <motion.div
+                                        key={action.href}
+                                        whileHover={{ y: -2, scale: 1.01 }}
+                                        whileTap={{ scale: 0.99 }}
+                                        transition={{ type: 'spring' as const, stiffness: 220, damping: 18 }}
+                                    >
+                                        <Link
+                                            href={action.href}
+                                            className="group block rounded-3xl bg-white/70 backdrop-blur-md border border-white/60 shadow-soft hover:shadow-soft-lg transition-shadow p-5"
+                                        >
+                                            <div className="flex items-start justify-between gap-4">
+                                                <div>
+                                                    <div className={`h-11 w-11 rounded-2xl bg-gradient-to-br ${action.bgClass} flex items-center justify-center`}>
+                                                        <Icon className={`h-5 w-5 ${action.iconClass}`} />
+                                                    </div>
+                                                    <p className="mt-4 text-sm font-semibold text-slate-900 tracking-tight">
+                                                        {action.label}
+                                                    </p>
+                                                    <p className="mt-1 text-sm text-slate-600 leading-snug">
+                                                        {action.description}
+                                                    </p>
+                                                </div>
+
+                                                <ArrowRight className="h-5 w-5 text-slate-300 group-hover:text-slate-600 transition-colors" />
+                                            </div>
+                                        </Link>
+                                    </motion.div>
+                                );
+                            })}
+                        </div>
                     </div>
                 </section>
 
