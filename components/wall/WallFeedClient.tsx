@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import {
     Search,
@@ -72,9 +72,10 @@ export interface ActivityItem {
 }
 
 interface WallFeedClientProps {
-    initialFeed: any[];
-    talentPool: TalentPoolItem[];
-    activity: ActivityItem[];
+    initialData?: any[];
+    initialFeed?: any[];
+    talentPool?: TalentPoolItem[];
+    activity?: ActivityItem[];
 }
 
 const FILTER_BADGES = [
@@ -128,11 +129,23 @@ const decodeUserIdFromToken = (token?: string | null) => {
     }
 };
 
-export function WallFeedClient({ initialFeed, talentPool, activity }: WallFeedClientProps) {
-    const [feedItems, setFeedItems] = useState<any[]>(initialFeed || []);
+export function WallFeedClient({
+    initialData,
+    initialFeed,
+    talentPool = [],
+    activity = [],
+}: WallFeedClientProps) {
+    const resolvedInitialData = Array.isArray(initialData)
+        ? initialData
+        : Array.isArray(initialFeed)
+            ? initialFeed
+            : [];
+
+    const [feedItems, setFeedItems] = useState<any[]>(resolvedInitialData);
     const [isLoading, setIsLoading] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+    const didInitFetchRef = useRef(false);
     const { toasts, addToast, removeToast } = useToasts();
     const [newPostTitle, setNewPostTitle] = useState('');
     const [newPostContent, setNewPostContent] = useState('');
@@ -140,10 +153,6 @@ export function WallFeedClient({ initialFeed, talentPool, activity }: WallFeedCl
     const [newPostType, setNewPostType] = useState<'OFFER' | 'NEED'>('OFFER');
     const [searchTerm, setSearchTerm] = useState('');
     const [activeFilter, setActiveFilter] = useState<string>('');
-
-    useEffect(() => {
-        setFeedItems(initialFeed || []);
-    }, [initialFeed]);
 
     useEffect(() => {
         if (typeof window === 'undefined') return;
@@ -209,12 +218,23 @@ export function WallFeedClient({ initialFeed, talentPool, activity }: WallFeedCl
     }, [activeFilter, searchTerm]);
 
     useEffect(() => {
+        const hasInitialData = resolvedInitialData.length > 0;
+        const hasQuery = Boolean(searchTerm.trim() || activeFilter);
+
+        if (!didInitFetchRef.current) {
+            didInitFetchRef.current = true;
+
+            if (hasInitialData && !hasQuery) {
+                return;
+            }
+        }
+
         const timeout = setTimeout(() => {
             fetchFeed();
         }, 300);
 
         return () => clearTimeout(timeout);
-    }, [fetchFeed]);
+    }, [activeFilter, fetchFeed, resolvedInitialData.length, searchTerm]);
 
     const handlePublish = useCallback(async () => {
         if (!newPostTitle.trim() || !newPostContent.trim()) {
@@ -454,16 +474,12 @@ export function WallFeedClient({ initialFeed, talentPool, activity }: WallFeedCl
 
                         {/* Empty State */}
                         {!isLoading && feedItems.length === 0 && (
-                            <div className="flex flex-col items-center justify-center py-20 text-center">
-                                <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
-                                    <Search className="w-8 h-8 text-slate-400" />
+                            <div className="col-span-full text-center py-20">
+                                <div className="bg-gray-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                                    🔍
                                 </div>
-                                <h3 className="text-lg font-semibold text-slate-900 mb-2">
-                                    Aucun résultat trouvé
-                                </h3>
-                                <p className="text-sm text-slate-500 max-w-sm">
-                                    Essayez de modifier vos filtres ou votre recherche pour trouver ce que vous cherchez.
-                                </p>
+                                <h3 className="text-lg font-medium text-gray-900">Aucun résultat trouvé</h3>
+                                <p className="text-gray-500">Essayez de modifier vos filtres ou votre recherche.</p>
                             </div>
                         )}
                     </div>

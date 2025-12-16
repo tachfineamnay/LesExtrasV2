@@ -2,10 +2,10 @@ import { Metadata } from 'next';
 import { WallFeedClient } from '@/components/wall/WallFeedClient';
 
 export const metadata: Metadata = {
-    title: 'Les Extras - Le Wall | Offres & Besoins Médico-Social',
-    description: 'La plateforme de mise en relation médico-sociale. Trouvez votre prochaine mission ou prestataire en temps réel.',
+    title: 'Le Wall - Les Extras | Offres & Besoins Médico-Social',
+    description: 'Découvrez les dernières offres de professionnels et besoins d\'établissements du secteur médico-social.',
     openGraph: {
-        title: 'Les Extras - Le Wall',
+        title: 'Le Wall - Les Extras',
         description: 'Plateforme de mise en relation médico-sociale B2B2C',
         type: 'website',
     },
@@ -31,7 +31,7 @@ async function getInitialFeed(): Promise<any[]> {
     }
 }
 
-export default async function HomePage() {
+export default async function WallPage() {
     const feed = await getInitialFeed();
 
     return (
