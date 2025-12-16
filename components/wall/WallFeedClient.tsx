@@ -348,110 +348,117 @@ export function WallFeedClient({
                         {isLoading ? <span className="text-sm text-slate-500">Mise à jour…</span> : null}
                     </div>
 
-                    {/* Focus Offres / Besoins */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 mb-8">
-                        {/* Offres - Slider horizontal */}
-                        <div className="rounded-3xl bg-white/70 backdrop-blur-md border border-white/60 shadow-soft p-4">
-                            <div className="flex items-center justify-between mb-3">
-                                <div>
-                                    <p className="text-[10px] uppercase tracking-[0.22em] text-slate-500">Offres</p>
-                                    <p className="text-sm font-semibold text-slate-900">Dernières offres</p>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-xs font-semibold text-indigo-500">{offers.length} items</span>
-                                    <div className="flex gap-1">
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                const container = document.getElementById('offers-slider');
-                                                if (container) container.scrollBy({ left: -280, behavior: 'smooth' });
-                                            }}
-                                            className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 transition-colors"
-                                            aria-label="Précédent"
-                                        >
-                                            <ChevronLeft className="w-4 h-4 text-slate-600" />
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                const container = document.getElementById('offers-slider');
-                                                if (container) container.scrollBy({ left: 280, behavior: 'smooth' });
-                                            }}
-                                            className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 transition-colors"
-                                            aria-label="Suivant"
-                                        >
-                                            <ChevronRightIcon className="w-4 h-4 text-slate-600" />
-                                        </button>
-                                    </div>
-                                </div>
+                    {/* Offres - Slider pleine largeur */}
+                    <div className="mb-8">
+                        <div className="flex items-center justify-between mb-4">
+                            <div>
+                                <p className="text-[10px] uppercase tracking-[0.22em] text-slate-500">Offres</p>
+                                <p className="text-lg font-semibold text-slate-900">Dernières offres</p>
                             </div>
-                            <div
-                                id="offers-slider"
-                                className="flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory"
-                            >
-                                {offers.slice(0, 8).map((item, idx) => (
-                                    <div key={`${item?.id ?? idx}-offer`} className="flex-shrink-0 w-[260px] snap-start">
-                                        <SmartCard item={item} mode={mode} />
-                                    </div>
-                                ))}
-                                {offers.length === 0 ? (
-                                    <div className="w-full text-sm text-slate-500 py-8 text-center">
-                                        Aucune offre visio/atelier trouvée.
-                                    </div>
-                                ) : null}
+                            <div className="flex items-center gap-3">
+                                <span className="text-sm font-medium text-indigo-500">{offers.length} offres</span>
+                                <div className="flex gap-1.5">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const container = document.getElementById('offers-slider');
+                                            if (container) container.scrollBy({ left: -320, behavior: 'smooth' });
+                                        }}
+                                        className="p-2 rounded-xl bg-white/80 border border-slate-200 hover:bg-slate-100 transition-colors shadow-sm"
+                                        aria-label="Précédent"
+                                    >
+                                        <ChevronLeft className="w-5 h-5 text-slate-600" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const container = document.getElementById('offers-slider');
+                                            if (container) container.scrollBy({ left: 320, behavior: 'smooth' });
+                                        }}
+                                        className="p-2 rounded-xl bg-white/80 border border-slate-200 hover:bg-slate-100 transition-colors shadow-sm"
+                                        aria-label="Suivant"
+                                    >
+                                        <ChevronRightIcon className="w-5 h-5 text-slate-600" />
+                                    </button>
+                                </div>
                             </div>
                         </div>
+                        <div
+                            id="offers-slider"
+                            className="flex gap-4 overflow-x-auto pb-4 scrollbar-none snap-x scroll-smooth"
+                        >
+                            {offers.slice(0, 12).map((item, idx) => (
+                                <motion.div 
+                                    key={`${item?.id ?? idx}-offer`} 
+                                    className="flex-shrink-0 w-[300px] snap-start"
+                                    whileHover={{ y: -4, scale: 1.01 }}
+                                    transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                                >
+                                    <SmartCard item={item} mode={mode} />
+                                </motion.div>
+                            ))}
+                            {offers.length === 0 && (
+                                <div className="w-full text-sm text-slate-500 py-12 text-center bg-slate-50/50 rounded-2xl border-2 border-dashed border-slate-200">
+                                    Aucune offre pour le moment.
+                                </div>
+                            )}
+                        </div>
+                    </div>
 
-                        {/* Besoins - Slider horizontal */}
-                        <div className="rounded-3xl bg-white/70 backdrop-blur-md border border-white/60 shadow-soft p-4">
-                            <div className="flex items-center justify-between mb-3">
-                                <div>
-                                    <p className="text-[10px] uppercase tracking-[0.22em] text-slate-500">Besoins</p>
-                                    <p className="text-sm font-semibold text-slate-900">Demandes urgentes</p>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-xs font-semibold text-[#FF6B6B]">{needs.length} items</span>
-                                    <div className="flex gap-1">
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                const container = document.getElementById('needs-slider');
-                                                if (container) container.scrollBy({ left: -280, behavior: 'smooth' });
-                                            }}
-                                            className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 transition-colors"
-                                            aria-label="Précédent"
-                                        >
-                                            <ChevronLeft className="w-4 h-4 text-slate-600" />
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                const container = document.getElementById('needs-slider');
-                                                if (container) container.scrollBy({ left: 280, behavior: 'smooth' });
-                                            }}
-                                            className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 transition-colors"
-                                            aria-label="Suivant"
-                                        >
-                                            <ChevronRightIcon className="w-4 h-4 text-slate-600" />
-                                        </button>
-                                    </div>
+                    {/* Besoins - Slider pleine largeur */}
+                    <div className="mb-8">
+                        <div className="flex items-center justify-between mb-4">
+                            <div>
+                                <p className="text-[10px] uppercase tracking-[0.22em] text-slate-500">Besoins</p>
+                                <p className="text-lg font-semibold text-slate-900">Demandes urgentes</p>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <span className="text-sm font-medium text-coral-500">{needs.length} demandes</span>
+                                <div className="flex gap-1.5">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const container = document.getElementById('needs-slider');
+                                            if (container) container.scrollBy({ left: -320, behavior: 'smooth' });
+                                        }}
+                                        className="p-2 rounded-xl bg-white/80 border border-slate-200 hover:bg-slate-100 transition-colors shadow-sm"
+                                        aria-label="Précédent"
+                                    >
+                                        <ChevronLeft className="w-5 h-5 text-slate-600" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const container = document.getElementById('needs-slider');
+                                            if (container) container.scrollBy({ left: 320, behavior: 'smooth' });
+                                        }}
+                                        className="p-2 rounded-xl bg-white/80 border border-slate-200 hover:bg-slate-100 transition-colors shadow-sm"
+                                        aria-label="Suivant"
+                                    >
+                                        <ChevronRightIcon className="w-5 h-5 text-slate-600" />
+                                    </button>
                                 </div>
                             </div>
-                            <div
-                                id="needs-slider"
-                                className="flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory"
-                            >
-                                {needs.slice(0, 8).map((item, idx) => (
-                                    <div key={`${item?.id ?? idx}-need`} className="flex-shrink-0 w-[260px] snap-start">
-                                        <SmartCard item={item} mode={mode} />
-                                    </div>
-                                ))}
-                                {needs.length === 0 ? (
-                                    <div className="w-full text-sm text-slate-500 py-8 text-center">
-                                        Aucune mission ou demande pour le moment.
-                                    </div>
-                                ) : null}
-                            </div>
+                        </div>
+                        <div
+                            id="needs-slider"
+                            className="flex gap-4 overflow-x-auto pb-4 scrollbar-none snap-x scroll-smooth"
+                        >
+                            {needs.slice(0, 12).map((item, idx) => (
+                                <motion.div 
+                                    key={`${item?.id ?? idx}-need`} 
+                                    className="flex-shrink-0 w-[300px] snap-start"
+                                    whileHover={{ y: -4, scale: 1.01 }}
+                                    transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                                >
+                                    <SmartCard item={item} mode={mode} />
+                                </motion.div>
+                            ))}
+                            {needs.length === 0 && (
+                                <div className="w-full text-sm text-slate-500 py-12 text-center bg-slate-50/50 rounded-2xl border-2 border-dashed border-slate-200">
+                                    Aucune demande pour le moment.
+                                </div>
+                            )}
                         </div>
                     </div>
 
