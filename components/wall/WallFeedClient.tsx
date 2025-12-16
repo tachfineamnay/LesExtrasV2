@@ -279,9 +279,9 @@ export function WallFeedClient({
                         className="mx-auto max-w-3xl"
                     >
                         {/* Badge */}
-                        <div className="inline-flex items-center gap-2 rounded-full bg-white/70 backdrop-blur-md border border-white/60 px-4 py-2 text-sm font-semibold text-slate-700 shadow-soft mb-6">
-                            <Sparkles className="h-4 w-4 text-[#FF6B6B]" />
-                            LES EXTRAS • Hub du social
+                        <div className="inline-flex items-center gap-2 rounded-full bg-coral-50 border border-coral-200 px-5 py-2.5 text-sm font-bold text-coral-600 shadow-soft mb-8">
+                            <Sparkles className="h-4 w-4 text-coral-500" />
+                            LES EXTRAS • Le hub du social
                         </div>
 
                         <h1 className="text-4xl sm:text-6xl font-semibold tracking-tight text-slate-900">
