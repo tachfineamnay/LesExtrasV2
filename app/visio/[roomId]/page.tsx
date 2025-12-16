@@ -1,143 +1,142 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useParams, useRouter } from 'next/navigation';
 import {
-    VideoLayout,
-    PreJoinScreen,
-    VideoRoom,
+    LiveKitRoom,
+    VideoConference,
+    RoomAudioRenderer,
     ControlBar,
-    MOCK_PARTICIPANTS,
-    type VisioParticipant,
-} from '@/components/visio';
+} from '@livekit/components-react';
+import '@livekit/components-styles';
+import { Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 
-type RoomState = 'LOBBY' | 'WAITING' | 'ACTIVE';
+const getApiBase = () => {
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+    const normalized = apiBase.replace(/\/+$/, '');
+    return normalized.endsWith('/api/v1') ? normalized : `${normalized}/api/v1`;
+};
+
+const getToken = () => {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem('accessToken') ||
+        document.cookie.split(';').find(c => c.trim().startsWith('accessToken='))?.split('=')[1];
+};
+
+interface TokenResponse {
+    token: string;
+    roomName: string;
+    meetingUrl: string;
+}
 
 export default function VisioPage() {
+    const params = useParams();
     const router = useRouter();
-    const [roomState, setRoomState] = useState<RoomState>('LOBBY');
+    const roomId = params.roomId as string;
 
-    // Media State
-    const [isAudioOn, setIsAudioOn] = useState(true);
-    const [isVideoOn, setIsVideoOn] = useState(true);
+    const [token, setToken] = useState<string | null>(null);
+    const [serverUrl, setServerUrl] = useState<string>('');
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-    // Participants
-    const [participants, setParticipants] = useState<VisioParticipant[]>([]);
+    useEffect(() => {
+        const fetchToken = async () => {
+            try {
+                const authToken = getToken();
+                if (!authToken) {
+                    setError('Vous devez \u00eatre connect\u00e9 pour acc\u00e9der \u00e0 la visio');
+                    setIsLoading(false);
+                    return;
+                }
 
-    const handleJoin = () => {
-        setRoomState('WAITING');
+                const response = await fetch(`${getApiBase()}/video/join/${roomId}`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${authToken}`,
+                    },
+                });
 
-        // Update my participant state
-        const myParticipant: VisioParticipant = {
-            ...MOCK_PARTICIPANTS[0],
-            isAudioOn,
-            isVideoOn,
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.message || 'Impossible de rejoindre la session');
+                }
+
+                const data: TokenResponse = await response.json();
+                setToken(data.token);
+                setServerUrl(data.meetingUrl || process.env.NEXT_PUBLIC_LIVEKIT_URL || 'wss://lesextras.livekit.cloud');
+            } catch (err: any) {
+                console.error('Failed to get token:', err);
+                setError(err.message || 'Erreur lors de la connexion \u00e0 la session vid\u00e9o');
+            } finally {
+                setIsLoading(false);
+            }
         };
 
-        // Simulate waiting for host... then connect
-        setTimeout(() => {
-            setParticipants([myParticipant]); // Just me at first
-            setRoomState('ACTIVE');
-
-            // Simulate host joining after 2 seconds
-            setTimeout(() => {
-                setParticipants([myParticipant, MOCK_PARTICIPANTS[1]]);
-            }, 2000);
-        }, 1500);
-    };
-
-    const handleToggleAudio = () => {
-        setIsAudioOn(!isAudioOn);
-        // If in active room, update participant state
-        if (roomState === 'ACTIVE') {
-            setParticipants(prev => prev.map(p =>
-                p.id === 'me' ? { ...p, isAudioOn: !isAudioOn } : p
-            ));
+        if (roomId) {
+            fetchToken();
         }
+    }, [roomId]);
+
+    const handleDisconnect = () => {
+        router.push('/bookings');
     };
 
-    const handleToggleVideo = () => {
-        setIsVideoOn(!isVideoOn);
-        // If in active room, update participant state
-        if (roomState === 'ACTIVE') {
-            setParticipants(prev => prev.map(p =>
-                p.id === 'me' ? { ...p, isVideoOn: !isVideoOn } : p
-            ));
-        }
-    };
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <Loader2 className="h-10 w-10 text-[#FF6B6B] animate-spin" />
+                    <p className="text-white text-lg">Connexion \u00e0 la session...</p>
+                </div>
+            </div>
+        );
+    }
 
-    const handleEndCall = () => {
-        if (confirm('Voulez-vous vraiment quitter la réunion ?')) {
-            router.push('/bookings');
-        }
-    };
+    if (error) {
+        return (
+            <div className="min-h-screen bg-slate-900 flex items-center justify-center px-4">
+                <div className="bg-slate-800 rounded-2xl p-8 max-w-md w-full text-center">
+                    <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <AlertCircle className="h-8 w-8 text-red-400" />
+                    </div>
+                    <h2 className="text-xl font-semibold text-white mb-2">Impossible de rejoindre</h2>
+                    <p className="text-slate-400 mb-6">{error}</p>
+                    <Link
+                        href="/bookings"
+                        className="inline-flex items-center gap-2 text-[#FF6B6B] font-medium hover:underline"
+                    >
+                        <ArrowLeft className="h-4 w-4" />
+                        Retour aux r\u00e9servations
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
+    if (!token || !serverUrl) {
+        return (
+            <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+                <p className="text-white">Configuration manquante</p>
+            </div>
+        );
+    }
 
     return (
-        <VideoLayout>
-            <AnimatePresence mode="wait">
-                {roomState === 'LOBBY' && (
-                    <motion.div
-                        key="lobby"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        className="w-full h-full flex items-center justify-center p-4"
-                    >
-                        <PreJoinScreen
-                            onJoin={handleJoin}
-                            isAudioOn={isAudioOn}
-                            isVideoOn={isVideoOn}
-                            onToggleAudio={() => setIsAudioOn(!isAudioOn)}
-                            onToggleVideo={() => setIsVideoOn(!isVideoOn)}
-                        />
-                    </motion.div>
-                )}
-
-                {roomState === 'WAITING' && (
-                    <motion.div
-                        key="waiting"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="w-full h-full flex flex-col items-center justify-center gap-6"
-                    >
-                        <div className="relative">
-                            <div className="w-24 h-24 rounded-full bg-slate-800 flex items-center justify-center animate-pulse">
-                                <span className="text-4xl">👋</span>
-                            </div>
-                            <div className="absolute inset-0 rounded-full border-2 border-coral-500/50 animate-ping" />
-                        </div>
-                        <div className="text-center">
-                            <h2 className="text-xl font-semibold text-white mb-1">Connexion en cours...</h2>
-                            <p className="text-slate-400">Nous préparons le salon</p>
-                        </div>
-                    </motion.div>
-                )}
-
-                {roomState === 'ACTIVE' && (
-                    <motion.div
-                        key="active"
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="relative w-full h-full flex flex-col"
-                    >
-                        {/* Main Grid */}
-                        <div className="flex-1 flex items-center justify-center overflow-y-auto pt-4 pb-24">
-                            <VideoRoom participants={participants} />
-                        </div>
-
-                        {/* Controls */}
-                        <ControlBar
-                            isAudioOn={isAudioOn}
-                            isVideoOn={isVideoOn}
-                            onToggleAudio={handleToggleAudio}
-                            onToggleVideo={handleToggleVideo}
-                            onEndCall={handleEndCall}
-                        />
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </VideoLayout>
+        <div className="h-screen bg-slate-900">
+            <LiveKitRoom
+                token={token}
+                serverUrl={serverUrl}
+                connect={true}
+                video={true}
+                audio={true}
+                onDisconnected={handleDisconnect}
+                data-lk-theme="default"
+                style={{ height: '100vh' }}
+            >
+                <VideoConference />
+                <RoomAudioRenderer />
+            </LiveKitRoom>
+        </div>
     );
 }

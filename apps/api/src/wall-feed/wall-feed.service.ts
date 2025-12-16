@@ -210,6 +210,58 @@ export class WallFeedService {
         }
     }
 
+    async getUserBookings(userId: string) {
+        try {
+            const bookings = await this.prisma.booking.findMany({
+                where: {
+                    OR: [
+                        { clientId: userId },
+                        { providerId: userId },
+                    ],
+                },
+                include: {
+                    service: { select: { name: true, imageUrl: true, type: true } },
+                    provider: {
+                        include: {
+                            profile: { select: { firstName: true, lastName: true, avatarUrl: true, city: true } },
+                        },
+                    },
+                    client: {
+                        include: {
+                            profile: { select: { firstName: true, lastName: true, avatarUrl: true } },
+                            establishment: { select: { name: true, city: true } },
+                        },
+                    },
+                },
+                orderBy: { createdAt: 'desc' },
+            });
+
+            return bookings.map(booking => ({
+                id: booking.id,
+                title: booking.service?.name || 'Réservation',
+                partnerName: booking.clientId === userId
+                    ? `${booking.provider?.profile?.firstName || ''} ${booking.provider?.profile?.lastName || ''}`.trim() || 'Prestataire'
+                    : booking.client?.establishment?.name || `${booking.client?.profile?.firstName || ''} ${booking.client?.profile?.lastName || ''}`.trim() || 'Client',
+                partnerAvatar: booking.clientId === userId
+                    ? booking.provider?.profile?.avatarUrl
+                    : booking.client?.profile?.avatarUrl,
+                date: booking.sessionDate,
+                time: booking.sessionTime || '09:00',
+                duration: '1h',
+                location: booking.clientId === userId
+                    ? booking.provider?.profile?.city || 'Non précisé'
+                    : booking.client?.establishment?.city || 'Non précisé',
+                price: booking.totalPrice,
+                status: booking.status,
+                isVideoSession: booking.isVideoSession,
+                videoRoomId: booking.videoRoomId,
+            }));
+        } catch (error) {
+            this.logger.error(`getUserBookings failed: ${error.message}`);
+            throw new InternalServerErrorException('Erreur lors de la récupération des réservations');
+        }
+    }
+
     /**
      * Create a new post
      */

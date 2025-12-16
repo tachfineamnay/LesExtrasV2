@@ -1,67 +1,23 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Calendar,
     ChevronLeft,
-    Bell,
-    Filter,
+    CreditCard,
+    Video,
+    Loader2,
 } from 'lucide-react';
 import { BookingList, type Booking } from '@/components/bookings';
 import { ToastContainer, useToasts } from '@/components/ui/Toast';
 
-// ===========================================
-// MOCK DATA
-// ===========================================
-
-const MOCK_BOOKINGS: Booking[] = [
-    {
-        id: '1',
-        title: 'Mission Aide-Soignant de Nuit',
-        partnerName: 'Clinique Saint-Joseph',
-        date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // +2 days
-        time: '20:00',
-        duration: '10h',
-        location: 'Lyon 3e',
-        price: 220,
-        status: 'CONFIRMED',
-    },
-    {
-        id: '2',
-        title: 'Remplacement Infirmier(e)',
-        partnerName: 'EHPAD Les Oliviers',
-        date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // +5 days
-        time: '07:00',
-        duration: '8h',
-        location: 'Villeurbanne',
-        price: 180,
-        status: 'PENDING',
-    },
-    {
-        id: '3',
-        title: 'Animation Atelier Mémoire',
-        partnerName: 'Résidence Senior Beau Site',
-        date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // -2 days
-        time: '14:00',
-        duration: '3h',
-        location: 'Lyon 6e',
-        price: 90,
-        status: 'COMPLETED',
-    },
-    {
-        id: '4',
-        title: 'Garde de Nuit',
-        partnerName: 'M. et Mme Durand',
-        date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // -10 days
-        time: '21:00',
-        duration: '12h',
-        location: 'Bron',
-        price: 150,
-        status: 'CANCELLED',
-    },
-];
+const getApiBase = () => {
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+    const normalized = apiBase.replace(/\/+$/, '');
+    return normalized.endsWith('/api/v1') ? normalized : `${normalized}/api/v1`;
+};
 
 // ===========================================
 // TYPES
@@ -73,10 +29,58 @@ type TabType = 'UPCOMING' | 'PENDING' | 'HISTORY';
 // COMPONENT
 // ===========================================
 
+interface ApiBooking {
+    id: string;
+    title: string;
+    partnerName: string;
+    partnerAvatar?: string;
+    date: string;
+    time: string;
+    duration: string;
+    location: string;
+    price: number;
+    status: string;
+    isVideoSession?: boolean;
+    videoRoomId?: string;
+}
+
 export default function BookingsPage() {
     const [activeTab, setActiveTab] = useState<TabType>('UPCOMING');
-    const [bookings, setBookings] = useState<Booking[]>(MOCK_BOOKINGS);
+    const [bookings, setBookings] = useState<Booking[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const { toasts, addToast, removeToast } = useToasts();
+
+    useEffect(() => {
+        const fetchBookings = async () => {
+            setIsLoading(true);
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch(`${getApiBase()}/wall/bookings`, {
+                    headers: token ? { Authorization: `Bearer ${token}` } : {},
+                    cache: 'no-store',
+                });
+
+                if (!res.ok) {
+                    throw new Error('Erreur lors du chargement');
+                }
+
+                const data: ApiBooking[] = await res.json();
+                const mapped: Booking[] = data.map((b) => ({
+                    ...b,
+                    date: new Date(b.date),
+                    status: b.status as Booking['status'],
+                }));
+                setBookings(mapped);
+            } catch (error) {
+                console.error('Erreur chargement bookings:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchBookings();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const handleCancel = (id: string) => {
         if (confirm('Êtes-vous sûr de vouloir annuler cette réservation ?')) {
@@ -88,15 +92,15 @@ export default function BookingsPage() {
     };
 
     const filteredBookings = bookings.filter(booking => {
-        if (activeTab === 'UPCOMING') return booking.status === 'CONFIRMED' && booking.date > new Date();
+        if (activeTab === 'UPCOMING') return (booking.status === 'CONFIRMED' || booking.status === 'PAID') && booking.date > new Date();
         if (activeTab === 'PENDING') return booking.status === 'PENDING';
         if (activeTab === 'HISTORY') return booking.status === 'COMPLETED' || booking.status === 'CANCELLED' || booking.date < new Date();
         return false;
     });
 
     const TABS: { id: TabType; label: string; count?: number }[] = [
-        { id: 'UPCOMING', label: 'À venir', count: bookings.filter(b => b.status === 'CONFIRMED' && b.date > new Date()).length },
-        { id: 'PENDING', label: 'En attente', count: bookings.filter(b => b.status === 'PENDING').length },
+        { id: 'UPCOMING', label: 'À venir', count: bookings.filter(b => (b.status === 'CONFIRMED' || b.status === 'PAID') && b.date > new Date()).length },
+        { id: 'PENDING', label: 'À payer', count: bookings.filter(b => b.status === 'PENDING').length },
         { id: 'HISTORY', label: 'Historique' },
     ];
 
@@ -164,20 +168,58 @@ export default function BookingsPage() {
 
             {/* Main Content */}
             <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                <AnimatePresence mode="wait">
-                    <motion.div
-                        key={activeTab}
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        transition={{ duration: 0.2 }}
-                    >
-                        <BookingList
-                            bookings={filteredBookings}
-                            onCancel={handleCancel}
-                        />
-                    </motion.div>
-                </AnimatePresence>
+                {isLoading ? (
+                    <div className="flex items-center justify-center py-20">
+                        <Loader2 className="w-8 h-8 animate-spin text-coral-500" />
+                    </div>
+                ) : (
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={activeTab}
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ duration: 0.2 }}
+                        >
+                            <BookingList
+                                bookings={filteredBookings}
+                                onCancel={handleCancel}
+                            />
+
+                            {/* Action Buttons for each booking */}
+                            <div className="mt-6 space-y-4">
+                                {filteredBookings.map((booking) => (
+                                    <div key={`action-${booking.id}`} className="bg-white rounded-xl p-4 border border-slate-100 shadow-sm">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <p className="font-medium text-slate-900">{booking.title}</p>
+                                                <p className="text-sm text-slate-500">{booking.price}€</p>
+                                            </div>
+                                            {booking.status === 'PENDING' && (
+                                                <Link
+                                                    href={`/checkout/${booking.id}`}
+                                                    className="flex items-center gap-2 px-4 py-2 bg-coral-500 text-white rounded-lg hover:bg-coral-600 transition-colors font-medium text-sm"
+                                                >
+                                                    <CreditCard className="w-4 h-4" />
+                                                    Payer
+                                                </Link>
+                                            )}
+                                            {(booking.status === 'PAID' || booking.status === 'CONFIRMED') && (booking as any).isVideoSession && (
+                                                <Link
+                                                    href={`/visio/${(booking as any).videoRoomId || booking.id}`}
+                                                    className="flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors font-medium text-sm"
+                                                >
+                                                    <Video className="w-4 h-4" />
+                                                    Rejoindre Visio
+                                                </Link>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </motion.div>
+                    </AnimatePresence>
+                )}
             </main>
         </div>
     );

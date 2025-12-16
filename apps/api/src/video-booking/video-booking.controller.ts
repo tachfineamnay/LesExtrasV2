@@ -24,6 +24,16 @@ import { CurrentUser, CurrentUserPayload } from '../common/decorators';
 export class VideoBookingController {
     constructor(private readonly videoService: VideoBookingService) { }
 
+    @Get('join/:bookingId')
+    @ApiOperation({ summary: 'Obtenir un token pour rejoindre une session vidéo' })
+    @ApiResponse({ status: 200, type: VideoTokenDto })
+    async getJoinToken(
+        @Param('bookingId') bookingId: string,
+        @CurrentUser() user: CurrentUserPayload,
+    ): Promise<VideoTokenDto> {
+        return this.videoService.getTokenForBooking(bookingId, user.id, user.email);
+    }
+
     @Post('sessions')
     @ApiOperation({ summary: 'Créer une session vidéo pour un booking' })
     @ApiResponse({ status: 201, type: VideoRoomDto })

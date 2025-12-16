@@ -6,30 +6,29 @@ import {
     Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { AccessToken } from 'livekit-server-sdk';
 import { v4 as uuidv4 } from 'uuid';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { CreateVideoSessionDto, VideoRoomDto, VideoTokenDto } from './dto';
-
-/**
- * Mock LiveKit API Response
- * In production, replace with actual LiveKit SDK
- */
-interface LiveKitMockResponse {
-    roomId: string;
-    token: string;
-    url: string;
-}
 
 @Injectable()
 export class VideoBookingService {
     private readonly logger = new Logger(VideoBookingService.name);
     private readonly LIVEKIT_URL: string;
+    private readonly LIVEKIT_API_KEY: string;
+    private readonly LIVEKIT_API_SECRET: string;
 
     constructor(
         private readonly prisma: PrismaService,
         private readonly configService: ConfigService,
     ) {
-        this.LIVEKIT_URL = this.configService.get<string>('LIVEKIT_URL') || 'https://meet.lesextras.fr';
+        this.LIVEKIT_URL = this.configService.get<string>('LIVEKIT_URL') || 'wss://lesextras.livekit.cloud';
+        this.LIVEKIT_API_KEY = this.configService.get<string>('LIVEKIT_API_KEY') || '';
+        this.LIVEKIT_API_SECRET = this.configService.get<string>('LIVEKIT_API_SECRET') || '';
+        
+        if (!this.LIVEKIT_API_KEY || !this.LIVEKIT_API_SECRET) {
+            this.logger.warn('LiveKit API credentials not configured - video will not work');
+        }
     }
 
     /**
@@ -238,7 +237,7 @@ export class VideoBookingService {
 
     // ==================== Private Helper Methods ====================
 
-    private generateRoomName(booking: any): string {
+        private generateRoomName(booking: any): string {
         const serviceName = booking.service?.name || 'Session';
         const date = booking.sessionDate
             ? new Date(booking.sessionDate).toLocaleDateString('fr-FR')
@@ -247,12 +246,15 @@ export class VideoBookingService {
     }
 
     private async getExistingRoom(booking: any): Promise<VideoRoomDto> {
-        const { hostToken, participantToken } = await this.generateTokens(
+        const hostToken = await this.createAccessToken(
             booking.videoRoomId,
-            this.generateRoomName(booking),
             booking.provider.profile?.firstName || 'Host',
+            true,
+        );
+        const participantToken = await this.createAccessToken(
+            booking.videoRoomId,
             booking.client.email,
-            60,
+            false,
         );
 
         return {
@@ -260,22 +262,11 @@ export class VideoBookingService {
             roomName: this.generateRoomName(booking),
             hostToken,
             participantToken,
-            meetingUrl: booking.meetingUrl,
-            expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+            meetingUrl: this.LIVEKIT_URL,
+            expiresAt: new Date(Date.now() + 2 * 60 * 60 * 1000),
         };
     }
 
-    /**
-     * Generate LiveKit tokens (MOCK)
-     * 
-     * In production, use @livekit/server-sdk:
-     * ```
-     * import { AccessToken } from 'livekit-server-sdk';
-     * const token = new AccessToken(apiKey, apiSecret, { identity });
-     * token.addGrant({ room, roomJoin: true, canPublish: true });
-     * return token.toJwt();
-     * ```
-     */
     private async generateTokens(
         roomId: string,
         roomName: string,
@@ -283,23 +274,8 @@ export class VideoBookingService {
         participantEmail: string,
         durationMinutes: number,
     ): Promise<{ hostToken: string; participantToken: string }> {
-        // MOCK: In production, use LiveKit SDK
-        const expiry = Math.floor(Date.now() / 1000) + durationMinutes * 60;
-
-        const hostToken = this.mockGenerateJWT({
-            room: roomId,
-            identity: hostName,
-            isHost: true,
-            exp: expiry,
-        });
-
-        const participantToken = this.mockGenerateJWT({
-            room: roomId,
-            identity: participantEmail,
-            isHost: false,
-            exp: expiry,
-        });
-
+        const hostToken = await this.createAccessToken(roomId, hostName, true);
+        const participantToken = await this.createAccessToken(roomId, participantEmail, false);
         return { hostToken, participantToken };
     }
 
@@ -309,31 +285,79 @@ export class VideoBookingService {
         isHost: boolean,
         durationMinutes: number,
     ): Promise<string> {
-        const expiry = Math.floor(Date.now() / 1000) + durationMinutes * 60;
-
-        return this.mockGenerateJWT({
-            room: roomId,
-            identity: userName,
-            isHost,
-            exp: expiry,
-        });
+        return await this.createAccessToken(roomId, userName, isHost);
     }
 
-    /**
-     * Mock JWT generator for development
-     * Replace with actual LiveKit token generation in production
-     */
-    private mockGenerateJWT(payload: {
-        room: string;
-        identity: string;
-        isHost: boolean;
-        exp: number;
-    }): string {
-        // Base64 encode the payload as a mock token
-        const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
-        const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
-        const signature = Buffer.from('mock_signature_for_development').toString('base64url');
+    private async createAccessToken(roomName: string, participantName: string, isHost: boolean): Promise<string> {
+        const at = new AccessToken(this.LIVEKIT_API_KEY, this.LIVEKIT_API_SECRET, {
+            identity: participantName,
+            ttl: '2h',
+        });
 
-        return `${header}.${body}.${signature}`;
+        at.addGrant({
+            room: roomName,
+            roomJoin: true,
+            canPublish: true,
+            canSubscribe: true,
+            canPublishData: true,
+        });
+
+        return await at.toJwt();
+    }
+
+    async getTokenForBooking(bookingId: string, userId: string, userName: string): Promise<VideoTokenDto> {
+        try {
+            const booking = await this.prisma.booking.findUnique({
+                where: { id: bookingId },
+                include: {
+                    client: true,
+                    provider: { include: { profile: true } },
+                    service: true,
+                },
+            });
+
+            if (!booking) {
+                throw new NotFoundException(`Booking ${bookingId} non trouvé`);
+            }
+
+            if (!booking.isVideoSession) {
+                throw new BadRequestException('Ce booking n\'est pas une session vidéo');
+            }
+
+            const isHost = booking.providerId === userId;
+            const isParticipant = booking.clientId === userId;
+
+            if (!isHost && !isParticipant) {
+                throw new BadRequestException('Vous n\'\u00eates pas autorisé \u00e0 rejoindre cette session');
+            }
+
+            let roomId = booking.videoRoomId;
+            if (!roomId) {
+                roomId = `room_${uuidv4()}`;
+                await this.prisma.booking.update({
+                    where: { id: bookingId },
+                    data: {
+                        videoRoomId: roomId,
+                        meetingUrl: `/visio/${roomId}`,
+                    },
+                });
+            }
+
+            const token = await this.createAccessToken(roomId, userName, isHost);
+
+            this.logger.log(`Token generated for ${userName} in room ${roomId}`);
+
+            return {
+                token,
+                roomName: roomId,
+                meetingUrl: this.LIVEKIT_URL,
+            };
+        } catch (error) {
+            if (error instanceof NotFoundException || error instanceof BadRequestException) {
+                throw error;
+            }
+            this.logger.error(`getTokenForBooking failed: ${error.message}`);
+            throw new InternalServerErrorException('Erreur lors de la génération du token');
+        }
     }
 }

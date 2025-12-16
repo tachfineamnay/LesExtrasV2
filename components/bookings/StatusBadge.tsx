@@ -4,7 +4,7 @@
 // TYPES
 // ===========================================
 
-export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED';
+export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'PAID' | 'COMPLETED' | 'CANCELLED';
 
 export interface StatusBadgeProps {
     status: BookingStatus;
@@ -26,6 +26,12 @@ const STATUS_CONFIG: Record<BookingStatus, { label: string; bg: string; text: st
         bg: 'bg-green-50',
         text: 'text-green-700',
         dot: 'bg-green-500',
+    },
+    PAID: {
+        label: 'Payé',
+        bg: 'bg-emerald-50',
+        text: 'text-emerald-700',
+        dot: 'bg-emerald-500',
     },
     COMPLETED: {
         label: 'Terminé',

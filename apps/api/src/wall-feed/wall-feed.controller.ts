@@ -55,10 +55,19 @@ export class WallFeedController {
         return this.wallService.getServiceById(id);
     }
 
+    @Get('bookings')
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Liste des réservations de l\'utilisateur' })
+    @ApiResponse({ status: 200, description: 'Liste des réservations' })
+    async getUserBookings(@CurrentUser() user: CurrentUserPayload) {
+        return this.wallService.getUserBookings(user.id);
+    }
+    
     @Post('bookings')
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
-    @ApiOperation({ summary: 'Cr\u00e9er une r\u00e9servation' })
+    @ApiOperation({ summary: 'Créer une réservation' })
     async createBooking(
         @CurrentUser() user: CurrentUserPayload,
         @Body() body: { serviceId: string; date: string; startTime: string; duration: number; message?: string },
