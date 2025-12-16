@@ -237,7 +237,7 @@ export function WallFeedClient({
 
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-safe pb-safe">
                 {/* Segmented control */}
-                <div className="sticky top-5 lg:top-24 z-30 flex flex-col items-center gap-3">
+                <div className="sticky top-5 lg:top-24 z-30 flex justify-center">
                     <div className="relative inline-flex rounded-2xl bg-white/70 backdrop-blur-md border border-white/60 p-1 shadow-soft">
                         {MODE_OPTIONS.map((option) => {
                             const Icon = option.icon;
@@ -268,12 +268,6 @@ export function WallFeedClient({
                             );
                         })}
                     </div>
-                    
-                    {/* Badge "Les Extras Hub vivant" directement sous les boutons */}
-                    <div className="inline-flex items-center gap-2 rounded-full bg-white/70 backdrop-blur-md border border-white/60 px-4 py-2 text-sm font-semibold text-slate-700 shadow-soft">
-                        <Sparkles className="h-4 w-4 text-[#FF6B6B]" />
-                        LES EXTRAS • Hub du social
-                    </div>
                 </div>
 
                 {/* Hero */}
@@ -284,6 +278,12 @@ export function WallFeedClient({
                         transition={{ duration: 0.55, ease: 'easeOut' }}
                         className="mx-auto max-w-3xl"
                     >
+                        {/* Badge */}
+                        <div className="inline-flex items-center gap-2 rounded-full bg-white/70 backdrop-blur-md border border-white/60 px-4 py-2 text-sm font-semibold text-slate-700 shadow-soft mb-6">
+                            <Sparkles className="h-4 w-4 text-[#FF6B6B]" />
+                            LES EXTRAS • Hub du social
+                        </div>
+
                         <h1 className="text-4xl sm:text-6xl font-semibold tracking-tight text-slate-900">
                             Un renfort demain.
                             <span className="block text-gradient">Une visio maintenant.</span>
