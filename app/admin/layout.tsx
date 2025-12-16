@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Shield, Loader2, AlertTriangle } from 'lucide-react';
+import Cookies from 'js-cookie';
 
 interface UserData {
     id: string;
@@ -24,7 +25,7 @@ export default function AdminLayout({
     useEffect(() => {
         const checkAdminAccess = async () => {
             try {
-                const token = localStorage.getItem('token');
+                const token = Cookies.get('accessToken');
 
                 if (!token) {
                     setError('Vous devez être connecté');
@@ -43,7 +44,7 @@ export default function AdminLayout({
 
                 if (!res.ok) {
                     setError('Session expirée');
-                    localStorage.removeItem('token');
+                    Cookies.remove('accessToken');
                     setTimeout(() => router.push('/login'), 2000);
                     return;
                 }

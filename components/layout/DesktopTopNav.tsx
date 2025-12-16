@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Calendar, Home, MessageCircle, Siren, LogIn, UserPlus, Bell, User } from 'lucide-react';
-import { auth } from '@/lib/auth';
+import { Calendar, Home, MessageCircle, Siren, LogIn, UserPlus, Bell, User, LogOut } from 'lucide-react';
+import { useAuth } from '@/lib/useAuth';
 
 const NAV_ITEMS = [
     { href: '/wall', label: 'Wall', icon: Home },
@@ -16,12 +16,8 @@ const NAV_ITEMS = [
 
 export function DesktopTopNav() {
     const pathname = usePathname();
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const { user, isAuthenticated, isLoading, logout } = useAuth();
     const [hasNotifications, setHasNotifications] = useState(true); // TODO: connect to real notifications
-
-    useEffect(() => {
-        setIsAuthenticated(auth.isAuthenticated());
-    }, [pathname]);
 
     if (pathname.startsWith('/auth/') || pathname.startsWith('/onboarding')) {
         return null;
@@ -96,10 +92,24 @@ export function DesktopTopNav() {
                                 {/* Profile */}
                                 <Link 
                                     href="/profile" 
-                                    className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 transition-colors"
+                                    className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 transition-colors"
                                 >
                                     <User className="h-5 w-5 text-slate-600" />
+                                    {user?.profile?.firstName && (
+                                        <span className="text-sm font-medium text-slate-700 hidden xl:block">
+                                            {user.profile.firstName}
+                                        </span>
+                                    )}
                                 </Link>
+
+                                {/* Logout */}
+                                <button 
+                                    onClick={logout}
+                                    className="p-2.5 rounded-xl bg-slate-100 hover:bg-red-100 hover:text-red-600 transition-colors"
+                                    title="Déconnexion"
+                                >
+                                    <LogOut className="h-5 w-5" />
+                                </button>
                             </>
                         ) : (
                             <>

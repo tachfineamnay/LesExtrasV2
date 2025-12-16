@@ -3,149 +3,74 @@
 import { useState } from 'react';
 import { UserProfile, UserProfileData, ProfileContent, ProfileAboutData, MissionHistoryItem, ReviewItem } from '@/components/profile';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/useAuth';
+import { Loader2 } from 'lucide-react';
 
 export default function ProfilePage() {
     const router = useRouter();
+    const { user, isLoading, isAuthenticated } = useAuth();
     const [isFavorite, setIsFavorite] = useState(false);
 
-    // TODO: Replace with actual user data from API/auth context
-    const isOwnProfile = true; // Determine from auth
+    // Show loading state
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+                <div className="text-center space-y-4">
+                    <Loader2 className="w-8 h-8 animate-spin text-coral-500 mx-auto" />
+                    <p className="text-slate-500">Chargement du profil...</p>
+                </div>
+            </div>
+        );
+    }
 
-    const mockProfile: UserProfileData = {
-        id: 'usr_current',
-        firstName: 'Marie',
-        lastName: 'Dupont',
-        email: 'marie.dupont@example.com',
-        phone: '06 12 34 56 78',
-        avatarUrl: null,
-        coverUrl: null,
-        headline: 'Éducatrice spécialisée • 10 ans d\'expérience en EHPAD et IME',
-        bio: null, // Bio is now in ProfileContent
-        city: 'Lyon 3e',
-        memberSince: new Date('2022-03-15'),
-        isVerified: true,
-        role: 'EXTRA',
+    // Redirect if not authenticated
+    if (!isAuthenticated || !user) {
+        router.push('/auth/login');
+        return null;
+    }
+
+    const isOwnProfile = true; // This is the current user's profile page
+
+    // Build profile data from API response
+    const profileData: UserProfileData = {
+        id: user.id,
+        firstName: user.profile?.firstName || user.email.split('@')[0],
+        lastName: user.profile?.lastName || '',
+        email: user.email,
+        phone: user.phone || '',
+        avatarUrl: user.profile?.avatarUrl || null,
+        coverUrl: user.profile?.coverUrl || null,
+        headline: user.profile?.headline || `${user.role === 'EXTRA' ? 'Professionnel' : user.role === 'CLIENT' ? 'Établissement' : 'Administrateur'} Les Extras`,
+        bio: user.profile?.bio || null,
+        city: user.profile?.city || '',
+        memberSince: new Date(user.createdAt),
+        isVerified: user.status === 'VERIFIED',
+        role: user.role,
         stats: {
-            averageRating: 4.9,
-            totalReviews: 34,
-            totalMissions: 47,
+            averageRating: 0, // TODO: fetch from reviews
+            totalReviews: 0,
+            totalMissions: 0,
             reliabilityRate: 100,
             isAvailable: true,
         },
     };
 
-    // About section data
+    // About section data from API
     const aboutData: ProfileAboutData = {
-        bio: 'Passionnée par l\'accompagnement des personnes en situation de handicap. Spécialisée dans l\'autisme et les troubles du comportement. Diplômée DEES avec une certification en musicothérapie. Je m\'adapte aux besoins spécifiques de chaque structure et propose un accompagnement personnalisé.',
-        specialties: ['Autisme', 'Petite enfance', 'EHPAD', 'Art-thérapie', 'Troubles du comportement'],
-        diplomas: [
-            { name: 'DEES (Diplôme d\'État d\'Éducateur Spécialisé)', year: 2014 },
-            { name: 'Certification Musicothérapie', year: 2018 },
-            { name: 'Formation Autisme - Méthode ABA', year: 2020 },
-        ],
-        yearsExperience: '10+ ans',
-        hourlyRate: 28,
-        radiusKm: 30,
-        isVideoEnabled: true,
+        bio: user.profile?.bio || 'Aucune bio renseignée. Modifiez votre profil pour en ajouter une.',
+        specialties: user.profile?.specialties || [],
+        diplomas: user.profile?.diplomas || [],
+        yearsExperience: '',
+        hourlyRate: user.profile?.hourlyRate || 0,
+        radiusKm: user.profile?.radiusKm || 0,
+        isVideoEnabled: user.profile?.isVideoEnabled || false,
     };
 
-    // Mission history mock data
-    const missionsHistory: MissionHistoryItem[] = [
-        {
-            id: 'm1',
-            title: 'Garde de nuit - EHPAD Les Lilas',
-            partnerName: 'EHPAD Les Lilas',
-            city: 'Lyon 6e',
-            date: new Date('2024-12-07'),
-            status: 'COMPLETED',
-            amount: 224,
-        },
-        {
-            id: 'm2',
-            title: 'Accompagnement weekend - IME Soleil',
-            partnerName: 'IME Soleil',
-            city: 'Villeurbanne',
-            date: new Date('2024-12-01'),
-            status: 'COMPLETED',
-            amount: 336,
-        },
-        {
-            id: 'm3',
-            title: 'Atelier Art-thérapie - Résidence Beaumont',
-            partnerName: 'Résidence Beaumont',
-            city: 'Lyon 3e',
-            date: new Date('2024-11-28'),
-            status: 'COMPLETED',
-            amount: 150,
-        },
-        {
-            id: 'm4',
-            title: 'Remplacement éducateur - Foyer Saint-Jean',
-            partnerName: 'Foyer Saint-Jean',
-            city: 'Lyon 7e',
-            date: new Date('2024-11-20'),
-            status: 'COMPLETED',
-            amount: 280,
-        },
-        {
-            id: 'm5',
-            title: 'Animation groupe - Centre Le Phare',
-            partnerName: 'Centre Le Phare',
-            city: 'Caluire',
-            date: new Date('2024-11-15'),
-            status: 'COMPLETED',
-            amount: 175,
-        },
-    ];
+    // Mission history - TODO: fetch from API
+    const missionsHistory: MissionHistoryItem[] = [];
 
-    // Reviews mock data
-    const reviewsData: ReviewItem[] = [
-        {
-            id: 'r1',
-            reviewerName: 'Dr. Sophie Martin',
-            reviewerRole: 'Directrice EHPAD Les Lilas',
-            rating: 5,
-            comment: 'Marie est une professionnelle exceptionnelle. Elle a su créer une relation de confiance avec nos résidents dès le premier jour. Son approche bienveillante et sa patience sont remarquables. Nous ferons appel à elle à nouveau sans hésitation.',
-            date: new Date('2024-12-08'),
-            isVerifiedMission: true,
-            missionTitle: 'Garde de nuit - EHPAD Les Lilas',
-            helpfulCount: 12,
-        },
-        {
-            id: 'r2',
-            reviewerName: 'Thomas Durand',
-            reviewerRole: 'Chef de service IME Soleil',
-            rating: 5,
-            comment: 'Intervention de grande qualité. Marie s\'est parfaitement intégrée à l\'équipe et a su gérer les situations complexes avec professionnalisme. Les enfants l\'ont beaucoup appréciée.',
-            date: new Date('2024-12-02'),
-            isVerifiedMission: true,
-            missionTitle: 'Accompagnement weekend - IME Soleil',
-            response: 'Merci beaucoup Thomas ! C\'est toujours un plaisir de travailler avec votre équipe. Les enfants sont formidables.',
-            responseDate: new Date('2024-12-03'),
-            helpfulCount: 8,
-        },
-        {
-            id: 'r3',
-            reviewerName: 'Claire Petit',
-            reviewerRole: 'Coordinatrice Résidence Beaumont',
-            rating: 4,
-            comment: 'Très bonne animation de l\'atelier art-thérapie. Les résidents ont passé un excellent moment. Marie est créative et sait s\'adapter aux différents niveaux.',
-            date: new Date('2024-11-29'),
-            isVerifiedMission: true,
-            missionTitle: 'Atelier Art-thérapie',
-            helpfulCount: 5,
-        },
-        {
-            id: 'r4',
-            reviewerName: 'Jean-Pierre Moreau',
-            reviewerRole: 'Directeur Foyer Saint-Jean',
-            rating: 5,
-            comment: 'Excellente professionnelle, ponctuelle et très impliquée. Elle a su gérer le service avec autonomie pendant l\'absence de notre éducateur. Je recommande vivement.',
-            date: new Date('2024-11-22'),
-            isVerifiedMission: true,
-            missionTitle: 'Remplacement éducateur',
-        },
-    ];
+    // Reviews - TODO: fetch from API
+    const reviewsData: ReviewItem[] = [];
 
     const handlePrimaryAction = () => {
         router.push('/dashboard/relief');
@@ -159,7 +84,7 @@ export default function ProfilePage() {
         if (navigator.share) {
             try {
                 await navigator.share({
-                    title: `${mockProfile.firstName} ${mockProfile.lastName} - Les Extras`,
+                    title: `${profileData.firstName} ${profileData.lastName} - Les Extras`,
                     url: window.location.href,
                 });
             } catch (err) {
@@ -184,7 +109,7 @@ export default function ProfilePage() {
             <div className="max-w-3xl mx-auto space-y-6">
                 {/* Profile Header Card */}
                 <UserProfile
-                    profile={mockProfile}
+                    profile={profileData}
                     isOwnProfile={isOwnProfile}
                     isFavorite={isFavorite}
                     onPrimaryAction={handlePrimaryAction}
@@ -197,14 +122,14 @@ export default function ProfilePage() {
 
                 {/* Profile Content Tabs */}
                 <ProfileContent
-                    role={mockProfile.role}
-                    userName={mockProfile.firstName}
+                    role={profileData.role}
+                    userName={profileData.firstName}
                     isOwnProfile={isOwnProfile}
                     about={aboutData}
                     missions={missionsHistory}
                     reviews={reviewsData}
-                    averageRating={mockProfile.stats.averageRating}
-                    totalReviews={mockProfile.stats.totalReviews}
+                    averageRating={profileData.stats.averageRating}
+                    totalReviews={profileData.stats.totalReviews}
                     onEmptyAction={(type) => {
                         if (type === 'missions') router.push('/dashboard/relief');
                         if (type === 'reviews') router.push('/profile');
