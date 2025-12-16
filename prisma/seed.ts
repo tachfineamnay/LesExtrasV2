@@ -455,7 +455,7 @@ async function main() {
   const videoTemplates = [
     {
       name: 'Coaching parental (Visio)',
-      category: "Educat'heure",
+      category: "Eduat'heure",
       tags: ['visio', 'parentalité', '1:1'],
       basePrice: 60,
       shortDescription:
@@ -463,7 +463,7 @@ async function main() {
     },
     {
       name: 'Suivi éducatif (Visio)',
-      category: "Educat'heure",
+      category: "Eduat'heure",
       tags: ['visio', 'suivi', 'routines'],
       basePrice: 55,
       shortDescription: 'Un accompagnement régulier, simple et actionnable.',

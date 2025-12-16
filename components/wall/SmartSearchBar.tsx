@@ -19,7 +19,7 @@ export interface SmartSearchBarProps {
     avatars?: FloatingAvatar[];
 }
 
-const DEFAULT_PLACEHOLDER = "Besoin d'un renfort pour demain ? Ou d'une visio Educ'at'heure ?";
+const DEFAULT_PLACEHOLDER = "Besoin d'un renfort pour demain ? Ou d'une visio Eduat'heure ?";
 
 const ORBIT_POSITIONS: CSSProperties[] = [
     { top: '-22px', left: '10%' },

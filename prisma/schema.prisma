@@ -1,6 +1,6 @@
 // =============================================================================
 // LES EXTRAS V2 - COMPLETE PRISMA SCHEMA
-// Modules: Marketplace, Wall, SOS Renfort, Educat'heure
+// Modules: Marketplace, Wall, SOS Renfort, Eduat'heure
 // =============================================================================
 
 generator client {
@@ -36,7 +36,7 @@ enum UserStatus {
 }
 
 enum ServiceType {
-  WORKSHOP       // Atelier présentiel (Educat'heure)
+  WORKSHOP       // Atelier présentiel (Eduat'heure)
   COACHING_VIDEO // Coaching vidéo en ligne
 }
 
@@ -329,7 +329,7 @@ model AvailabilitySlot {
 }
 
 // =============================================================================
-// SERVICE (CATALOGUE) - Marketplace Educat'heure
+// SERVICE (CATALOGUE) - Marketplace Eduat'heure
 // =============================================================================
 
 model Service {

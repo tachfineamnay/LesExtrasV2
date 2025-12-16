@@ -39,7 +39,7 @@ const MODE_OPTIONS = [
     },
     {
         id: 'VISIO' as const,
-        label: "Educ'at'heure / Visio",
+        label: "Eduat'heure / Visio",
         icon: Video,
         accentClass: 'text-indigo-500',
     },
@@ -224,7 +224,7 @@ export function WallFeedClient({
     const modeCopy =
         mode === 'FIELD'
             ? 'Renfort terrain en établissement | Missions urgentes'
-            : "Visio 1:1 | Educat'heure et accompagnement";
+            : "Visio 1:1 | Eduat'heure et accompagnement";
 
     return (
         <div className="relative min-h-screen bg-canvas overflow-hidden">
@@ -342,7 +342,7 @@ export function WallFeedClient({
                             <h2 className="mt-2 text-xl font-semibold text-slate-900 tracking-tight">
                                 {mode === 'FIELD'
                                     ? 'Renfort terrain - Offres & demandes'
-                                    : "Educat'heure / Visio - Offres & demandes"}
+                                    : "Eduat'heure / Visio - Offres & demandes"}
                             </h2>
                         </div>
                         {isLoading ? <span className="text-sm text-slate-500">Mise à jour…</span> : null}
