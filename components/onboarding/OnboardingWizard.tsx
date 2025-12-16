@@ -1,210 +1,450 @@
 'use client';
 
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import {
-    User,
-    Briefcase,
-    FileCheck,
-    CreditCard,
+    UserCheck,
+    Search,
+    Building2,
+    Heart,
     ChevronRight,
     ChevronLeft,
     Check,
     Loader2,
-    MapPin,
-    Phone,
     Mail,
-    Calendar,
-    Award
+    Lock,
+    User,
+    Phone,
 } from 'lucide-react';
-import { DocumentUpload } from './DocumentUpload';
 
-interface StepProps {
-    currentStep: number;
-    totalSteps: number;
-}
+// ===========================================
+// TYPES & SCHEMAS
+// ===========================================
 
-const STEPS = [
-    { id: 1, title: 'Profil', icon: User },
-    { id: 2, title: 'Compétences', icon: Briefcase },
-    { id: 3, title: 'Documents', icon: FileCheck },
-    { id: 4, title: 'Paiement', icon: CreditCard },
-];
+type UserType = 'TALENT' | 'SEEKER' | null;
+type ClientType = 'ESTABLISHMENT' | 'FAMILY' | null;
 
-const SPECIALTIES = [
-    'Aide-soignant(e)',
-    'Infirmier(ère)',
-    'Éducateur spécialisé',
-    'Auxiliaire de vie',
-    'Psychomotricien(ne)',
-    'Ergothérapeute',
-    'Moniteur éducateur',
-    'AES',
-];
+const accountSchema = z.object({
+    firstName: z.string().min(2, 'Prénom requis (min 2 caractères)'),
+    lastName: z.string().min(2, 'Nom requis (min 2 caractères)'),
+    email: z.string().email('Email invalide'),
+    phone: z.string().min(10, 'Téléphone requis'),
+    password: z.string().min(8, 'Mot de passe min 8 caractères'),
+    confirmPassword: z.string(),
+    establishmentName: z.string().optional(),
+}).refine((data) => data.password === data.confirmPassword, {
+    message: 'Les mots de passe ne correspondent pas',
+    path: ['confirmPassword'],
+});
 
-const DIPLOMAS = [
-    'DEAS (Diplôme d\'État d\'Aide-Soignant)',
-    'DEI (Diplôme d\'État d\'Infirmier)',
-    'DEES (Diplôme d\'État d\'Éducateur Spécialisé)',
-    'DEAES (Diplôme d\'État d\'Accompagnant Éducatif et Social)',
-    'Licence Sciences de l\'Éducation',
-    'Master Psychologie',
-];
+type AccountFormData = z.infer<typeof accountSchema>;
+
+// ===========================================
+// ANIMATION VARIANTS
+// ===========================================
+
+const slideVariants = {
+    enter: { opacity: 0, x: 30 },
+    center: { opacity: 1, x: 0 },
+    exit: { opacity: 0, x: -30 },
+};
+
+const cardVariants = {
+    idle: { scale: 1, boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)' },
+    hover: { scale: 1.02, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' },
+};
+
+// ===========================================
+// COMPONENT
+// ===========================================
 
 export function OnboardingWizard() {
-    const [currentStep, setCurrentStep] = useState(1);
+    const router = useRouter();
+    const [step, setStep] = useState(1);
+    const [userType, setUserType] = useState<UserType>(null);
+    const [clientType, setClientType] = useState<ClientType>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Form state
-    const [formData, setFormData] = useState({
-        // Step 1 - Profile
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
-        birthDate: '',
-        address: '',
-        city: '',
-        postalCode: '',
-        bio: '',
-        // Step 2 - Skills
-        specialties: [] as string[],
-        diplomas: [] as string[],
-        yearsExperience: '',
-        // Step 3 - Documents
-        idDocument: null as any,
-        diplomaDocument: null as any,
-        insuranceDocument: null as any,
-        // Step 4 - Payment
-        iban: '',
-        bic: '',
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+    } = useForm<AccountFormData>({
+        resolver: zodResolver(accountSchema),
     });
 
-    const updateField = (field: string, value: any) => {
-        setFormData(prev => ({ ...prev, [field]: value }));
+    const totalSteps = userType === 'SEEKER' ? 4 : 3;
+    const progressPercentage = (step / totalSteps) * 100;
+
+    // ===========================================
+    // HANDLERS
+    // ===========================================
+
+    const handleUserTypeSelect = (type: UserType) => {
+        setUserType(type);
+        if (type === 'TALENT') {
+            setStep(3);
+        } else {
+            setStep(2);
+        }
     };
 
-    const toggleArrayField = (field: 'specialties' | 'diplomas', value: string) => {
-        setFormData(prev => ({
-            ...prev,
-            [field]: prev[field].includes(value)
-                ? prev[field].filter(v => v !== value)
-                : [...prev[field], value],
-        }));
+    const handleClientTypeSelect = (type: ClientType) => {
+        setClientType(type);
+        setStep(3);
     };
 
-    const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, 4));
-    const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
+    const goBack = () => {
+        if (step === 3 && userType === 'TALENT') {
+            setStep(1);
+            setUserType(null);
+        } else if (step === 3 && userType === 'SEEKER') {
+            setStep(2);
+        } else if (step === 2) {
+            setStep(1);
+            setUserType(null);
+        }
+    };
 
-    const handleSubmit = async () => {
+    const onSubmit = async (data: AccountFormData) => {
         setIsSubmitting(true);
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        setIsSubmitting(false);
-        // Redirect to success or dashboard
-        window.location.href = '/onboarding/success';
+        try {
+            const payload = {
+                ...data,
+                role: userType === 'TALENT' ? 'EXTRA' : 'CLIENT',
+                clientType: userType === 'SEEKER' ? (clientType === 'ESTABLISHMENT' ? 'ESTABLISHMENT' : 'PARTICULAR') : null,
+            };
+
+            const res = await fetch('/api/v1/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+
+            if (res.ok) {
+                setStep(4);
+                setTimeout(() => {
+                    router.push('/dashboard');
+                }, 2000);
+            } else {
+                const error = await res.json();
+                alert(error.message || 'Erreur lors de l\'inscription');
+            }
+        } catch (error) {
+            alert('Erreur de connexion au serveur');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
-    const progressPercentage = (currentStep / 4) * 100;
+    // ===========================================
+    // RENDER
+    // ===========================================
 
     return (
-        <div className="min-h-screen bg-slate-50">
+        <div className="min-h-screen bg-slate-50 flex flex-col">
             {/* Header */}
             <header className="bg-white border-b border-slate-100 sticky top-0 z-40">
-                <div className="max-w-3xl mx-auto px-4 py-4">
-                    <div className="flex items-center justify-between mb-4">
+                <div className="max-w-2xl mx-auto px-4 py-4">
+                    <div className="flex items-center justify-between mb-3">
                         <h1 className="text-xl font-bold text-slate-900">
-                            Devenir <span className="text-gradient">Extra</span>
+                            Les <span className="text-coral-500">Extras</span>
                         </h1>
                         <span className="text-sm text-slate-500">
-                            Étape {currentStep} sur 4
+                            Étape {step} sur {totalSteps}
                         </span>
                     </div>
 
                     {/* Progress Bar */}
                     <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
                         <motion.div
-                            className="h-full bg-gradient-to-r from-coral-500 to-orange-500"
+                            className="h-full bg-coral-500"
                             initial={{ width: 0 }}
                             animate={{ width: `${progressPercentage}%` }}
                             transition={{ duration: 0.3 }}
                         />
                     </div>
-
-                    {/* Step Indicators */}
-                    <div className="flex justify-between mt-4">
-                        {STEPS.map((step) => {
-                            const Icon = step.icon;
-                            const isActive = step.id === currentStep;
-                            const isCompleted = step.id < currentStep;
-
-                            return (
-                                <div
-                                    key={step.id}
-                                    className={`flex items-center gap-2 ${isActive ? 'text-coral-600' : isCompleted ? 'text-green-600' : 'text-slate-400'
-                                        }`}
-                                >
-                                    <div className={`
-                    w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
-                    ${isActive
-                                            ? 'bg-coral-100 text-coral-600'
-                                            : isCompleted
-                                                ? 'bg-green-100 text-green-600'
-                                                : 'bg-slate-100 text-slate-400'
-                                        }
-                  `}>
-                                        {isCompleted ? <Check className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
-                                    </div>
-                                    <span className="hidden sm:block text-sm font-medium">{step.title}</span>
-                                </div>
-                            );
-                        })}
-                    </div>
                 </div>
             </header>
 
-            {/* Form Content */}
-            <main className="max-w-3xl mx-auto px-4 py-8">
-                <AnimatePresence mode="wait">
-                    {/* Step 1: Profile */}
-                    {currentStep === 1 && (
-                        <motion.div
-                            key="step1"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            className="space-y-6"
-                        >
-                            <div>
-                                <h2 className="text-2xl font-bold text-slate-900 mb-2">Informations personnelles</h2>
-                                <p className="text-slate-500">Commençons par faire connaissance</p>
-                            </div>
-
-                            <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-700 mb-1">Prénom *</label>
-                                        <input
-                                            type="text"
-                                            value={formData.firstName}
-                                            onChange={(e) => updateField('firstName', e.target.value)}
-                                            className="input-premium"
-                                            placeholder="Marie"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-700 mb-1">Nom *</label>
-                                        <input
-                                            type="text"
-                                            value={formData.lastName}
-                                            onChange={(e) => updateField('lastName', e.target.value)}
-                                            className="input-premium"
-                                            placeholder="Dupont"
-                                        />
-                                    </div>
+            {/* Main Content */}
+            <main className="flex-1 flex items-center justify-center px-4 py-8">
+                <div className="w-full max-w-2xl">
+                    <AnimatePresence mode="wait">
+                        {/* ========================================= */}
+                        {/* STEP 1: Choix du profil */}
+                        {/* ========================================= */}
+                        {step === 1 && (
+                            <motion.div
+                                key="step1"
+                                variants={slideVariants}
+                                initial="enter"
+                                animate="center"
+                                exit="exit"
+                                transition={{ duration: 0.25 }}
+                                className="space-y-8"
+                            >
+                                <div className="text-center">
+                                    <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">
+                                        Bienvenue. Quel est votre profil ?
+                                    </h2>
+                                    <p className="text-slate-500">Choisissez l'option qui vous correspond</p>
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {/* Carte Talent */}
+                                    <motion.button
+                                        type="button"
+                                        variants={cardVariants}
+                                        initial="idle"
+                                        whileHover="hover"
+                                        onClick={() => handleUserTypeSelect('TALENT')}
+                                        className={`
+                                            relative p-6 rounded-2xl bg-white border-2 text-left transition-all
+                                            ${userType === 'TALENT'
+                                                ? 'border-coral-500 ring-2 ring-coral-200'
+                                                : 'border-slate-200 hover:border-slate-300'
+                                            }
+                                        `}
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className={`
+                                                w-14 h-14 rounded-xl flex items-center justify-center
+                                                ${userType === 'TALENT' ? 'bg-coral-50' : 'bg-slate-100'}
+                                            `}>
+                                                <UserCheck className={`w-7 h-7 ${userType === 'TALENT' ? 'text-coral-500' : 'text-slate-600'}`} />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-lg font-semibold text-slate-900">Je suis un Talent</h3>
+                                                <p className="text-sm text-slate-500">Professionnel du médico-social</p>
+                                            </div>
+                                        </div>
+                                        {userType === 'TALENT' && (
+                                            <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-coral-500 flex items-center justify-center">
+                                                <Check className="w-4 h-4 text-white" />
+                                            </div>
+                                        )}
+                                    </motion.button>
+
+                                    {/* Carte Cherche Talent */}
+                                    <motion.button
+                                        type="button"
+                                        variants={cardVariants}
+                                        initial="idle"
+                                        whileHover="hover"
+                                        onClick={() => handleUserTypeSelect('SEEKER')}
+                                        className={`
+                                            relative p-6 rounded-2xl bg-white border-2 text-left transition-all
+                                            ${userType === 'SEEKER'
+                                                ? 'border-coral-500 ring-2 ring-coral-200'
+                                                : 'border-slate-200 hover:border-slate-300'
+                                            }
+                                        `}
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className={`
+                                                w-14 h-14 rounded-xl flex items-center justify-center
+                                                ${userType === 'SEEKER' ? 'bg-coral-50' : 'bg-slate-100'}
+                                            `}>
+                                                <Search className={`w-7 h-7 ${userType === 'SEEKER' ? 'text-coral-500' : 'text-slate-600'}`} />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-lg font-semibold text-slate-900">Je cherche un Talent</h3>
+                                                <p className="text-sm text-slate-500">Établissement ou famille</p>
+                                            </div>
+                                        </div>
+                                        {userType === 'SEEKER' && (
+                                            <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-coral-500 flex items-center justify-center">
+                                                <Check className="w-4 h-4 text-white" />
+                                            </div>
+                                        )}
+                                    </motion.button>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {/* ========================================= */}
+                        {/* STEP 2: Précision (si SEEKER) */}
+                        {/* ========================================= */}
+                        {step === 2 && userType === 'SEEKER' && (
+                            <motion.div
+                                key="step2"
+                                variants={slideVariants}
+                                initial="enter"
+                                animate="center"
+                                exit="exit"
+                                transition={{ duration: 0.25 }}
+                                className="space-y-8"
+                            >
+                                <div className="text-center">
+                                    <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">
+                                        Vous représentez...
+                                    </h2>
+                                    <p className="text-slate-500">Précisez votre situation</p>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {/* Carte Établissement */}
+                                    <motion.button
+                                        type="button"
+                                        variants={cardVariants}
+                                        initial="idle"
+                                        whileHover="hover"
+                                        onClick={() => handleClientTypeSelect('ESTABLISHMENT')}
+                                        className={`
+                                            relative p-6 rounded-2xl bg-white border-2 text-left transition-all
+                                            ${clientType === 'ESTABLISHMENT'
+                                                ? 'border-coral-500 ring-2 ring-coral-200'
+                                                : 'border-slate-200 hover:border-slate-300'
+                                            }
+                                        `}
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className={`
+                                                w-14 h-14 rounded-xl flex items-center justify-center
+                                                ${clientType === 'ESTABLISHMENT' ? 'bg-coral-50' : 'bg-slate-100'}
+                                            `}>
+                                                <Building2 className={`w-7 h-7 ${clientType === 'ESTABLISHMENT' ? 'text-coral-500' : 'text-slate-600'}`} />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-lg font-semibold text-slate-900">Un Établissement</h3>
+                                                <p className="text-sm text-slate-500">EHPAD, IME, Crèche, Hôpital...</p>
+                                            </div>
+                                        </div>
+                                        {clientType === 'ESTABLISHMENT' && (
+                                            <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-coral-500 flex items-center justify-center">
+                                                <Check className="w-4 h-4 text-white" />
+                                            </div>
+                                        )}
+                                    </motion.button>
+
+                                    {/* Carte Famille */}
+                                    <motion.button
+                                        type="button"
+                                        variants={cardVariants}
+                                        initial="idle"
+                                        whileHover="hover"
+                                        onClick={() => handleClientTypeSelect('FAMILY')}
+                                        className={`
+                                            relative p-6 rounded-2xl bg-white border-2 text-left transition-all
+                                            ${clientType === 'FAMILY'
+                                                ? 'border-coral-500 ring-2 ring-coral-200'
+                                                : 'border-slate-200 hover:border-slate-300'
+                                            }
+                                        `}
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className={`
+                                                w-14 h-14 rounded-xl flex items-center justify-center
+                                                ${clientType === 'FAMILY' ? 'bg-coral-50' : 'bg-slate-100'}
+                                            `}>
+                                                <Heart className={`w-7 h-7 ${clientType === 'FAMILY' ? 'text-coral-500' : 'text-slate-600'}`} />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-lg font-semibold text-slate-900">Une Famille</h3>
+                                                <p className="text-sm text-slate-500">Aidant, parent, tuteur...</p>
+                                            </div>
+                                        </div>
+                                        {clientType === 'FAMILY' && (
+                                            <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-coral-500 flex items-center justify-center">
+                                                <Check className="w-4 h-4 text-white" />
+                                            </div>
+                                        )}
+                                    </motion.button>
+                                </div>
+
+                                {/* Bouton Retour */}
+                                <div className="flex justify-start">
+                                    <button
+                                        type="button"
+                                        onClick={goBack}
+                                        className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-slate-900 transition-colors"
+                                    >
+                                        <ChevronLeft className="w-5 h-5" />
+                                        Retour
+                                    </button>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {/* ========================================= */}
+                        {/* STEP 3: Création de compte */}
+                        {/* ========================================= */}
+                        {step === 3 && (
+                            <motion.div
+                                key="step3"
+                                variants={slideVariants}
+                                initial="enter"
+                                animate="center"
+                                exit="exit"
+                                transition={{ duration: 0.25 }}
+                                className="space-y-6"
+                            >
+                                <div className="text-center">
+                                    <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">
+                                        Créez votre compte
+                                    </h2>
+                                    <p className="text-slate-500">
+                                        {userType === 'TALENT'
+                                            ? 'Rejoignez notre communauté de professionnels'
+                                            : clientType === 'ESTABLISHMENT'
+                                                ? 'Inscrivez votre établissement'
+                                                : 'Trouvez l\'accompagnement adapté'
+                                        }
+                                    </p>
+                                </div>
+
+                                <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
+                                    {/* Nom de l'établissement (si ESTABLISHMENT) */}
+                                    {clientType === 'ESTABLISHMENT' && (
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">
+                                                <Building2 className="w-4 h-4 inline mr-1" />
+                                                Nom de la structure *
+                                            </label>
+                                            <input
+                                                type="text"
+                                                {...register('establishmentName')}
+                                                className="input-premium"
+                                                placeholder="EHPAD Les Oliviers"
+                                            />
+                                        </div>
+                                    )}
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">
+                                                <User className="w-4 h-4 inline mr-1" />
+                                                Prénom *
+                                            </label>
+                                            <input
+                                                type="text"
+                                                {...register('firstName')}
+                                                className="input-premium"
+                                                placeholder="Marie"
+                                            />
+                                            {errors.firstName && (
+                                                <p className="text-sm text-red-500 mt-1">{errors.firstName.message}</p>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">Nom *</label>
+                                            <input
+                                                type="text"
+                                                {...register('lastName')}
+                                                className="input-premium"
+                                                placeholder="Dupont"
+                                            />
+                                            {errors.lastName && (
+                                                <p className="text-sm text-red-500 mt-1">{errors.lastName.message}</p>
+                                            )}
+                                        </div>
+                                    </div>
+
                                     <div>
                                         <label className="block text-sm font-medium text-slate-700 mb-1">
                                             <Mail className="w-4 h-4 inline mr-1" />
@@ -212,12 +452,15 @@ export function OnboardingWizard() {
                                         </label>
                                         <input
                                             type="email"
-                                            value={formData.email}
-                                            onChange={(e) => updateField('email', e.target.value)}
+                                            {...register('email')}
                                             className="input-premium"
-                                            placeholder="marie@example.com"
+                                            placeholder="marie@exemple.com"
                                         />
+                                        {errors.email && (
+                                            <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>
+                                        )}
                                     </div>
+
                                     <div>
                                         <label className="block text-sm font-medium text-slate-700 mb-1">
                                             <Phone className="w-4 h-4 inline mr-1" />
@@ -225,326 +468,116 @@ export function OnboardingWizard() {
                                         </label>
                                         <input
                                             type="tel"
-                                            value={formData.phone}
-                                            onChange={(e) => updateField('phone', e.target.value)}
+                                            {...register('phone')}
                                             className="input-premium"
                                             placeholder="06 12 34 56 78"
                                         />
+                                        {errors.phone && (
+                                            <p className="text-sm text-red-500 mt-1">{errors.phone.message}</p>
+                                        )}
                                     </div>
-                                </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                                        <Calendar className="w-4 h-4 inline mr-1" />
-                                        Date de naissance *
-                                    </label>
-                                    <input
-                                        type="date"
-                                        value={formData.birthDate}
-                                        onChange={(e) => updateField('birthDate', e.target.value)}
-                                        className="input-premium"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                                        <MapPin className="w-4 h-4 inline mr-1" />
-                                        Adresse
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={formData.address}
-                                        onChange={(e) => updateField('address', e.target.value)}
-                                        className="input-premium"
-                                        placeholder="123 rue de la Santé"
-                                    />
-                                </div>
-
-                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                                    <div className="col-span-2 sm:col-span-2">
-                                        <label className="block text-sm font-medium text-slate-700 mb-1">Ville *</label>
-                                        <input
-                                            type="text"
-                                            value={formData.city}
-                                            onChange={(e) => updateField('city', e.target.value)}
-                                            className="input-premium"
-                                            placeholder="Lyon"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-700 mb-1">Code postal *</label>
-                                        <input
-                                            type="text"
-                                            value={formData.postalCode}
-                                            onChange={(e) => updateField('postalCode', e.target.value)}
-                                            className="input-premium"
-                                            placeholder="69003"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Bio (optionnel)</label>
-                                    <textarea
-                                        value={formData.bio}
-                                        onChange={(e) => updateField('bio', e.target.value)}
-                                        className="input-premium min-h-[100px] resize-none"
-                                        placeholder="Présentez-vous en quelques mots..."
-                                    />
-                                </div>
-                            </div>
-                        </motion.div>
-                    )}
-
-                    {/* Step 2: Skills */}
-                    {currentStep === 2 && (
-                        <motion.div
-                            key="step2"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            className="space-y-6"
-                        >
-                            <div>
-                                <h2 className="text-2xl font-bold text-slate-900 mb-2">Compétences & Expérience</h2>
-                                <p className="text-slate-500">Décrivez votre profil professionnel</p>
-                            </div>
-
-                            <div className="bg-white rounded-2xl shadow-soft p-6 space-y-6">
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-3">
-                                        <Briefcase className="w-4 h-4 inline mr-1" />
-                                        Spécialités * (sélectionnez au moins une)
-                                    </label>
-                                    <div className="flex flex-wrap gap-2">
-                                        {SPECIALTIES.map((specialty) => (
-                                            <button
-                                                key={specialty}
-                                                type="button"
-                                                onClick={() => toggleArrayField('specialties', specialty)}
-                                                className={`
-                          pill-btn
-                          ${formData.specialties.includes(specialty)
-                                                        ? 'pill-btn-active'
-                                                        : 'pill-btn-inactive'
-                                                    }
-                        `}
-                                            >
-                                                {specialty}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-3">
-                                        <Award className="w-4 h-4 inline mr-1" />
-                                        Diplômes obtenus
-                                    </label>
-                                    <div className="space-y-2">
-                                        {DIPLOMAS.map((diploma) => (
-                                            <label
-                                                key={diploma}
-                                                className={`
-                          flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all
-                          ${formData.diplomas.includes(diploma)
-                                                        ? 'border-coral-500 bg-coral-50'
-                                                        : 'border-slate-200 hover:border-slate-300'
-                                                    }
-                        `}
-                                            >
-                                                <input
-                                                    type="checkbox"
-                                                    checked={formData.diplomas.includes(diploma)}
-                                                    onChange={() => toggleArrayField('diplomas', diploma)}
-                                                    className="sr-only"
-                                                />
-                                                <div className={`
-                          w-5 h-5 rounded-md border-2 flex items-center justify-center
-                          ${formData.diplomas.includes(diploma)
-                                                        ? 'border-coral-500 bg-coral-500'
-                                                        : 'border-slate-300'
-                                                    }
-                        `}>
-                                                    {formData.diplomas.includes(diploma) && (
-                                                        <Check className="w-3 h-3 text-white" />
-                                                    )}
-                                                </div>
-                                                <span className="text-sm text-slate-700">{diploma}</span>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">
+                                                <Lock className="w-4 h-4 inline mr-1" />
+                                                Mot de passe *
                                             </label>
-                                        ))}
+                                            <input
+                                                type="password"
+                                                {...register('password')}
+                                                className="input-premium"
+                                                placeholder="••••••••"
+                                            />
+                                            {errors.password && (
+                                                <p className="text-sm text-red-500 mt-1">{errors.password.message}</p>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">Confirmer *</label>
+                                            <input
+                                                type="password"
+                                                {...register('confirmPassword')}
+                                                className="input-premium"
+                                                placeholder="••••••••"
+                                            />
+                                            {errors.confirmPassword && (
+                                                <p className="text-sm text-red-500 mt-1">{errors.confirmPassword.message}</p>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
+
+                                    {/* Actions */}
+                                    <div className="flex items-center justify-between pt-4">
+                                        <button
+                                            type="button"
+                                            onClick={goBack}
+                                            className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-slate-900 transition-colors"
+                                        >
+                                            <ChevronLeft className="w-5 h-5" />
+                                            Retour
+                                        </button>
+
+                                        <button
+                                            type="submit"
+                                            disabled={isSubmitting}
+                                            className="btn-primary !px-6 !py-3 shadow-soft hover:shadow-soft-lg disabled:opacity-70"
+                                        >
+                                            {isSubmitting ? (
+                                                <>
+                                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                                    Création...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    Créer mon compte
+                                                    <ChevronRight className="w-5 h-5" />
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+                                </form>
+                            </motion.div>
+                        )}
+
+                        {/* ========================================= */}
+                        {/* STEP 4: Succès */}
+                        {/* ========================================= */}
+                        {step === 4 && (
+                            <motion.div
+                                key="step4"
+                                variants={slideVariants}
+                                initial="enter"
+                                animate="center"
+                                exit="exit"
+                                transition={{ duration: 0.25 }}
+                                className="text-center space-y-6"
+                            >
+                                <motion.div
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.2 }}
+                                    className="w-20 h-20 mx-auto rounded-full bg-green-100 flex items-center justify-center"
+                                >
+                                    <Check className="w-10 h-10 text-green-600" />
+                                </motion.div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                                        Années d'expérience *
-                                    </label>
-                                    <select
-                                        value={formData.yearsExperience}
-                                        onChange={(e) => updateField('yearsExperience', e.target.value)}
-                                        className="input-premium"
-                                    >
-                                        <option value="">Sélectionner...</option>
-                                        <option value="0-1">Moins d'1 an</option>
-                                        <option value="1-3">1 à 3 ans</option>
-                                        <option value="3-5">3 à 5 ans</option>
-                                        <option value="5-10">5 à 10 ans</option>
-                                        <option value="10+">Plus de 10 ans</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </motion.div>
-                    )}
-
-                    {/* Step 3: Documents */}
-                    {currentStep === 3 && (
-                        <motion.div
-                            key="step3"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            className="space-y-6"
-                        >
-                            <div>
-                                <h2 className="text-2xl font-bold text-slate-900 mb-2">Documents justificatifs</h2>
-                                <p className="text-slate-500">Téléversez vos documents pour la vérification</p>
-                            </div>
-
-                            <div className="bg-white rounded-2xl shadow-soft p-6 space-y-6">
-                                <DocumentUpload
-                                    label="Pièce d'identité"
-                                    description="CNI, Passeport ou Titre de séjour (recto-verso)"
-                                    accept=".pdf,.jpg,.jpeg,.png"
-                                    required
-                                    onFilesChange={(files) => updateField('idDocument', files)}
-                                />
-
-                                <DocumentUpload
-                                    label="Diplôme(s)"
-                                    description="Uploadez vos diplômes en lien avec vos spécialités"
-                                    accept=".pdf,.jpg,.jpeg,.png"
-                                    multiple
-                                    required
-                                    onFilesChange={(files) => updateField('diplomaDocument', files)}
-                                />
-
-                                <DocumentUpload
-                                    label="Attestation d'assurance RC Pro"
-                                    description="Responsabilité Civile Professionnelle en cours de validité"
-                                    accept=".pdf"
-                                    required
-                                    onFilesChange={(files) => updateField('insuranceDocument', files)}
-                                />
-
-                                <div className="p-4 rounded-xl bg-blue-50 border border-blue-100">
-                                    <p className="text-sm text-blue-700">
-                                        <strong>🔒 Confidentialité</strong> : Vos documents sont stockés de manière sécurisée et ne sont consultés que par notre équipe de vérification.
+                                    <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">
+                                        Bienvenue chez Les Extras !
+                                    </h2>
+                                    <p className="text-slate-500">
+                                        Votre compte a été créé avec succès.
                                     </p>
                                 </div>
-                            </div>
-                        </motion.div>
-                    )}
 
-                    {/* Step 4: Payment */}
-                    {currentStep === 4 && (
-                        <motion.div
-                            key="step4"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            className="space-y-6"
-                        >
-                            <div>
-                                <h2 className="text-2xl font-bold text-slate-900 mb-2">Informations de paiement</h2>
-                                <p className="text-slate-500">Pour recevoir vos paiements après chaque mission</p>
-                            </div>
-
-                            <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">IBAN *</label>
-                                    <input
-                                        type="text"
-                                        value={formData.iban}
-                                        onChange={(e) => updateField('iban', e.target.value.toUpperCase())}
-                                        className="input-premium font-mono"
-                                        placeholder="FR76 XXXX XXXX XXXX XXXX XXXX XXX"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">BIC/SWIFT *</label>
-                                    <input
-                                        type="text"
-                                        value={formData.bic}
-                                        onChange={(e) => updateField('bic', e.target.value.toUpperCase())}
-                                        className="input-premium font-mono"
-                                        placeholder="BNPAFRPP"
-                                    />
-                                </div>
-
-                                <div className="p-4 rounded-xl bg-green-50 border border-green-100">
-                                    <p className="text-sm text-green-700">
-                                        <strong>💸 Paiements rapides</strong> : Les virements sont effectués sous 48h après validation de chaque mission via Stripe Connect.
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Summary */}
-                            <div className="bg-gradient-to-br from-coral-500 to-orange-500 rounded-2xl p-6 text-white">
-                                <h3 className="font-bold text-lg mb-4">Récapitulatif</h3>
-                                <div className="space-y-2 text-sm">
-                                    <p><strong>Nom :</strong> {formData.firstName} {formData.lastName}</p>
-                                    <p><strong>Ville :</strong> {formData.city}</p>
-                                    <p><strong>Spécialités :</strong> {formData.specialties.join(', ') || 'Non renseigné'}</p>
-                                    <p><strong>Expérience :</strong> {formData.yearsExperience || 'Non renseigné'}</p>
-                                </div>
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-
-                {/* Navigation */}
-                <div className="flex justify-between mt-8">
-                    {currentStep > 1 ? (
-                        <button
-                            onClick={prevStep}
-                            className="flex items-center gap-2 px-6 py-3 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 transition-colors"
-                        >
-                            <ChevronLeft className="w-5 h-5" />
-                            Précédent
-                        </button>
-                    ) : (
-                        <div />
-                    )}
-
-                    {currentStep < 4 ? (
-                        <button
-                            onClick={nextStep}
-                            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-coral-500 text-white font-medium hover:bg-coral-600 transition-colors shadow-lg shadow-coral-500/30"
-                        >
-                            Continuer
-                            <ChevronRight className="w-5 h-5" />
-                        </button>
-                    ) : (
-                        <button
-                            onClick={handleSubmit}
-                            disabled={isSubmitting}
-                            className="flex items-center gap-2 px-8 py-3 rounded-xl bg-green-500 text-white font-medium hover:bg-green-600 transition-colors shadow-lg shadow-green-500/30 disabled:opacity-70"
-                        >
-                            {isSubmitting ? (
-                                <>
+                                <div className="flex items-center justify-center gap-2 text-slate-500">
                                     <Loader2 className="w-5 h-5 animate-spin" />
-                                    Envoi en cours...
-                                </>
-                            ) : (
-                                <>
-                                    <Check className="w-5 h-5" />
-                                    Soumettre ma candidature
-                                </>
-                            )}
-                        </button>
-                    )}
+                                    <span>Redirection vers votre tableau de bord...</span>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </main>
         </div>

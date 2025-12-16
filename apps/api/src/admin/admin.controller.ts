@@ -17,12 +17,13 @@ import {
 } from '@nestjs/swagger';
 import { AdminService } from './admin.service';
 import { CreateAdminNoteDto, AdminNoteResponseDto } from './dto';
-import { JwtAuthGuard } from '../common/guards';
-import { CurrentUser, CurrentUserPayload } from '../common/decorators';
+import { JwtAuthGuard, RolesGuard } from '../common/guards';
+import { Roles, CurrentUser, CurrentUserPayload } from '../common/decorators';
 
 @ApiTags('admin')
 @Controller('admin')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('ADMIN')
 @ApiBearerAuth()
 export class AdminController {
     constructor(private readonly adminService: AdminService) {}

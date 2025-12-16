@@ -23,6 +23,26 @@ export class RegisterDto {
     @IsOptional()
     @IsString()
     phone?: string;
+
+    @ApiPropertyOptional({ example: 'Jean' })
+    @IsOptional()
+    @IsString()
+    firstName?: string;
+
+    @ApiPropertyOptional({ example: 'Dupont' })
+    @IsOptional()
+    @IsString()
+    lastName?: string;
+
+    @ApiPropertyOptional({ enum: ['PARTICULAR', 'ESTABLISHMENT'], example: 'ESTABLISHMENT' })
+    @IsOptional()
+    @IsString()
+    clientType?: 'PARTICULAR' | 'ESTABLISHMENT';
+
+    @ApiPropertyOptional({ example: 'EHPAD Les Oliviers' })
+    @IsOptional()
+    @IsString()
+    establishmentName?: string;
 }
 
 export class LoginDto {

@@ -39,15 +39,47 @@ export class AuthService {
             // Hash password
             const passwordHash = await bcrypt.hash(dto.password, this.SALT_ROUNDS);
 
-            // Create user
-            const user = await this.prisma.user.create({
-                data: {
-                    email: dto.email.toLowerCase(),
-                    passwordHash,
-                    role: dto.role,
-                    phone: dto.phone,
-                    status: 'PENDING',
-                },
+            // Create user with profile/establishment in a transaction
+            const user = await this.prisma.$transaction(async (tx) => {
+                // 1. Create the user
+                const newUser = await tx.user.create({
+                    data: {
+                        email: dto.email.toLowerCase(),
+                        passwordHash,
+                        role: dto.role,
+                        phone: dto.phone,
+                        status: 'PENDING',
+                        clientType: dto.clientType,
+                        isVerified: false,
+                        onboardingStep: 1,
+                    } as any,
+                });
+
+                // 2. Create Profile if firstName/lastName provided (for EXTRA or CLIENT)
+                if (dto.firstName && dto.lastName) {
+                    await tx.profile.create({
+                        data: {
+                            userId: newUser.id,
+                            firstName: dto.firstName,
+                            lastName: dto.lastName,
+                        },
+                    });
+                }
+
+                // 3. Create Establishment if clientType is ESTABLISHMENT
+                if (dto.role === 'CLIENT' && dto.clientType === 'ESTABLISHMENT' && dto.establishmentName) {
+                    await tx.establishment.create({
+                        data: {
+                            userId: newUser.id,
+                            name: dto.establishmentName,
+                            address: '', // À compléter dans l'onboarding
+                            city: '',
+                            postalCode: '',
+                        },
+                    });
+                }
+
+                return newUser;
             });
 
             this.logger.log(`New user registered: ${user.email} (${user.role})`);
