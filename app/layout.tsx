@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Outfit } from "next/font/google";
 import "./globals.css";
-import { MobileBottomNav } from "@/components/layout";
+import { DesktopTopNav, MobileBottomNav } from "@/components/layout";
 
 const outfit = Outfit({ subsets: ["latin"] });
 
@@ -27,6 +27,7 @@ export default function RootLayout({
     return (
         <html lang="fr" className="smooth-scroll">
             <body className={`${outfit.className} has-bottom-nav lg:pb-0`}>
+                <DesktopTopNav />
                 {children}
                 <MobileBottomNav />
             </body>

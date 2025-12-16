@@ -102,15 +102,19 @@ export function WallFeedClient({
 
     const [mode, setMode] = useState<DiscoveryMode>('FIELD');
     const [searchTerm, setSearchTerm] = useState('');
-    const [items, setItems] = useState<any[]>(() => filterItemsForMode(resolvedInitialData, 'FIELD'));
+    const [allItems, setAllItems] = useState<any[]>(resolvedInitialData);
     const [isLoading, setIsLoading] = useState(false);
     const didInitFetchRef = useRef(false);
 
     const heroAvatars = useMemo(() => extractHeroAvatars(resolvedInitialData), [resolvedInitialData]);
+    const visibleItems = useMemo(() => {
+        const filtered = filterItemsForMode(allItems, mode);
+        return filtered.length > 0 ? filtered : allItems;
+    }, [allItems, mode]);
 
     useEffect(() => {
         if (searchTerm.trim()) return;
-        setItems(filterItemsForMode(resolvedInitialData, mode));
+        setAllItems(resolvedInitialData);
     }, [mode, resolvedInitialData, searchTerm]);
 
     const fetchFeed = useCallback(async () => {
@@ -120,15 +124,6 @@ export function WallFeedClient({
             const normalizedSearch = searchTerm.trim();
 
             if (normalizedSearch) params.search = normalizedSearch;
-
-            if (mode === 'FIELD') {
-                params.type = 'MISSION';
-            }
-
-            if (mode === 'VISIO') {
-                params.type = 'POST';
-                params.category = 'COACHING_VIDEO';
-            }
 
             const response = await getFeed(params);
             const data = response as any;
@@ -140,13 +135,13 @@ export function WallFeedClient({
                 (Array.isArray(data) && data) ||
                 [];
 
-            setItems(Array.isArray(rawItems) ? rawItems : []);
+            setAllItems(Array.isArray(rawItems) ? rawItems : []);
         } catch (error) {
             console.error('Erreur lors du chargement du wall', error);
         } finally {
             setIsLoading(false);
         }
-    }, [mode, searchTerm]);
+    }, [searchTerm]);
 
     useEffect(() => {
         const hasInitialData = resolvedInitialData.length > 0;
@@ -165,9 +160,9 @@ export function WallFeedClient({
         }, 320);
 
         return () => clearTimeout(timeout);
-    }, [fetchFeed, mode, resolvedInitialData.length, searchTerm]);
+    }, [fetchFeed, resolvedInitialData.length, searchTerm]);
 
-    const emptyState = !isLoading && items.length === 0;
+    const emptyState = !isLoading && visibleItems.length === 0;
     const modeCopy =
         mode === 'FIELD'
             ? 'Renfort terrain en établissement • Missions urgentes'
@@ -184,7 +179,7 @@ export function WallFeedClient({
 
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-safe pb-safe">
                 {/* Segmented control */}
-                <div className="sticky top-5 z-30 flex justify-center">
+                <div className="sticky top-5 lg:top-24 z-30 flex justify-center">
                     <div className="relative inline-flex rounded-2xl bg-white/70 backdrop-blur-md border border-white/60 p-1 shadow-soft">
                         {MODE_OPTIONS.map((option) => {
                             const Icon = option.icon;
@@ -255,7 +250,7 @@ export function WallFeedClient({
                         {isLoading ? <span className="text-sm text-slate-500">Mise à jour…</span> : null}
                     </div>
 
-                    <BentoFeed items={items} mode={mode} isLoading={isLoading} />
+                    <BentoFeed items={visibleItems} mode={mode} isLoading={isLoading} />
 
                     {emptyState ? (
                         <div className="col-span-full text-center py-20">
