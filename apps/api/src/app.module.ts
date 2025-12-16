@@ -9,6 +9,7 @@ import { GeocodingModule } from './common/services/geocoding.module';
 
 // Feature Modules
 import { AuthModule } from './auth/auth.module';
+import { AdminModule } from './admin/admin.module';
 import { MatchingEngineModule } from './matching-engine/matching-engine.module';
 import { VideoBookingModule } from './video-booking/video-booking.module';
 import { WallFeedModule } from './wall-feed/wall-feed.module';
@@ -50,6 +51,7 @@ import { HealthModule } from './health/health.module';
 
         // Features
         AuthModule,
+        AdminModule,
         MatchingEngineModule,
         VideoBookingModule,
         WallFeedModule,
