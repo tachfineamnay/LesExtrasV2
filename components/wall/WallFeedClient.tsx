@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, Calendar, MapPin, MessageCircle, Search, Siren, Sparkles, Video } from 'lucide-react';
+import { ArrowRight, Calendar, ChevronLeft, ChevronRight as ChevronRightIcon, MapPin, MessageCircle, Search, Siren, Sparkles, Video } from 'lucide-react';
 import { getFeed } from '@/app/services/wall.service';
 import Link from 'next/link';
 import { BentoFeed } from './BentoFeed';
@@ -237,7 +237,7 @@ export function WallFeedClient({
 
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-safe pb-safe">
                 {/* Segmented control */}
-                <div className="sticky top-5 lg:top-24 z-30 flex justify-center">
+                <div className="sticky top-5 lg:top-24 z-30 flex flex-col items-center gap-3">
                     <div className="relative inline-flex rounded-2xl bg-white/70 backdrop-blur-md border border-white/60 p-1 shadow-soft">
                         {MODE_OPTIONS.map((option) => {
                             const Icon = option.icon;
@@ -268,22 +268,23 @@ export function WallFeedClient({
                             );
                         })}
                     </div>
+                    
+                    {/* Badge "Les Extras Hub vivant" directement sous les boutons */}
+                    <div className="inline-flex items-center gap-2 rounded-full bg-white/70 backdrop-blur-md border border-white/60 px-4 py-2 text-sm font-semibold text-slate-700 shadow-soft">
+                        <Sparkles className="h-4 w-4 text-[#FF6B6B]" />
+                        LES EXTRAS • Hub vivant
+                    </div>
                 </div>
 
                 {/* Hero */}
-                <section className="pt-16 sm:pt-20 pb-10 sm:pb-14 text-center">
+                <section className="pt-10 sm:pt-14 pb-10 sm:pb-14 text-center">
                     <motion.div
                         initial={{ opacity: 0, y: 14 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.55, ease: 'easeOut' }}
                         className="mx-auto max-w-3xl"
                     >
-                        <div className="inline-flex items-center gap-2 rounded-full bg-white/70 backdrop-blur-md border border-white/60 px-4 py-2 text-sm font-semibold text-slate-700 shadow-soft">
-                            <Sparkles className="h-4 w-4 text-[#FF6B6B]" />
-                            LES EXTRAS • Hub vivant
-                        </div>
-
-                        <h1 className="mt-6 text-4xl sm:text-6xl font-semibold tracking-tight text-slate-900">
+                        <h1 className="text-4xl sm:text-6xl font-semibold tracking-tight text-slate-900">
                             Un renfort demain.
                             <span className="block text-gradient">Une visio maintenant.</span>
                         </h1>
@@ -349,44 +350,104 @@ export function WallFeedClient({
 
                     {/* Focus Offres / Besoins */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 mb-8">
+                        {/* Offres - Slider horizontal */}
                         <div className="rounded-3xl bg-white/70 backdrop-blur-md border border-white/60 shadow-soft p-4">
                             <div className="flex items-center justify-between mb-3">
                                 <div>
                                     <p className="text-[10px] uppercase tracking-[0.22em] text-slate-500">Offres</p>
-                                    <p className="text-sm font-semibold text-slate-900">Talents & ateliers</p>
+                                    <p className="text-sm font-semibold text-slate-900">Dernières offres</p>
                                 </div>
-                                <span className="text-xs font-semibold text-indigo-500">{offers.length} items</span>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs font-semibold text-indigo-500">{offers.length} items</span>
+                                    <div className="flex gap-1">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const container = document.getElementById('offers-slider');
+                                                if (container) container.scrollBy({ left: -280, behavior: 'smooth' });
+                                            }}
+                                            className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 transition-colors"
+                                            aria-label="Précédent"
+                                        >
+                                            <ChevronLeft className="w-4 h-4 text-slate-600" />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const container = document.getElementById('offers-slider');
+                                                if (container) container.scrollBy({ left: 280, behavior: 'smooth' });
+                                            }}
+                                            className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 transition-colors"
+                                            aria-label="Suivant"
+                                        >
+                                            <ChevronRightIcon className="w-4 h-4 text-slate-600" />
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                {offers.slice(0, 4).map((item, idx) => (
-                                    <div key={`${item?.id ?? idx}-offer`} className="h-full">
+                            <div
+                                id="offers-slider"
+                                className="flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory"
+                            >
+                                {offers.slice(0, 8).map((item, idx) => (
+                                    <div key={`${item?.id ?? idx}-offer`} className="flex-shrink-0 w-[260px] snap-start">
                                         <SmartCard item={item} mode={mode} />
                                     </div>
                                 ))}
                                 {offers.length === 0 ? (
-                                    <div className="col-span-full text-sm text-slate-500">
+                                    <div className="w-full text-sm text-slate-500 py-8 text-center">
                                         Aucune offre visio/atelier trouvée.
                                     </div>
                                 ) : null}
                             </div>
                         </div>
 
+                        {/* Besoins - Slider horizontal */}
                         <div className="rounded-3xl bg-white/70 backdrop-blur-md border border-white/60 shadow-soft p-4">
                             <div className="flex items-center justify-between mb-3">
                                 <div>
                                     <p className="text-[10px] uppercase tracking-[0.22em] text-slate-500">Besoins</p>
-                                    <p className="text-sm font-semibold text-slate-900">Demandes & missions</p>
+                                    <p className="text-sm font-semibold text-slate-900">Demandes urgentes</p>
                                 </div>
-                                <span className="text-xs font-semibold text-[#FF6B6B]">{needs.length} items</span>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs font-semibold text-[#FF6B6B]">{needs.length} items</span>
+                                    <div className="flex gap-1">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const container = document.getElementById('needs-slider');
+                                                if (container) container.scrollBy({ left: -280, behavior: 'smooth' });
+                                            }}
+                                            className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 transition-colors"
+                                            aria-label="Précédent"
+                                        >
+                                            <ChevronLeft className="w-4 h-4 text-slate-600" />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const container = document.getElementById('needs-slider');
+                                                if (container) container.scrollBy({ left: 280, behavior: 'smooth' });
+                                            }}
+                                            className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 transition-colors"
+                                            aria-label="Suivant"
+                                        >
+                                            <ChevronRightIcon className="w-4 h-4 text-slate-600" />
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                {needs.slice(0, 4).map((item, idx) => (
-                                    <div key={`${item?.id ?? idx}-need`} className="h-full">
+                            <div
+                                id="needs-slider"
+                                className="flex gap-3 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory"
+                            >
+                                {needs.slice(0, 8).map((item, idx) => (
+                                    <div key={`${item?.id ?? idx}-need`} className="flex-shrink-0 w-[260px] snap-start">
                                         <SmartCard item={item} mode={mode} />
                                     </div>
                                 ))}
                                 {needs.length === 0 ? (
-                                    <div className="col-span-full text-sm text-slate-500">
+                                    <div className="w-full text-sm text-slate-500 py-8 text-center">
                                         Aucune mission ou demande pour le moment.
                                     </div>
                                 ) : null}
