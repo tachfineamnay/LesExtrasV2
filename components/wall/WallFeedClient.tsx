@@ -1,61 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import {
-    Search,
-    Zap,
-    Dumbbell,
-    Video,
-    Heart,
-    Palette,
-    Filter,
-    Users,
-    Activity,
-    ChevronRight,
-    Clock,
-    Star,
-    Bell
-} from 'lucide-react';
-import { NeedCard, OfferCard } from '@/components/wall';
-import { getFeed, createPost, type CreatePostPayload } from '@/app/services/wall.service';
-import { ToastContainer, useToasts } from '@/components/ui/Toast';
-
-// Types for feed items
-export interface NeedItem {
-    id: string;
-    authorId?: string;
-    type: 'NEED';
-    title: string;
-    establishment: string;
-    city: string;
-    description: string;
-    urgencyLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-    hourlyRate: number;
-    jobTitle: string;
-    startDate: string;
-    isNightShift: boolean;
-    tags: string[];
-}
-
-export interface OfferItem {
-    id: string;
-    authorId?: string;
-    type: 'OFFER';
-    title: string;
-    providerName: string;
-    providerRating: number;
-    providerReviews: number;
-    city: string;
-    description: string;
-    serviceType: 'WORKSHOP' | 'COACHING_VIDEO';
-    category: string;
-    basePrice: number;
-    imageUrl?: string;
-    tags: string[];
-}
-
-export type FeedItem = NeedItem | OfferItem;
+import { MapPin, Sparkles, Video } from 'lucide-react';
+import { getFeed } from '@/app/services/wall.service';
+import { BentoFeed } from './BentoFeed';
+import { SmartSearchBar, type FloatingAvatar } from './SmartSearchBar';
+import type { DiscoveryMode } from './SmartCard';
 
 export interface TalentPoolItem {
     id: string;
@@ -78,62 +29,70 @@ interface WallFeedClientProps {
     activity?: ActivityItem[];
 }
 
-const FILTER_BADGES = [
-    { id: 'urgent', label: 'Urgent', icon: Zap, color: 'text-red-500' },
-    { id: 'sport', label: 'Sport', icon: Dumbbell, color: 'text-blue-500' },
-    { id: 'visio', label: 'Visio', icon: Video, color: 'text-purple-500' },
-    { id: 'bien-etre', label: 'Bien-etre', icon: Heart, color: 'text-pink-500' },
-    { id: 'art', label: 'Art', icon: Palette, color: 'text-orange-500' },
+const MODE_OPTIONS = [
+    {
+        id: 'FIELD' as const,
+        label: 'Renfort Terrain',
+        icon: MapPin,
+        accentClass: 'text-[#FF6B6B]',
+    },
+    {
+        id: 'VISIO' as const,
+        label: "Educ'at'heure / Visio",
+        icon: Video,
+        accentClass: 'text-indigo-500',
+    },
 ];
 
-// Animation variants
-const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-        opacity: 1,
-        transition: {
-            staggerChildren: 0.08,
-            delayChildren: 0.1,
-        },
-    },
+const isMissionItem = (item: any) =>
+    String(item?.type || '').toUpperCase() === 'MISSION' || Boolean(item?.urgencyLevel);
+
+const isVisioServiceItem = (item: any) => {
+    const isService =
+        String(item?.type || '').toUpperCase() === 'SERVICE' ||
+        Boolean(item?.serviceType) ||
+        Boolean(item?.profile);
+
+    if (!isService) return false;
+
+    const serviceType = String(item?.serviceType || '').toUpperCase();
+    return serviceType === 'COACHING_VIDEO';
 };
 
-const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-        opacity: 1,
-        y: 0,
-        transition: {
-            type: 'spring' as const,
-            stiffness: 100,
-            damping: 15,
-        },
-    },
+const filterItemsForMode = (items: any[], mode: DiscoveryMode) => {
+    if (!Array.isArray(items)) return [];
+    if (mode === 'FIELD') return items.filter(isMissionItem);
+    return items.filter(isVisioServiceItem);
 };
 
-const decodeUserIdFromToken = (token?: string | null) => {
-    if (!token) return null;
+const extractHeroAvatars = (items: any[]): FloatingAvatar[] => {
+    const result: FloatingAvatar[] = [];
+    const seen = new Set<string>();
 
-    try {
-        const cleaned = token.replace(/^Bearer\s+/i, '').trim();
-        const parts = cleaned.split('.');
-        if (parts.length < 2) return null;
+    for (const item of items) {
+        const profile = item?.profile;
+        const id = String(profile?.userId || item?.authorId || item?.id || '');
+        if (!id || seen.has(id)) continue;
 
-        const payload = JSON.parse(
-            atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'))
-        );
+        const name = profile
+            ? `${profile.firstName || ''} ${profile.lastName || ''}`.trim() || item?.authorName || null
+            : item?.authorName || null;
 
-        return payload.sub || payload.id || null;
-    } catch {
-        return null;
+        const avatarUrl = profile?.avatarUrl || item?.authorAvatar || null;
+
+        if (!name && !avatarUrl) continue;
+
+        seen.add(id);
+        result.push({ id, name, avatarUrl });
+        if (result.length >= 6) break;
     }
+
+    return result;
 };
 
 export function WallFeedClient({
     initialData,
     initialFeed,
-    talentPool = [],
-    activity = [],
 }: WallFeedClientProps) {
     const resolvedInitialData = Array.isArray(initialData)
         ? initialData
@@ -141,62 +100,34 @@ export function WallFeedClient({
             ? initialFeed
             : [];
 
-    const [feedItems, setFeedItems] = useState<any[]>(resolvedInitialData);
-    const [isLoading, setIsLoading] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-    const didInitFetchRef = useRef(false);
-    const { toasts, addToast, removeToast } = useToasts();
-    const [newPostTitle, setNewPostTitle] = useState('');
-    const [newPostContent, setNewPostContent] = useState('');
-    const [newPostCity, setNewPostCity] = useState('');
-    const [newPostType, setNewPostType] = useState<'OFFER' | 'NEED'>('OFFER');
+    const [mode, setMode] = useState<DiscoveryMode>('FIELD');
     const [searchTerm, setSearchTerm] = useState('');
-    const [activeFilter, setActiveFilter] = useState<string>('');
+    const [items, setItems] = useState<any[]>(() => filterItemsForMode(resolvedInitialData, 'FIELD'));
+    const [isLoading, setIsLoading] = useState(false);
+    const didInitFetchRef = useRef(false);
+
+    const heroAvatars = useMemo(() => extractHeroAvatars(resolvedInitialData), [resolvedInitialData]);
 
     useEffect(() => {
-        if (typeof window === 'undefined') return;
-
-        const candidates = [
-            window.localStorage.getItem('accessToken'),
-            window.localStorage.getItem('token'),
-            window.localStorage.getItem('jwt'),
-        ];
-
-        for (const token of candidates) {
-            const userId = decodeUserIdFromToken(token);
-            if (userId) {
-                setCurrentUserId(userId);
-                return;
-            }
-        }
-
-        const cookieToken = document.cookie
-            ?.split(';')
-            .map((c) => c.trim())
-            .find((c) => c.startsWith('token=') || c.startsWith('accessToken='));
-
-        if (cookieToken) {
-            const [, value] = cookieToken.split('=');
-            const userId = decodeUserIdFromToken(value);
-            if (userId) setCurrentUserId(userId);
-        }
-    }, []);
-
-    const toggleFilter = (filterId: string) => {
-        setActiveFilter((prev) => (prev === filterId ? '' : filterId));
-    };
+        if (searchTerm.trim()) return;
+        setItems(filterItemsForMode(resolvedInitialData, mode));
+    }, [mode, resolvedInitialData, searchTerm]);
 
     const fetchFeed = useCallback(async () => {
         setIsLoading(true);
         try {
             const params: Record<string, any> = {};
+            const normalizedSearch = searchTerm.trim();
 
-            if (searchTerm.trim()) {
-                params.search = searchTerm.trim();
+            if (normalizedSearch) params.search = normalizedSearch;
+
+            if (mode === 'FIELD') {
+                params.type = 'MISSION';
             }
-            if (activeFilter) {
-                params.category = activeFilter;
+
+            if (mode === 'VISIO') {
+                params.type = 'POST';
+                params.category = 'COACHING_VIDEO';
             }
 
             const response = await getFeed(params);
@@ -209,17 +140,17 @@ export function WallFeedClient({
                 (Array.isArray(data) && data) ||
                 [];
 
-            setFeedItems(rawItems);
+            setItems(Array.isArray(rawItems) ? rawItems : []);
         } catch (error) {
             console.error('Erreur lors du chargement du wall', error);
         } finally {
             setIsLoading(false);
         }
-    }, [activeFilter, searchTerm]);
+    }, [mode, searchTerm]);
 
     useEffect(() => {
         const hasInitialData = resolvedInitialData.length > 0;
-        const hasQuery = Boolean(searchTerm.trim() || activeFilter);
+        const hasQuery = Boolean(searchTerm.trim());
 
         if (!didInitFetchRef.current) {
             didInitFetchRef.current = true;
@@ -231,347 +162,112 @@ export function WallFeedClient({
 
         const timeout = setTimeout(() => {
             fetchFeed();
-        }, 300);
+        }, 320);
 
         return () => clearTimeout(timeout);
-    }, [activeFilter, fetchFeed, resolvedInitialData.length, searchTerm]);
+    }, [fetchFeed, mode, resolvedInitialData.length, searchTerm]);
 
-    const handlePublish = useCallback(async () => {
-        if (!newPostTitle.trim() || !newPostContent.trim()) {
-            return;
-        }
-
-        setIsSubmitting(true);
-        try {
-            const payload: CreatePostPayload = {
-                type: newPostType,
-                title: newPostTitle.trim(),
-                content: newPostContent.trim(),
-                city: newPostCity.trim() || undefined,
-            };
-
-            const created = await createPost(payload as any);
-            if (created) {
-                setFeedItems((prev) => [created, ...prev]);
-            } else {
-                await fetchFeed();
-            }
-
-            setNewPostTitle('');
-            setNewPostContent('');
-            setNewPostCity('');
-        } catch (error) {
-            console.error('Erreur lors de la publication', error);
-            addToast({
-                message: 'Erreur lors de la publication',
-                type: 'error',
-            });
-        } finally {
-            setIsSubmitting(false);
-        }
-    }, [addToast, fetchFeed, newPostCity, newPostContent, newPostTitle, newPostType]);
-
-    const resolveCardType = useCallback((item: any): 'NEED' | 'OFFER' => {
-        const rawType = (item?.type || item?.postType || '').toString().toUpperCase();
-
-        if (rawType === 'MISSION' || rawType === 'NEED') {
-            return 'NEED';
-        }
-
-        if (rawType === 'POST' && item?.postType && String(item.postType).toUpperCase() === 'NEED') {
-            return 'NEED';
-        }
-
-        if (item?.urgencyLevel || item?.jobTitle || item?.client) {
-            return 'NEED';
-        }
-
-        return 'OFFER';
-    }, []);
-
-    const isPublishDisabled = isSubmitting || !newPostTitle.trim() || !newPostContent.trim();
-    const showSkeleton = isLoading && feedItems.length === 0;
-    const handleSelfContact = useCallback(() => {
-        addToast({
-            message: "C'est votre annonce",
-            type: 'info',
-        });
-    }, [addToast]);
+    const emptyState = !isLoading && items.length === 0;
+    const modeCopy =
+        mode === 'FIELD'
+            ? 'Renfort terrain en établissement • Missions urgentes'
+            : "Visio 1:1 • Educ'at'heure et accompagnement";
 
     return (
-        <div className="min-h-screen bg-slate-50">
-            {/* Header Sticky */}
-            <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-100">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="py-4">
-                        {/* Top Row: Logo + Search + Notifications */}
-                        <div className="flex items-center gap-4 mb-4">
-                            {/* Logo */}
-                            <div className="flex-shrink-0">
-                                <h1 className="text-xl font-bold text-slate-900">
-                                    Les<span className="text-gradient">Extras</span>
-                                </h1>
-                            </div>
+        <div className="relative min-h-screen bg-canvas overflow-hidden">
+            {/* Aurora background */}
+            <div aria-hidden className="absolute inset-0 -z-10">
+                <div className="absolute -top-48 left-1/2 h-[520px] w-[760px] -translate-x-1/2 rounded-full bg-gradient-to-r from-[#FF6B6B]/18 via-indigo-500/12 to-emerald-400/10 blur-3xl" />
+                <div className="absolute top-[22%] -left-40 h-[460px] w-[460px] rounded-full bg-[#FF6B6B]/12 blur-3xl" />
+                <div className="absolute bottom-[-220px] right-[-140px] h-[560px] w-[560px] rounded-full bg-indigo-500/14 blur-3xl" />
+            </div>
 
-                            {/* Search Bar */}
-                            <div className="flex-1 max-w-xl">
-                                <div className="relative">
-                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                                    <input
-                                        type="text"
-                                        placeholder="Rechercher un professionnel, une mission, un service..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="input-premium pl-12 pr-4"
-                                        aria-label="Rechercher"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Notifications */}
-                            <button
-                                aria-label="Notifications"
-                                className="relative p-2 rounded-xl hover:bg-slate-100 transition-colors"
-                            >
-                                <Bell className="w-5 h-5 text-slate-600" />
-                                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-coral-500 rounded-full" />
-                            </button>
-                        </div>
-
-                        {/* Filter Badges */}
-                        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-                            <span className="flex-shrink-0 text-xs font-medium text-slate-400 mr-1">
-                                <Filter className="w-4 h-4" />
-                            </span>
-                            {FILTER_BADGES.map((filter) => {
-                                const Icon = filter.icon;
-                                const isActive = activeFilter === filter.id;
-                                return (
-                                    <button
-                                        key={filter.id}
-                                        onClick={() => toggleFilter(filter.id)}
-                                        className={`
-                      pill-btn flex-shrink-0 flex items-center gap-1.5
-                      ${isActive ? 'pill-btn-active' : 'pill-btn-inactive'}
-                    `}
-                                    >
-                                        <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : filter.color}`} />
-                                        {filter.label}
-                                    </button>
-                                );
-                            })}
-                        </div>
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-safe pb-safe">
+                {/* Segmented control */}
+                <div className="sticky top-5 z-30 flex justify-center">
+                    <div className="relative inline-flex rounded-2xl bg-white/70 backdrop-blur-md border border-white/60 p-1 shadow-soft">
+                        {MODE_OPTIONS.map((option) => {
+                            const Icon = option.icon;
+                            const isActive = mode === option.id;
+                            return (
+                                <motion.button
+                                    key={option.id}
+                                    type="button"
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => setMode(option.id)}
+                                    className={`relative flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-sm font-semibold tracking-tight transition-colors ${
+                                        isActive ? 'text-slate-900' : 'text-slate-600 hover:text-slate-900'
+                                    }`}
+                                >
+                                    {isActive ? (
+                                        <motion.span
+                                            layoutId="discovery-mode"
+                                            className="absolute inset-0 rounded-xl bg-white/85 shadow-soft"
+                                            transition={{ type: 'spring' as const, stiffness: 280, damping: 24 }}
+                                        />
+                                    ) : null}
+                                    <span className="relative z-10 inline-flex items-center gap-2">
+                                        <Icon className={`h-4 w-4 ${isActive ? option.accentClass : 'text-slate-400'}`} />
+                                        {option.label}
+                                    </span>
+                                </motion.button>
+                            );
+                        })}
                     </div>
                 </div>
-            </header>
 
-            <ToastContainer toasts={toasts} onRemove={removeToast} />
-
-            {/* Main Content */}
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                <div className="flex gap-6">
-                    {/* Feed Grid - Masonry */}
-                    <div className="flex-1 space-y-4">
-                        <div className="bg-white rounded-2xl p-5 shadow-soft">
-                            <div className="flex items-center justify-between gap-3 mb-3">
-                                <div>
-                                    <h2 className="font-semibold text-slate-900">Publier sur le Wall</h2>
-                                    <p className="text-sm text-slate-500">Partage un besoin ou une offre</p>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setNewPostType('NEED')}
-                                        className={`pill-btn ${newPostType === 'NEED' ? 'pill-btn-active' : 'pill-btn-inactive'}`}
-                                    >
-                                        Besoin
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setNewPostType('OFFER')}
-                                        className={`pill-btn ${newPostType === 'OFFER' ? 'pill-btn-active' : 'pill-btn-inactive'}`}
-                                    >
-                                        Offre
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div className="grid gap-3">
-                                <input
-                                    value={newPostTitle}
-                                    onChange={(e) => setNewPostTitle(e.target.value)}
-                                    placeholder="Titre de l'annonce"
-                                    className="input-premium"
-                                />
-                                <textarea
-                                    value={newPostContent}
-                                    onChange={(e) => setNewPostContent(e.target.value)}
-                                    placeholder="Decris ton annonce"
-                                    className="input-premium min-h-[120px]"
-                                />
-                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                                    <input
-                                        value={newPostCity}
-                                        onChange={(e) => setNewPostCity(e.target.value)}
-                                        placeholder="Ville (optionnel)"
-                                        className="input-premium sm:flex-1"
-                                    />
-                                    <div className="flex justify-end gap-2 sm:w-auto">
-                                        <button
-                                            type="button"
-                                            onClick={handlePublish}
-                                            disabled={isPublishDisabled}
-                                            className={`inline-flex items-center justify-center px-4 py-2 rounded-xl font-semibold text-white bg-coral-500 hover:bg-coral-600 transition-colors ${isPublishDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
-                                        >
-                                            {isSubmitting ? 'Publication...' : 'Publier'}
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
+                {/* Hero */}
+                <section className="pt-16 sm:pt-20 pb-10 sm:pb-14 text-center">
+                    <motion.div
+                        initial={{ opacity: 0, y: 14 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.55, ease: 'easeOut' }}
+                        className="mx-auto max-w-3xl"
+                    >
+                        <div className="inline-flex items-center gap-2 rounded-full bg-white/70 backdrop-blur-md border border-white/60 px-4 py-2 text-sm font-semibold text-slate-700 shadow-soft">
+                            <Sparkles className="h-4 w-4 text-[#FF6B6B]" />
+                            LES EXTRAS • Hub vivant
                         </div>
 
-                        {showSkeleton ? (
-                            <div className="columns-1 md:columns-2 xl:columns-3 gap-4 space-y-4">
-                                {Array.from({ length: 6 }).map((_, index) => (
-                                    <div key={index} className="break-inside-avoid">
-                                        <div className="h-56 bg-white rounded-2xl shadow-soft border border-slate-100 animate-pulse" />
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <motion.div
-                                variants={containerVariants}
-                                initial="hidden"
-                                animate="visible"
-                                className="columns-1 md:columns-2 xl:columns-3 gap-4 space-y-4"
-                            >
-                                {feedItems.map((item) => {
-                                    const cardType = resolveCardType(item);
-                                    return (
-                                        <motion.div
-                                            key={item.id}
-                                            variants={itemVariants}
-                                            className="break-inside-avoid"
-                                        >
-                                            {cardType === 'NEED' ? (
-                                                <NeedCard
-                                                    data={item}
-                                                    onClick={() => console.log('Need clicked:', item.id)}
-                                                />
-                                            ) : (
-                                                <OfferCard
-                                                    data={item}
-                                                    currentUserId={currentUserId || undefined}
-                                                    onSelfContact={handleSelfContact}
-                                                    onClick={() => console.log('Offer clicked:', item.id)}
-                                                />
-                                            )}
-                                        </motion.div>
-                                    );
-                                })}
-                            </motion.div>
-                        )}
+                        <h1 className="mt-6 text-4xl sm:text-6xl font-semibold tracking-tight text-slate-900">
+                            Un renfort demain.
+                            <span className="block text-gradient">Une visio maintenant.</span>
+                        </h1>
 
-                        {/* Empty State */}
-                        {!isLoading && feedItems.length === 0 && (
-                            <div className="col-span-full text-center py-20">
-                                <div className="bg-gray-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                                    🔍
-                                </div>
-                                <h3 className="text-lg font-medium text-gray-900">Aucun résultat trouvé</h3>
-                                <p className="text-gray-500">Essayez de modifier vos filtres ou votre recherche.</p>
-                            </div>
-                        )}
+                        <p className="mt-5 text-base sm:text-lg text-slate-600 leading-relaxed">{modeCopy}</p>
+                    </motion.div>
+
+                    <div className="mx-auto mt-10 w-full max-w-3xl">
+                        <SmartSearchBar value={searchTerm} onChange={setSearchTerm} avatars={heroAvatars} />
+                    </div>
+                </section>
+
+                {/* Feed */}
+                <section className="pb-16">
+                    <div className="flex items-end justify-between gap-4 mb-6">
+                        <div>
+                            <p className="label-sm">Découverte</p>
+                            <h2 className="mt-2 text-xl font-semibold text-slate-900 tracking-tight">
+                                {mode === 'FIELD' ? 'Missions disponibles' : 'Profils visio disponibles'}
+                            </h2>
+                        </div>
+                        {isLoading ? <span className="text-sm text-slate-500">Mise à jour…</span> : null}
                     </div>
 
-                    {/* Sidebar - Desktop Only */}
-                    <aside className="hidden lg:block w-80 flex-shrink-0 space-y-6">
-                        {/* Mon Vivier */}
-                        <div className="bg-white rounded-2xl p-5 shadow-soft">
-                            <div className="flex items-center justify-between mb-4">
-                                <h2 className="font-semibold text-slate-900 flex items-center gap-2">
-                                    <Users className="w-4 h-4 text-coral-500" />
-                                    Mon Vivier
-                                </h2>
-                                <button className="text-xs text-coral-600 font-medium hover:underline">
-                                    Voir tout
-                                </button>
-                            </div>
+                    <BentoFeed items={items} mode={mode} isLoading={isLoading} />
 
-                            <div className="space-y-3">
-                                {talentPool.map((talent) => (
-                                    <div
-                                        key={talent.id}
-                                        className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer group"
-                                    >
-                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-coral-100 to-orange-100 flex items-center justify-center">
-                                            <span className="text-sm font-semibold text-coral-600">
-                                                {talent.name.charAt(0)}
-                                            </span>
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-medium text-slate-900 truncate">
-                                                {talent.name}
-                                            </p>
-                                            <p className="text-xs text-slate-500">{talent.role}</p>
-                                        </div>
-                                        <div className="flex items-center gap-1 text-xs">
-                                            <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
-                                            <span className="font-medium">{talent.rating}</span>
-                                        </div>
-                                        <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-colors" />
-                                    </div>
-                                ))}
+                    {emptyState ? (
+                        <div className="col-span-full text-center py-20">
+                            <div className="bg-gray-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                                🔍
                             </div>
+                            <h3 className="text-lg font-medium text-gray-900">Aucun résultat trouvé</h3>
+                            <p className="text-gray-500">Essayez de modifier vos filtres ou votre recherche.</p>
                         </div>
-
-                        {/* Activite Recente */}
-                        <div className="bg-white rounded-2xl p-5 shadow-soft">
-                            <div className="flex items-center justify-between mb-4">
-                                <h2 className="font-semibold text-slate-900 flex items-center gap-2">
-                                    <Activity className="w-4 h-4 text-blue-500" />
-                                    Activite recente
-                                </h2>
-                            </div>
-
-                            <div className="space-y-3">
-                                {activity.map((item) => (
-                                    <div
-                                        key={item.id}
-                                        className="flex items-start gap-3 p-2 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
-                                    >
-                                        <div className="w-2 h-2 rounded-full bg-blue-400 mt-2 flex-shrink-0" />
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm text-slate-700 leading-snug">
-                                                {item.text}
-                                            </p>
-                                            <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
-                                                <Clock className="w-3 h-3" />
-                                                Il y a {item.time}
-                                            </p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Quick Stats */}
-                        <div className="bg-gradient-to-br from-coral-500 to-orange-500 rounded-2xl p-5 text-white">
-                            <h3 className="font-semibold mb-3">Cette semaine</h3>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="bg-white/20 rounded-xl p-3 backdrop-blur-sm">
-                                    <p className="text-2xl font-bold">12</p>
-                                    <p className="text-xs text-white/80">Nouvelles missions</p>
-                                </div>
-                                <div className="bg-white/20 rounded-xl p-3 backdrop-blur-sm">
-                                    <p className="text-2xl font-bold">5</p>
-                                    <p className="text-xs text-white/80">Candidatures</p>
-                                </div>
-                            </div>
-                        </div>
-                    </aside>
-                </div>
-            </main>
+                    ) : null}
+                </section>
+            </div>
         </div>
     );
 }

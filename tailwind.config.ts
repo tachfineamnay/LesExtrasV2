@@ -10,16 +10,17 @@ const config: Config = {
         extend: {
             colors: {
                 // ADEPA Brand Colors
+                canvas: "#FAFAFA",
                 coral: {
                     50: "#FFF1F1",
                     100: "#FFE4E4",
                     200: "#FEC8C8",
                     300: "#FEA0A0",
-                    400: "#FF4D4D", // ADEPA Primary Red
-                    500: "#EF4444",
-                    600: "#DC2626",
-                    700: "#B91C1C",
-                    800: "#991B1B",
+                    400: "#FF8585",
+                    500: "#FF6B6B", // 2026 Coral (Renfort/Action)
+                    600: "#F15353",
+                    700: "#D94242",
+                    800: "#B93232",
                     900: "#7F1D1D",
                 },
                 gray: {
