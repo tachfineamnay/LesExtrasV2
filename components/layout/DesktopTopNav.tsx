@@ -1,9 +1,11 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Calendar, Home, MessageCircle, Siren, LogIn } from 'lucide-react';
+import { Calendar, Home, MessageCircle, Siren, LogIn, UserPlus, Bell, User } from 'lucide-react';
+import { auth } from '@/lib/auth';
 
 const NAV_ITEMS = [
     { href: '/wall', label: 'Wall', icon: Home },
@@ -14,8 +16,14 @@ const NAV_ITEMS = [
 
 export function DesktopTopNav() {
     const pathname = usePathname();
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [hasNotifications, setHasNotifications] = useState(true); // TODO: connect to real notifications
 
-    if (pathname.startsWith('/auth/')) {
+    useEffect(() => {
+        setIsAuthenticated(auth.isAuthenticated());
+    }, [pathname]);
+
+    if (pathname.startsWith('/auth/') || pathname.startsWith('/onboarding')) {
         return null;
     }
 
@@ -70,10 +78,48 @@ export function DesktopTopNav() {
                         })}
                     </nav>
 
-                    <Link href="/auth/login" className="btn-primary">
-                        <LogIn className="h-4 w-4" />
-                        Se connecter
-                    </Link>
+                    {/* Right section: Auth buttons or User icons */}
+                    <div className="flex items-center gap-3">
+                        {isAuthenticated ? (
+                            <>
+                                {/* Notifications */}
+                                <Link 
+                                    href="/notifications" 
+                                    className="relative p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 transition-colors"
+                                >
+                                    <Bell className="h-5 w-5 text-slate-600" />
+                                    {hasNotifications && (
+                                        <span className="absolute top-1.5 right-1.5 h-2.5 w-2.5 bg-coral-500 rounded-full border-2 border-white" />
+                                    )}
+                                </Link>
+
+                                {/* Profile */}
+                                <Link 
+                                    href="/profile" 
+                                    className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 transition-colors"
+                                >
+                                    <User className="h-5 w-5 text-slate-600" />
+                                </Link>
+                            </>
+                        ) : (
+                            <>
+                                {/* S'inscrire */}
+                                <Link 
+                                    href="/onboarding" 
+                                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors"
+                                >
+                                    <UserPlus className="h-4 w-4" />
+                                    S'inscrire
+                                </Link>
+
+                                {/* Se connecter */}
+                                <Link href="/auth/login" className="btn-primary">
+                                    <LogIn className="h-4 w-4" />
+                                    Se connecter
+                                </Link>
+                            </>
+                        )}
+                    </div>
                 </div>
             </div>
         </header>
