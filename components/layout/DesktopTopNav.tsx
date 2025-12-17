@@ -111,8 +111,8 @@ export function DesktopTopNav() {
                         {isAuthenticated ? (
                             <>
                                 {/* Notifications avec badge */}
-                                <Link 
-                                    href="/notifications" 
+                                <button 
+                                    onClick={() => {/* TODO: implement notifications panel */}} 
                                     className="relative p-2.5 rounded-xl bg-white/80 hover:bg-white border border-slate-200/50 hover:border-slate-300 transition-all hover:shadow-sm group"
                                 >
                                     <Bell className="h-5 w-5 text-slate-600 group-hover:text-slate-800 transition-colors" />
@@ -125,7 +125,7 @@ export function DesktopTopNav() {
                                             {notificationCount > 9 ? '9+' : notificationCount}
                                         </motion.span>
                                     )}
-                                </Link>
+                                </button>
 
                                 {/* Menu utilisateur avec dropdown */}
                                 <div className="relative" ref={menuRef}>

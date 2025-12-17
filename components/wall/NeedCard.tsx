@@ -73,7 +73,7 @@ export function NeedCard({
         event.stopPropagation();
 
         if (!missionId) return;
-        router.push(`/missions/${missionId}`);
+        router.push(`/dashboard/missions/${missionId}`);
     };
 
     const card = (

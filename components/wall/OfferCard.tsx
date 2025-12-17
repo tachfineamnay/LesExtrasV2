@@ -62,7 +62,7 @@ export function OfferCard({
             return;
         }
 
-        router.push(`/messages/new?recipientId=${encodeURIComponent(authorId)}`);
+        router.push(`/messages?recipientId=${encodeURIComponent(authorId)}`);
     };
 
     const card = (

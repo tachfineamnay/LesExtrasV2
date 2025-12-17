@@ -29,7 +29,7 @@ export default function AdminLayout({
 
                 if (!token) {
                     setError('Vous devez être connecté');
-                    setTimeout(() => router.push('/login'), 2000);
+                    setTimeout(() => router.push('/auth/login'), 2000);
                     return;
                 }
 
@@ -45,7 +45,7 @@ export default function AdminLayout({
                 if (!res.ok) {
                     setError('Session expirée');
                     Cookies.remove('accessToken');
-                    setTimeout(() => router.push('/login'), 2000);
+                    setTimeout(() => router.push('/auth/login'), 2000);
                     return;
                 }
 
@@ -53,7 +53,7 @@ export default function AdminLayout({
 
                 if (user.role !== 'ADMIN') {
                     setError('Accès réservé aux administrateurs');
-                    setTimeout(() => router.push('/dashboard'), 2000);
+                    setTimeout(() => router.push('/wall'), 2000);
                     return;
                 }
 
