@@ -34,7 +34,7 @@ export class AuthController {
     }
 
     @Post('login')
-    @Throttle({ default: { limit: 3, ttl: 60000 } }) // 3 attempts per minute (brute force protection)
+    @Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 attempts per minute
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'Se connecter' })
     @ApiResponse({ status: 200, description: 'Connexion réussie', type: AuthResponseDto })
