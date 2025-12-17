@@ -8,8 +8,10 @@ import {
     Search,
     Siren,
     Calendar,
-    User
+    User,
+    Shield
 } from 'lucide-react';
+import { useAuth } from '@/lib/useAuth';
 
 const NAV_ITEMS = [
     { href: '/wall', label: 'Accueil', icon: Home },
@@ -21,11 +23,22 @@ const NAV_ITEMS = [
 
 export function MobileBottomNav() {
     const pathname = usePathname();
+    const { user } = useAuth();
+    const isAdmin = user?.role === 'ADMIN';
 
     // Hide on auth pages and onboarding
     if (pathname.startsWith('/auth/') || pathname.startsWith('/onboarding')) {
         return null;
     }
+
+    // Build nav items - replace Search with Admin for admin users
+    const navItems = isAdmin
+        ? NAV_ITEMS.map(item => 
+            item.href === '/search' 
+                ? { href: '/admin', label: 'Admin', icon: Shield }
+                : item
+          )
+        : NAV_ITEMS;
 
     // Hide on desktop
     return (
@@ -36,10 +49,11 @@ export function MobileBottomNav() {
             {/* Safe area padding for iPhone */}
             <div className="relative px-2 pb-safe">
                 <div className="flex items-center justify-around h-16">
-                    {NAV_ITEMS.map((item) => {
+                    {navItems.map((item) => {
                         const Icon = item.icon;
                         const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
-                        const isHighlight = item.highlight;
+                        const isHighlight = 'highlight' in item && item.highlight;
+                        const isAdminItem = item.href === '/admin';
 
                         if (isHighlight) {
                             return (
@@ -71,17 +85,17 @@ export function MobileBottomNav() {
                                     whileTap={{ scale: 0.9 }}
                                     className={`
                     p-2 rounded-xl transition-colors
-                    ${isActive ? 'bg-coral-100' : ''}
+                    ${isActive ? (isAdminItem ? 'bg-purple-100' : 'bg-coral-100') : ''}
                   `}
                                 >
                                     <Icon className={`
                     w-5 h-5 transition-colors
-                    ${isActive ? 'text-coral-600' : 'text-gray-400'}
+                    ${isActive ? (isAdminItem ? 'text-purple-600' : 'text-coral-600') : 'text-gray-400'}
                   `} />
                                 </motion.div>
                                 <span className={`
                   text-[10px] font-medium transition-colors
-                  ${isActive ? 'text-coral-600' : 'text-gray-400'}
+                  ${isActive ? (isAdminItem ? 'text-purple-600' : 'text-coral-600') : 'text-gray-400'}
                 `}>
                                     {item.label}
                                 </span>

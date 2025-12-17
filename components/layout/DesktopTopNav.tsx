@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Home, MessageCircle, Siren, LogIn, UserPlus, Bell, User, LogOut, Settings, ChevronDown } from 'lucide-react';
+import { Calendar, Home, MessageCircle, Siren, LogIn, UserPlus, Bell, User, LogOut, Settings, ChevronDown, Shield } from 'lucide-react';
 import { useAuth } from '@/lib/useAuth';
 
 const NAV_ITEMS = [
@@ -172,6 +172,17 @@ export function DesktopTopNav() {
 
                                                 {/* Menu items */}
                                                 <div className="py-2">
+                                                    {/* Admin link - only for ADMIN role */}
+                                                    {user?.role === 'ADMIN' && (
+                                                        <Link
+                                                            href="/admin"
+                                                            onClick={() => setShowUserMenu(false)}
+                                                            className="flex items-center gap-3 px-4 py-2.5 text-sm text-purple-700 bg-purple-50 hover:bg-purple-100 transition-colors font-medium"
+                                                        >
+                                                            <Shield className="h-4 w-4 text-purple-600" />
+                                                            Administration
+                                                        </Link>
+                                                    )}
                                                     <Link
                                                         href="/profile"
                                                         onClick={() => setShowUserMenu(false)}
