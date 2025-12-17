@@ -21,6 +21,7 @@ import {
     Activity,
     ArrowUpRight,
     Loader2,
+    Zap,
 } from 'lucide-react';
 
 // ===========================================
@@ -219,17 +220,23 @@ function ActivityIcon({ type }: { type: RecentActivity['type'] }) {
 // QUICK ACTION BUTTON
 // ===========================================
 
-function QuickAction({ label, href, icon: Icon }: { label: string; href: string; icon: React.ElementType }) {
+function QuickAction({ label, href, icon: Icon, highlight }: { label: string; href: string; icon: React.ElementType; highlight?: boolean }) {
     return (
         <Link href={href}>
             <motion.div
                 whileHover={{ scale: 1.02 }}
-                className="flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-sm transition-all"
+                className={`flex items-center gap-3 p-4 rounded-xl border transition-all ${
+                    highlight 
+                        ? 'bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200 hover:border-indigo-300 shadow-sm' 
+                        : 'bg-white border-slate-100 hover:border-slate-200 hover:shadow-sm'
+                }`}
             >
-                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                    <Icon className="w-5 h-5 text-slate-600" />
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                    highlight ? 'bg-indigo-100' : 'bg-slate-100'
+                }`}>
+                    <Icon className={`w-5 h-5 ${highlight ? 'text-indigo-600' : 'text-slate-600'}`} />
                 </div>
-                <span className="flex-1 font-medium text-slate-700">{label}</span>
+                <span className={`flex-1 font-medium ${highlight ? 'text-indigo-700' : 'text-slate-700'}`}>{label}</span>
                 <ArrowUpRight className="w-4 h-4 text-slate-400" />
             </motion.div>
         </Link>
@@ -415,8 +422,21 @@ export default function AdminDashboardPage() {
                     />
                 </div>
 
-                {/* Two Columns Layout */}
+                {/* Two Columns Layout - Actions en premier */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Actions rapides - EN PREMIER */}
+                    <div className="lg:col-span-1 lg:order-first order-last space-y-4">
+                        <h2 className="font-semibold text-slate-900 px-1 flex items-center gap-2">
+                            <Zap className="w-5 h-5 text-amber-500" />
+                            Actions rapides
+                        </h2>
+                        <QuickAction label="Valider les documents" href="/admin/moderation" icon={FileCheck} highlight />
+                        <QuickAction label="Gérer les utilisateurs" href="/admin/users" icon={Users} />
+                        <QuickAction label="Voir les missions SOS" href="/admin/missions" icon={Briefcase} />
+                        <QuickAction label="Consulter les contrats" href="/admin/contracts" icon={FileText} />
+                        <QuickAction label="Calendrier des missions" href="/admin/calendar" icon={Calendar} />
+                    </div>
+
                     {/* Activité récente */}
                     <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
                         <div className="p-6 border-b border-slate-100 flex items-center justify-between">
@@ -442,16 +462,6 @@ export default function AdminDashboardPage() {
                                 Voir tout l'historique
                             </Link>
                         </div>
-                    </div>
-
-                    {/* Actions rapides */}
-                    <div className="space-y-4">
-                        <h2 className="font-semibold text-slate-900 px-1">Actions rapides</h2>
-                        <QuickAction label="Valider les documents" href="/admin/moderation" icon={FileCheck} />
-                        <QuickAction label="Gérer les utilisateurs" href="/admin/users" icon={Users} />
-                        <QuickAction label="Voir les missions SOS" href="/admin/missions" icon={Briefcase} />
-                        <QuickAction label="Consulter les contrats" href="/admin/contracts" icon={FileText} />
-                        <QuickAction label="Calendrier des missions" href="/admin/calendar" icon={Calendar} />
                     </div>
                 </div>
             </main>
