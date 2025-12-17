@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { Calendar, Home, MessageCircle, Siren, LogIn, UserPlus, Bell, User, LogOut } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Calendar, Home, MessageCircle, Siren, LogIn, UserPlus, Bell, User, LogOut, Settings, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/lib/useAuth';
 
 const NAV_ITEMS = [
@@ -17,11 +17,36 @@ const NAV_ITEMS = [
 export function DesktopTopNav() {
     const pathname = usePathname();
     const { user, isAuthenticated, isLoading, logout } = useAuth();
-    const [hasNotifications, setHasNotifications] = useState(true); // TODO: connect to real notifications
+    const [showUserMenu, setShowUserMenu] = useState(false);
+    const [notificationCount] = useState(3); // TODO: connect to real notifications
+    const [messageCount] = useState(2); // TODO: connect to real messages count
+    const menuRef = useRef<HTMLDivElement>(null);
+
+    // Close menu on outside click
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                setShowUserMenu(false);
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     if (pathname.startsWith('/auth/') || pathname.startsWith('/onboarding')) {
         return null;
     }
+
+    // User initials for avatar
+    const getInitials = () => {
+        if (user?.profile?.firstName && user?.profile?.lastName) {
+            return `${user.profile.firstName[0]}${user.profile.lastName[0]}`.toUpperCase();
+        }
+        if (user?.profile?.firstName) {
+            return user.profile.firstName.substring(0, 2).toUpperCase();
+        }
+        return 'U';
+    };
 
     return (
         <header className="hidden lg:block sticky top-0 z-50">
@@ -41,6 +66,7 @@ export function DesktopTopNav() {
                             const Icon = item.icon;
                             const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
                             const isHighlight = item.highlight;
+                            const isMessages = item.href === '/messages';
 
                             if (isHighlight) {
                                 return (
@@ -61,7 +87,7 @@ export function DesktopTopNav() {
                                 <Link
                                     key={item.href}
                                     href={item.href}
-                                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-semibold tracking-tight transition-colors ${
+                                    className={`relative inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-semibold tracking-tight transition-colors ${
                                         isActive
                                             ? 'bg-slate-900/5 text-slate-900'
                                             : 'text-slate-600 hover:bg-slate-900/5 hover:text-slate-900'
@@ -69,54 +95,125 @@ export function DesktopTopNav() {
                                 >
                                     <Icon className={`h-4 w-4 ${isActive ? 'text-[#FF6B6B]' : 'text-slate-400'}`} />
                                     {item.label}
+                                    {/* Badge messages non lus */}
+                                    {isMessages && isAuthenticated && messageCount > 0 && (
+                                        <span className="absolute -top-1 -right-1 h-5 w-5 bg-[#FF6B6B] text-white text-xs font-bold rounded-full flex items-center justify-center shadow-sm">
+                                            {messageCount > 9 ? '9+' : messageCount}
+                                        </span>
+                                    )}
                                 </Link>
                             );
                         })}
                     </nav>
 
-                    {/* Right section: Auth buttons or User icons */}
+                    {/* Right section: Auth buttons or User menu */}
                     <div className="flex items-center gap-3">
                         {isAuthenticated ? (
                             <>
-                                {/* Notifications */}
+                                {/* Notifications avec badge */}
                                 <Link 
                                     href="/notifications" 
-                                    className="relative p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 transition-colors"
+                                    className="relative p-2.5 rounded-xl bg-white/80 hover:bg-white border border-slate-200/50 hover:border-slate-300 transition-all hover:shadow-sm group"
                                 >
-                                    <Bell className="h-5 w-5 text-slate-600" />
-                                    {hasNotifications && (
-                                        <span className="absolute top-1.5 right-1.5 h-2.5 w-2.5 bg-coral-500 rounded-full border-2 border-white" />
+                                    <Bell className="h-5 w-5 text-slate-600 group-hover:text-slate-800 transition-colors" />
+                                    {notificationCount > 0 && (
+                                        <motion.span 
+                                            initial={{ scale: 0 }}
+                                            animate={{ scale: 1 }}
+                                            className="absolute -top-1.5 -right-1.5 h-5 w-5 bg-gradient-to-r from-[#FF6B6B] to-rose-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-sm"
+                                        >
+                                            {notificationCount > 9 ? '9+' : notificationCount}
+                                        </motion.span>
                                     )}
                                 </Link>
 
-                                {/* Profile */}
-                                <Link 
-                                    href="/profile" 
-                                    className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 transition-colors"
-                                >
-                                    <User className="h-5 w-5 text-slate-600" />
-                                    {user?.profile?.firstName && (
-                                        <span className="text-sm font-medium text-slate-700 hidden xl:block">
-                                            {user.profile.firstName}
+                                {/* Menu utilisateur avec dropdown */}
+                                <div className="relative" ref={menuRef}>
+                                    <button
+                                        onClick={() => setShowUserMenu(!showUserMenu)}
+                                        className="flex items-center gap-2 px-2 py-1.5 rounded-xl bg-white/80 hover:bg-white border border-slate-200/50 hover:border-slate-300 transition-all hover:shadow-sm"
+                                    >
+                                        {/* Avatar */}
+                                        {user?.profile?.avatarUrl ? (
+                                            <img 
+                                                src={user.profile.avatarUrl} 
+                                                alt="Avatar" 
+                                                className="h-8 w-8 rounded-lg object-cover"
+                                            />
+                                        ) : (
+                                            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-[#FF6B6B] to-rose-400 flex items-center justify-center">
+                                                <span className="text-white text-sm font-semibold">{getInitials()}</span>
+                                            </div>
+                                        )}
+                                        {/* Prénom */}
+                                        <span className="text-sm font-medium text-slate-700 max-w-[100px] truncate hidden xl:block">
+                                            {user?.profile?.firstName || 'Mon compte'}
                                         </span>
-                                    )}
-                                </Link>
+                                        <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
+                                    </button>
 
-                                {/* Logout */}
-                                <button 
-                                    onClick={logout}
-                                    className="p-2.5 rounded-xl bg-slate-100 hover:bg-red-100 hover:text-red-600 transition-colors"
-                                    title="Déconnexion"
-                                >
-                                    <LogOut className="h-5 w-5" />
-                                </button>
+                                    {/* Dropdown menu */}
+                                    <AnimatePresence>
+                                        {showUserMenu && (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                                                transition={{ duration: 0.15 }}
+                                                className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden"
+                                            >
+                                                {/* Header utilisateur */}
+                                                <div className="px-4 py-3 bg-gradient-to-r from-slate-50 to-slate-100/50 border-b border-slate-100">
+                                                    <p className="text-sm font-semibold text-slate-900 truncate">
+                                                        {user?.profile?.firstName} {user?.profile?.lastName}
+                                                    </p>
+                                                    <p className="text-xs text-slate-500 truncate">{user?.email}</p>
+                                                </div>
+
+                                                {/* Menu items */}
+                                                <div className="py-2">
+                                                    <Link
+                                                        href="/profile"
+                                                        onClick={() => setShowUserMenu(false)}
+                                                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                                                    >
+                                                        <User className="h-4 w-4 text-slate-400" />
+                                                        Mon profil
+                                                    </Link>
+                                                    <Link
+                                                        href="/settings/profile"
+                                                        onClick={() => setShowUserMenu(false)}
+                                                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                                                    >
+                                                        <Settings className="h-4 w-4 text-slate-400" />
+                                                        Paramètres
+                                                    </Link>
+                                                </div>
+
+                                                {/* Déconnexion */}
+                                                <div className="border-t border-slate-100 py-2">
+                                                    <button
+                                                        onClick={() => {
+                                                            setShowUserMenu(false);
+                                                            logout();
+                                                        }}
+                                                        className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                                                    >
+                                                        <LogOut className="h-4 w-4" />
+                                                        Déconnexion
+                                                    </button>
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
                             </>
                         ) : (
                             <>
                                 {/* S'inscrire */}
                                 <Link 
                                     href="/onboarding" 
-                                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors"
+                                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-700 bg-white/80 border border-slate-200/50 hover:bg-white hover:border-slate-300 transition-all hover:shadow-sm"
                                 >
                                     <UserPlus className="h-4 w-4" />
                                     S'inscrire
