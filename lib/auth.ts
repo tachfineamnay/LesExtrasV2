@@ -3,6 +3,17 @@ import Cookies from 'js-cookie';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'; // Fallback for dev
 
+// Cookie options for proper persistence
+const getCookieOptions = (): Cookies.CookieAttributes => {
+  const isSecure = typeof window !== 'undefined' && window.location.protocol === 'https:';
+  return {
+    expires: 7, // 7 days
+    path: '/',
+    sameSite: 'lax',
+    secure: isSecure,
+  };
+};
+
 export interface LoginResponse {
   accessToken: string;
 }
@@ -15,6 +26,7 @@ export const auth = {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ email, password }),
+      credentials: 'include', // Important for cookies
     });
 
     if (!response.ok) {
@@ -28,8 +40,9 @@ export const auth = {
   },
 
   setToken(token: string) {
-    // Set cookie for 7 days
-    Cookies.set('accessToken', token, { expires: 7, secure: window.location.protocol === 'https:' });
+    // Set cookie with proper options for persistence
+    Cookies.set('accessToken', token, getCookieOptions());
+    console.log('[Auth] Token saved to cookie');
   },
 
   getToken() {
@@ -37,11 +50,11 @@ export const auth = {
   },
 
   logout() {
-    Cookies.remove('accessToken');
+    Cookies.remove('accessToken', { path: '/' });
     window.location.href = '/auth/login';
   },
   
   isAuthenticated() {
-      return !!Cookies.get('accessToken');
+    return !!Cookies.get('accessToken');
   }
 };
