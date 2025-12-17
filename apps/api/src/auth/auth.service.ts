@@ -100,17 +100,30 @@ export class AuthService {
      */
     async login(dto: LoginDto): Promise<AuthResponseDto> {
         try {
+            const emailLower = dto.email.toLowerCase();
+            this.logger.log(`Login attempt for: ${emailLower}`);
+
             // Find user
             const user = await this.prisma.user.findUnique({
-                where: { email: dto.email.toLowerCase() },
+                where: { email: emailLower },
             });
 
-            if (!user || !user.passwordHash) {
+            if (!user) {
+                this.logger.warn(`User not found: ${emailLower}`);
                 throw new UnauthorizedException('Email ou mot de passe incorrect');
             }
 
+            if (!user.passwordHash) {
+                this.logger.warn(`No password hash for user: ${emailLower}`);
+                throw new UnauthorizedException('Email ou mot de passe incorrect');
+            }
+
+            this.logger.log(`User found: ${user.id}, checking password...`);
+
             // Verify password
             const isPasswordValid = await bcrypt.compare(dto.password, user.passwordHash);
+
+            this.logger.log(`Password valid: ${isPasswordValid}`);
 
             if (!isPasswordValid) {
                 throw new UnauthorizedException('Email ou mot de passe incorrect');
