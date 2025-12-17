@@ -36,7 +36,7 @@ export async function middleware(request: NextRequest) {
         try {
             const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback_dev_secret');
             await jwtVerify(token, secret);
-            return NextResponse.redirect(new URL('/dashboard', request.url));
+            return NextResponse.redirect(new URL('/profile', request.url));
         } catch (error) {
             // Si token invalide sur page login, on laisse passer
             return NextResponse.next();

@@ -22,6 +22,11 @@ const NAV_ITEMS = [
 export function MobileBottomNav() {
     const pathname = usePathname();
 
+    // Hide on auth pages and onboarding
+    if (pathname.startsWith('/auth/') || pathname.startsWith('/onboarding')) {
+        return null;
+    }
+
     // Hide on desktop
     return (
         <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">

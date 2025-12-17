@@ -45,7 +45,7 @@ export default function LoginPage() {
 
             // Short delay to show the success toast
             setTimeout(() => {
-                router.push('/wall');
+                router.push('/profile');
                 router.refresh(); // Refresh to update middleware/server state
             }, 1000);
 
