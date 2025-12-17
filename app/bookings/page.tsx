@@ -211,7 +211,7 @@ export default function BookingsPage() {
                                             {(booking.status === 'PAID' || booking.status === 'CONFIRMED') && (booking as any).isVideoSession && (
                                                 <Link
                                                     href={`/visio/${(booking as any).videoRoomId || booking.id}`}
-                                                    className="flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors font-medium text-sm"
+                                                    className="flex items-center gap-2 px-4 py-2 bg-coral-500 text-white rounded-xl hover:bg-coral-600 shadow-sm hover:shadow-md active:scale-95 transition-all font-medium text-sm"
                                                 >
                                                     <Video className="w-4 h-4" />
                                                     Rejoindre Visio

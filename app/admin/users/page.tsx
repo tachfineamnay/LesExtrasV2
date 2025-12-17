@@ -384,7 +384,7 @@ export default function AdminUsersPage() {
                             <p className="text-slate-600">{error}</p>
                             <button
                                 onClick={fetchUsers}
-                                className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                                className="mt-4 px-4 py-2 bg-coral-500 text-white rounded-xl hover:bg-coral-600 shadow-sm hover:shadow-md active:scale-95 transition-all"
                             >
                                 Réessayer
                             </button>

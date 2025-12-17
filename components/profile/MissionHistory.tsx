@@ -173,7 +173,7 @@ export function MissionHistory({
                                 <div className={`
                                     w-3 h-3 rounded-full border-2 border-white shadow-sm
                                     ${mission.status === 'COMPLETED' ? 'bg-green-500' :
-                                        mission.status === 'IN_PROGRESS' ? 'bg-blue-500' :
+                                        mission.status === 'IN_PROGRESS' ? 'bg-coral-500' :
                                             mission.status === 'CANCELLED' ? 'bg-red-400' :
                                                 'bg-slate-300'
                                     }

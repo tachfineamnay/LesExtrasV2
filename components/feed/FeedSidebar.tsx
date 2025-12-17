@@ -111,7 +111,7 @@ export function FeedSidebar({ talentPool, activity }: FeedSidebarProps) {
                             key={item.id}
                             className="flex items-start gap-3 p-2 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
                         >
-                            <div className="w-2 h-2 rounded-full bg-blue-400 mt-2 flex-shrink-0" />
+                            <div className="w-2 h-2 rounded-full bg-coral-400 mt-2 flex-shrink-0" />
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm text-slate-700 leading-snug">
                                     {item.text}

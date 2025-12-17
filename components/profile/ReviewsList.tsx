@@ -159,7 +159,7 @@ function ReviewCard({ review }: { review: ReviewItem }) {
                                 {review.reviewerName}
                             </h4>
                             {review.isVerifiedMission && (
-                                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-blue-50 text-blue-600">
+                                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-lg bg-coral-50 text-coral-600">
                                     <BadgeCheck className="w-3 h-3" />
                                     <span className="text-[10px] font-medium">Vérifié</span>
                                 </span>

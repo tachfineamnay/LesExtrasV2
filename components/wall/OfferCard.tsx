@@ -140,7 +140,7 @@ export function OfferCard({
 
                 {/* Category Badge */}
                 {category && (
-                    <span className="inline-block px-3 py-1 rounded-lg bg-orange-50 text-orange-700 text-xs font-medium mb-3">
+                    <span className="inline-block px-3 py-1 rounded-xl bg-coral-50 text-coral-700 text-xs font-medium mb-3">
                         {category}
                     </span>
                 )}
@@ -174,7 +174,7 @@ export function OfferCard({
                         <button
                             type="button"
                             onClick={handleContact}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-500 text-white text-xs font-semibold hover:bg-orange-600 transition-colors"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-coral-500 text-white text-xs font-semibold hover:bg-coral-600 shadow-sm hover:shadow-md active:scale-95 transition-all"
                             aria-label={`Contacter ${providerName}`}
                         >
                             <Mail className="w-3.5 h-3.5" />

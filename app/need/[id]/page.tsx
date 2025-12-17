@@ -102,7 +102,7 @@ export default async function NeedDetailPage({ params }: { params: { id: string 
                         <span className="text-xl font-semibold text-slate-900">{formatPrice(mission.hourlyRate)}</span>
                         <Link
                             href={applyHref}
-                            className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors"
+                            className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-coral-500 text-white font-semibold hover:bg-coral-600 shadow-sm hover:shadow-md active:scale-95 transition-all"
                         >
                             Postuler
                         </Link>
@@ -144,7 +144,7 @@ export default async function NeedDetailPage({ params }: { params: { id: string 
                                     {requiredSkills.map((skill) => (
                                         <span
                                             key={skill}
-                                            className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-sm"
+                                            className="px-3 py-1 rounded-full bg-coral-50 text-coral-700 text-sm"
                                         >
                                             {skill}
                                         </span>
@@ -163,7 +163,7 @@ export default async function NeedDetailPage({ params }: { params: { id: string 
                                 </div>
                                 <Link
                                     href={applyHref}
-                                    className="inline-flex w-full items-center justify-center px-4 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors"
+                                    className="inline-flex w-full items-center justify-center px-4 py-3 rounded-xl bg-coral-500 text-white font-semibold hover:bg-coral-600 shadow-sm hover:shadow-md active:scale-95 transition-all"
                                 >
                                     Postuler
                                 </Link>
@@ -181,7 +181,7 @@ export default async function NeedDetailPage({ params }: { params: { id: string 
                     </div>
                     <Link
                         href={applyHref}
-                        className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors"
+                        className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-coral-500 text-white font-semibold hover:bg-coral-600 shadow-sm hover:shadow-md active:scale-95 transition-all"
                     >
                         Postuler
                     </Link>
