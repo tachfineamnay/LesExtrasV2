@@ -249,7 +249,10 @@ export default function AdminDashboardPage() {
         const fetchDashboard = async () => {
             try {
                 const token = Cookies.get('accessToken');
-                const headers = token ? { Authorization: `Bearer ${token}` } : {};
+                const headers: Record<string, string> = {};
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
 
                 const statsRes = await fetch(`${getApiBase()}/admin/dashboard/stats`, { headers });
                 if (statsRes.ok) {
