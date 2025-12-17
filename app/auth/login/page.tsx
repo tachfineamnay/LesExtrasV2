@@ -38,6 +38,23 @@ export default function LoginPage() {
             const response = await auth.login(data.email, data.password);
             auth.setToken(response.accessToken);
 
+            // Fetch user role to determine redirect
+            const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+            const normalized = apiBase.replace(/\/+$/, '');
+            const baseUrl = normalized.endsWith('/api/v1') ? normalized : `${normalized}/api/v1`;
+            
+            const meRes = await fetch(`${baseUrl}/auth/me`, {
+                headers: { Authorization: `Bearer ${response.accessToken}` },
+            });
+            
+            let redirectPath = '/profile';
+            if (meRes.ok) {
+                const user = await meRes.json();
+                if (user.role === 'ADMIN') {
+                    redirectPath = '/admin';
+                }
+            }
+
             addToast({
                 message: 'Connexion réussie ! Redirection...',
                 type: 'success',
@@ -45,7 +62,7 @@ export default function LoginPage() {
 
             // Short delay to show the success toast
             setTimeout(() => {
-                router.push('/profile');
+                router.push(redirectPath);
                 router.refresh(); // Refresh to update middleware/server state
             }, 1000);
 
