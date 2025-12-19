@@ -216,7 +216,7 @@ export default function MissionDetailPage({ params }: PageProps) {
                             <button
                                 type="button"
                                 onClick={() => handleContact(candidate.id)}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-coral-500 text-white text-xs font-semibold hover:bg-coral-600 transition-colors"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-600 text-white text-xs font-semibold hover:bg-brand-700 transition-colors"
                             >
                                 <Send className="w-3.5 h-3.5" />
                                 Contacter
@@ -253,7 +253,7 @@ export default function MissionDetailPage({ params }: PageProps) {
                         ) : (
                             <Link
                                 href={`/dashboard/missions/${missionId}/contract`}
-                                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-coral-500 text-white text-sm font-semibold hover:bg-coral-600 transition-colors"
+                                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-600 text-white text-sm font-semibold hover:bg-brand-700 transition-colors"
                             >
                                 <Shield className="w-4 h-4" />
                                 Signer le contrat

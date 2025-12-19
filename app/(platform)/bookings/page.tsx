@@ -143,7 +143,7 @@ export default function BookingsPage() {
                                     onClick={() => setActiveTab(tab.id)}
                                     className={`
                                         relative px-4 py-3 text-sm font-medium transition-colors whitespace-nowrap
-                                        ${isActive ? 'text-coral-600' : 'text-slate-500 hover:text-slate-700'}
+                                        ${isActive ? 'text-brand-600' : 'text-slate-500 hover:text-slate-700'}
                                     `}
                                 >
                                     <div className="flex items-center gap-2">
@@ -151,7 +151,7 @@ export default function BookingsPage() {
                                         {tab.count !== undefined && tab.count > 0 && (
                                             <span className={`
                                                 px-1.5 py-0.5 text-[10px] rounded-full
-                                                ${isActive ? 'bg-coral-100 text-coral-600' : 'bg-slate-100 text-slate-500'}
+                                                ${isActive ? 'bg-brand-100 text-brand-600' : 'bg-slate-100 text-slate-500'}
                                             `}>
                                                 {tab.count}
                                             </span>
@@ -160,7 +160,7 @@ export default function BookingsPage() {
                                     {isActive && (
                                         <motion.div
                                             layoutId="activeTabBorder"
-                                            className="absolute bottom-0 left-0 right-0 h-0.5 bg-coral-500"
+                                            className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-500"
                                         />
                                     )}
                                 </button>
@@ -174,7 +174,7 @@ export default function BookingsPage() {
             <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 {isLoading ? (
                     <div className="flex items-center justify-center py-20">
-                        <Loader2 className="w-8 h-8 animate-spin text-coral-500" />
+                        <Loader2 className="w-8 h-8 animate-spin text-brand-600" />
                     </div>
                 ) : (
                     <AnimatePresence mode="wait">
@@ -202,7 +202,7 @@ export default function BookingsPage() {
                                             {booking.status === 'PENDING' && (
                                                 <Link
                                                     href={`/checkout/${booking.id}`}
-                                                    className="flex items-center gap-2 px-4 py-2 bg-coral-500 text-white rounded-lg hover:bg-coral-600 transition-colors font-medium text-sm"
+                                                    className="flex items-center gap-2 px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors font-medium text-sm"
                                                 >
                                                     <CreditCard className="w-4 h-4" />
                                                     Payer
@@ -211,7 +211,7 @@ export default function BookingsPage() {
                                             {(booking.status === 'PAID' || booking.status === 'CONFIRMED') && (booking as any).isVideoSession && (
                                                 <Link
                                                     href={`/visio/${(booking as any).videoRoomId || booking.id}`}
-                                                    className="flex items-center gap-2 px-4 py-2 bg-coral-500 text-white rounded-xl hover:bg-coral-600 shadow-sm hover:shadow-md active:scale-95 transition-all font-medium text-sm"
+                                                    className="flex items-center gap-2 px-4 py-2 bg-brand-500 text-white rounded-xl hover:bg-brand-600 shadow-sm hover:shadow-md active:scale-95 transition-all font-medium text-sm"
                                                 >
                                                     <Video className="w-4 h-4" />
                                                     Rejoindre Visio

@@ -51,7 +51,7 @@ function CheckoutForm() {
                 className={`w-full h-11 rounded-xl font-semibold text-white text-sm transition-colors ${
                     !stripe || isSubmitting
                         ? 'bg-slate-400 cursor-not-allowed'
-                        : 'bg-coral-500 hover:bg-coral-600'
+                        : 'bg-brand-600 hover:bg-brand-700'
                 }`}
             >
                 {isSubmitting ? 'Paiement en cours...' : 'Payer'}
@@ -124,7 +124,7 @@ export default function CheckoutPage() {
                 <div className="bg-white rounded-2xl shadow-soft border border-slate-100 p-6">
                     {isLoading && (
                         <div className="flex justify-center py-10">
-                            <div className="w-6 h-6 border-2 border-slate-300 border-t-coral-500 rounded-full animate-spin" />
+                            <div className="w-6 h-6 border-2 border-slate-300 border-t-brand-600 rounded-full animate-spin" />
                         </div>
                     )}
 

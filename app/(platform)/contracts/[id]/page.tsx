@@ -401,7 +401,7 @@ Le Prestataire déclare être titulaire d'une assurance responsabilité civile p
     if (isLoading) {
         return (
             <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-coral-500" />
+                <Loader2 className="w-8 h-8 animate-spin text-brand-600" />
             </div>
         );
     }
@@ -412,7 +412,7 @@ Le Prestataire déclare être titulaire d'une assurance responsabilité civile p
                 <div className="text-center">
                     <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
                     <p className="text-slate-600">{error || 'Contrat non trouvé'}</p>
-                    <Link href="/contracts" className="text-coral-500 hover:underline mt-4 inline-block">
+                    <Link href="/contracts" className="text-brand-600 hover:underline mt-4 inline-block">
                         Retour aux contrats
                     </Link>
                 </div>
@@ -483,7 +483,7 @@ Le Prestataire déclare être titulaire d'une assurance responsabilité civile p
                     <motion.div
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="p-4 bg-gradient-to-r from-coral-500 to-orange-500 rounded-2xl text-white flex items-center gap-3"
+                        className="p-4 bg-gradient-to-r from-rose-500 to-rose-600 rounded-2xl text-white flex items-center gap-3"
                     >
                         <PenTool className="w-6 h-6" />
                         <div>
@@ -626,10 +626,10 @@ Le Prestataire déclare être titulaire d'une assurance responsabilité civile p
 
                 {/* Signature Area */}
                 {needsToSign && (
-                    <div className="bg-white rounded-2xl border-2 border-coral-200 p-6">
+                    <div className="bg-white rounded-2xl border-2 border-brand-200 p-6">
                         <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 rounded-full bg-coral-100 flex items-center justify-center">
-                                <PenTool className="w-5 h-5 text-coral-600" />
+                            <div className="w-10 h-10 rounded-full bg-brand-100 flex items-center justify-center">
+                                <PenTool className="w-5 h-5 text-brand-600" />
                             </div>
                             <div>
                                 <h2 className="font-semibold text-slate-900">Votre signature</h2>

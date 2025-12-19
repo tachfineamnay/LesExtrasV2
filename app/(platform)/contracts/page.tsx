@@ -180,10 +180,10 @@ function ContractCard({ contract, userRole }: { contract: Contract; userRole: 'E
         <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`bg-white rounded-2xl border ${needsAction ? 'border-coral-200 shadow-coral-100' : 'border-slate-100'} overflow-hidden hover:shadow-lg transition-all`}
+            className={`bg-white rounded-2xl border ${needsAction ? 'border-brand-200 shadow-brand-100' : 'border-slate-100'} overflow-hidden hover:shadow-lg transition-all`}
         >
             {needsAction && (
-                <div className="px-4 py-2 bg-gradient-to-r from-coral-500 to-orange-500 text-white text-sm font-medium flex items-center gap-2">
+                <div className="px-4 py-2 bg-gradient-to-r from-rose-500 to-rose-600 text-white text-sm font-medium flex items-center gap-2">
                     <PenTool className="w-4 h-4" />
                     Action requise : Signez ce contrat
                 </div>
@@ -234,7 +234,7 @@ function ContractCard({ contract, userRole }: { contract: Contract; userRole: 'E
                         href={`/contracts/${contract.id}`}
                         className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-colors ${
                             needsAction
-                                ? 'bg-coral-500 text-white hover:bg-coral-600'
+                                ? 'bg-brand-600 text-white hover:bg-brand-700'
                                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                         }`}
                     >
@@ -457,7 +457,7 @@ export default function ContractsPage() {
                         {userRole === 'EXTRA' && (
                             <Link
                                 href="/quotes/new"
-                                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-coral-500 text-white font-medium hover:bg-coral-600 transition-colors"
+                                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-600 text-white font-medium hover:bg-brand-700 transition-colors"
                             >
                                 <Plus className="w-4 h-4" />
                                 Nouveau devis
@@ -471,9 +471,9 @@ export default function ContractsPage() {
             {(pendingContracts.length > 0 || pendingQuotes.length > 0) && (
                 <div className="max-w-4xl mx-auto px-4 py-4">
                     {pendingContracts.length > 0 && (
-                        <div className="mb-3 p-4 bg-coral-50 border border-coral-200 rounded-xl flex items-center gap-3">
-                            <PenTool className="w-5 h-5 text-coral-600" />
-                            <p className="text-sm text-coral-700 font-medium">
+                        <div className="mb-3 p-4 bg-brand-50 border border-brand-200 rounded-xl flex items-center gap-3">
+                            <PenTool className="w-5 h-5 text-brand-600" />
+                            <p className="text-sm text-brand-700 font-medium">
                                 {pendingContracts.length} contrat(s) en attente de votre signature
                             </p>
                         </div>
@@ -496,7 +496,7 @@ export default function ContractsPage() {
                         onClick={() => setActiveTab('contracts')}
                         className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                             activeTab === 'contracts'
-                                ? 'bg-coral-500 text-white'
+                                ? 'bg-brand-600 text-white'
                                 : 'text-slate-600 hover:bg-slate-100'
                         }`}
                     >
@@ -507,7 +507,7 @@ export default function ContractsPage() {
                         onClick={() => setActiveTab('quotes')}
                         className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                             activeTab === 'quotes'
-                                ? 'bg-coral-500 text-white'
+                                ? 'bg-brand-600 text-white'
                                 : 'text-slate-600 hover:bg-slate-100'
                         }`}
                     >
@@ -521,7 +521,7 @@ export default function ContractsPage() {
             <main className="max-w-4xl mx-auto px-4 py-6">
                 {isLoading ? (
                     <div className="flex items-center justify-center py-20">
-                        <Loader2 className="w-8 h-8 animate-spin text-coral-500" />
+                        <Loader2 className="w-8 h-8 animate-spin text-brand-600" />
                     </div>
                 ) : activeTab === 'contracts' ? (
                     contracts.length === 0 ? (

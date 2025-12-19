@@ -122,7 +122,7 @@ export default function NewBookingPage() {
                                 <p className="text-sm text-slate-500">Réservation</p>
                                 <h1 className="text-2xl font-semibold text-slate-900">Planifier votre session</h1>
                             </div>
-                            <Link href="/wall" className="text-sm text-coral-600 font-semibold hover:underline">
+                            <Link href="/wall" className="text-sm text-brand-600 font-semibold hover:underline">
                                 Retour au Wall
                             </Link>
                         </div>
@@ -183,7 +183,7 @@ export default function NewBookingPage() {
                                 type="button"
                                 onClick={handleSubmit}
                                 disabled={isSubmitting}
-                                className={`inline-flex items-center justify-center px-4 py-3 rounded-xl font-semibold text-white bg-coral-500 hover:bg-coral-600 transition-colors ${
+                                className={`inline-flex items-center justify-center px-4 py-3 rounded-xl font-semibold text-white bg-brand-600 hover:bg-brand-700 transition-colors ${
                                     isSubmitting ? 'opacity-60 cursor-not-allowed' : ''
                                 }`}
                             >
@@ -195,7 +195,7 @@ export default function NewBookingPage() {
                     <aside className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
                         <h2 className="text-lg font-semibold text-slate-900">Résumé</h2>
                         <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-100 to-coral-100 flex items-center justify-center overflow-hidden ring-2 ring-white shadow">
+                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand-100 to-brand-50 flex items-center justify-center overflow-hidden ring-2 ring-white shadow">
                                 {service?.profile?.avatarUrl ? (
                                     <img
                                         src={service.profile.avatarUrl}
