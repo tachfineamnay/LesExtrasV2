@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Home, MessageCircle, Siren, LogIn, UserPlus, Bell, User, LogOut, Settings, ChevronDown, Shield } from 'lucide-react';
+import { Calendar, Home, MessageCircle, Siren, LogIn, UserPlus, Bell, User, LogOut, Settings, ChevronDown, Shield, Activity } from 'lucide-react';
 import { useAuth } from '@/lib/useAuth';
 import { CreateActionModal } from '@/components/create/CreateActionModal';
 
@@ -53,12 +53,14 @@ export function DesktopTopNav() {
         <header className="hidden lg:block sticky top-0 z-50">
             <div className="glass border-b border-white/60">
                 <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between gap-6">
-                    <Link href="/wall" className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-[#FF6B6B] via-[#FF6B6B] to-indigo-500 shadow-soft flex items-center justify-center">
-                            <span className="text-white font-semibold tracking-tight">LX</span>
+                    <Link href="/wall" className="flex items-center gap-2.5 group">
+                        {/* Logo Icon - Pulse/Heartbeat */}
+                        <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-indigo-600 to-teal-500 shadow-soft flex items-center justify-center transition-transform group-hover:scale-105">
+                            <Activity className="h-5 w-5 text-white" strokeWidth={2.5} />
                         </div>
-                        <span className="text-lg font-semibold text-slate-900 tracking-tight">
-                            Les<span className="text-gradient">Extras</span>
+                        {/* Logo Text */}
+                        <span className="hidden sm:inline text-lg font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-teal-500">
+                            Sociopulse
                         </span>
                     </Link>
 
@@ -75,7 +77,7 @@ export function DesktopTopNav() {
                                         <motion.span
                                             whileHover={{ scale: 1.02 }}
                                             whileTap={{ scale: 0.98 }}
-                                            className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-gradient-to-r from-[#FF6B6B] to-orange-500 text-white font-semibold shadow-soft"
+                                            className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-gradient-to-r from-rose-500 to-rose-600 text-white font-semibold shadow-soft"
                                         >
                                             <Icon className="h-4 w-4" />
                                             {item.label}
@@ -94,11 +96,11 @@ export function DesktopTopNav() {
                                             : 'text-slate-600 hover:bg-slate-900/5 hover:text-slate-900'
                                     }`}
                                 >
-                                    <Icon className={`h-4 w-4 ${isActive ? 'text-[#FF6B6B]' : 'text-slate-400'}`} />
+                                    <Icon className={`h-4 w-4 ${isActive ? 'text-indigo-600' : 'text-slate-400'}`} />
                                     {item.label}
                                     {/* Badge messages non lus */}
                                     {isMessages && isAuthenticated && messageCount > 0 && (
-                                        <span className="absolute -top-1 -right-1 h-5 w-5 bg-[#FF6B6B] text-white text-xs font-bold rounded-full flex items-center justify-center shadow-sm">
+                                        <span className="absolute -top-1 -right-1 h-5 w-5 bg-indigo-600 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-sm">
                                             {messageCount > 9 ? '9+' : messageCount}
                                         </span>
                                     )}
@@ -123,7 +125,7 @@ export function DesktopTopNav() {
                                         <motion.span 
                                             initial={{ scale: 0 }}
                                             animate={{ scale: 1 }}
-                                            className="absolute -top-1.5 -right-1.5 h-5 w-5 bg-gradient-to-r from-[#FF6B6B] to-rose-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-sm"
+                                            className="absolute -top-1.5 -right-1.5 h-5 w-5 bg-gradient-to-r from-indigo-600 to-indigo-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-sm"
                                         >
                                             {notificationCount > 9 ? '9+' : notificationCount}
                                         </motion.span>
@@ -144,7 +146,7 @@ export function DesktopTopNav() {
                                                 className="h-8 w-8 rounded-lg object-cover"
                                             />
                                         ) : (
-                                            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-[#FF6B6B] to-rose-400 flex items-center justify-center">
+                                            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-600 to-teal-500 flex items-center justify-center">
                                                 <span className="text-white text-sm font-semibold">{getInitials()}</span>
                                             </div>
                                         )}
@@ -224,17 +226,17 @@ export function DesktopTopNav() {
                             </>
                         ) : (
                             <>
-                                {/* S'inscrire */}
+                                {/* S'inscrire - Outline Indigo */}
                                 <Link 
                                     href="/onboarding" 
-                                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-700 bg-white/80 border border-slate-200/50 hover:bg-white hover:border-slate-300 transition-all hover:shadow-sm"
+                                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-indigo-700 bg-white/80 border border-indigo-200 hover:bg-indigo-50 hover:border-indigo-300 transition-all hover:shadow-sm"
                                 >
                                     <UserPlus className="h-4 w-4" />
                                     S'inscrire
                                 </Link>
 
-                                {/* Se connecter */}
-                                <Link href="/auth/login" className="btn-primary">
+                                {/* Se connecter - Solid Indigo */}
+                                <Link href="/auth/login" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition-all shadow-sm hover:shadow-md">
                                     <LogIn className="h-4 w-4" />
                                     Se connecter
                                 </Link>
