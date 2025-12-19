@@ -48,7 +48,7 @@ export function FeedSidebar({ talentPool, activity }: FeedSidebarProps) {
                     </h2>
                     <Link
                         href="/vivier"
-                        className="text-xs text-coral-600 font-medium hover:underline"
+                        className="text-xs text-brand-600 font-medium hover:underline"
                     >
                         Voir tout
                     </Link>
@@ -61,7 +61,7 @@ export function FeedSidebar({ talentPool, activity }: FeedSidebarProps) {
                             href={`/profile/${talent.id}`}
                             className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer group"
                         >
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-coral-100 to-orange-100 flex items-center justify-center overflow-hidden">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-100 to-indigo-100 flex items-center justify-center overflow-hidden">
                                 {talent.avatar ? (
                                     <img
                                         src={talent.avatar}
@@ -69,7 +69,7 @@ export function FeedSidebar({ talentPool, activity }: FeedSidebarProps) {
                                         className="w-full h-full object-cover"
                                     />
                                 ) : (
-                                    <span className="text-sm font-semibold text-coral-600">
+                                    <span className="text-sm font-semibold text-brand-600">
                                         {(talent.name || '?').charAt(0)}
                                     </span>
                                 )}
@@ -111,7 +111,7 @@ export function FeedSidebar({ talentPool, activity }: FeedSidebarProps) {
                             key={item.id}
                             className="flex items-start gap-3 p-2 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
                         >
-                            <div className="w-2 h-2 rounded-full bg-coral-400 mt-2 flex-shrink-0" />
+                            <div className="w-2 h-2 rounded-full bg-brand-400 mt-2 flex-shrink-0" />
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm text-slate-700 leading-snug">
                                     {item.text}
@@ -133,7 +133,7 @@ export function FeedSidebar({ talentPool, activity }: FeedSidebarProps) {
             </div>
 
             {/* Quick Stats Card */}
-            <div className="bg-gradient-to-br from-coral-500 to-coral-600 rounded-2xl p-5 text-white">
+            <div className="bg-gradient-to-br from-brand-600 to-brand-700 rounded-2xl p-5 text-white">
                 <h3 className="font-semibold mb-3">Cette semaine</h3>
                 <div className="grid grid-cols-2 gap-3">
                     <div className="bg-white/20 rounded-xl p-3 backdrop-blur-sm">

@@ -263,8 +263,8 @@ export function MissionMonitor({ initialMissions = [], onRefresh }: MissionMonit
                                         <td className="px-6 py-4">
                                             {mission.candidateName ? (
                                                 <div className="flex items-center gap-2">
-                                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-coral-100 to-orange-100 flex items-center justify-center">
-                                                        <span className="text-xs font-semibold text-coral-600">
+                                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-100 to-indigo-100 flex items-center justify-center">
+                                                        <span className="text-xs font-semibold text-brand-600">
                                                             {(mission.candidateName || '?').charAt(0)}
                                                         </span>
                                                     </div>

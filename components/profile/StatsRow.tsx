@@ -65,7 +65,7 @@ function StatItem({ icon, value, label, sublabel, highlight = false }: StatItemP
             className={`
                 flex flex-col items-center p-4 rounded-2xl
                 ${highlight 
-                    ? 'bg-gradient-to-br from-coral-50 to-orange-50 border border-coral-100' 
+                    ? 'bg-gradient-to-br from-brand-50 to-indigo-50 border border-brand-100'
                     : 'bg-slate-50/80 hover:bg-slate-100/80'
                 }
                 transition-colors duration-200
@@ -74,7 +74,7 @@ function StatItem({ icon, value, label, sublabel, highlight = false }: StatItemP
             {/* Icon */}
             <div className={`
                 mb-2 p-2 rounded-xl
-                ${highlight ? 'bg-coral-100 text-coral-600' : 'bg-white text-slate-500 shadow-sm'}
+                ${highlight ? 'bg-brand-100 text-brand-600' : 'bg-white text-slate-500 shadow-sm'}
             `}>
                 {icon}
             </div>
@@ -82,7 +82,7 @@ function StatItem({ icon, value, label, sublabel, highlight = false }: StatItemP
             {/* Value */}
             <span className={`
                 text-xl sm:text-2xl font-bold
-                ${highlight ? 'text-coral-600' : 'text-slate-900'}
+                ${highlight ? 'text-brand-600' : 'text-slate-900'}
             `}>
                 {value}
             </span>

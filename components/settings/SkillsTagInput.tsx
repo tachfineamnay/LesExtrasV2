@@ -70,7 +70,7 @@ export function SkillsTagInput({
                     type="button"
                     onClick={() => addTag(inputValue)}
                     disabled={disabled || !inputValue.trim() || value.length >= maxTags}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg bg-coral-500 text-white hover:bg-coral-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg bg-brand-600 text-white hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     aria-label="Ajouter"
                 >
                     <Plus className="w-4 h-4" />
@@ -87,14 +87,14 @@ export function SkillsTagInput({
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0, opacity: 0 }}
                             layout
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-coral-100 text-coral-700 text-sm font-medium"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-100 text-brand-700 text-sm font-medium"
                         >
                             {tag}
                             {!disabled && (
                                 <button
                                     type="button"
                                     onClick={() => removeTag(tag)}
-                                    className="p-0.5 rounded-full hover:bg-coral-200 transition-colors"
+                                    className="p-0.5 rounded-full hover:bg-brand-200 transition-colors"
                                     aria-label={`Supprimer ${tag}`}
                                 >
                                     <X className="w-3.5 h-3.5" />

@@ -176,7 +176,7 @@ export function CreateActionModal({
                     ) : (
                         <button
                             type="button"
-                            className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-gradient-to-r from-coral-500 to-rose-500 text-white font-semibold shadow-soft hover:shadow-soft-lg transition-shadow"
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-teal-500 text-white font-semibold shadow-soft hover:shadow-soft-lg transition-shadow"
                         >
                             <Plus className="h-4 w-4" />
                             Publier
@@ -242,8 +242,8 @@ export function CreateActionModal({
                                     className="group text-left rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 transition-colors p-5"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <span className="h-10 w-10 rounded-2xl bg-coral-500/10 flex items-center justify-center">
-                                            <Sparkles className="h-5 w-5 text-coral-600" />
+                                        <span className="h-10 w-10 rounded-2xl bg-brand-500/10 flex items-center justify-center">
+                                            <Sparkles className="h-5 w-5 text-brand-600" />
                                         </span>
                                         <div>
                                             <p className="text-sm font-semibold text-slate-900">{postLabel}</p>
@@ -318,7 +318,7 @@ export function CreateActionModal({
                                         type="checkbox"
                                         checked={ethicsConfirmed}
                                         onChange={(e) => setEthicsConfirmed(e.target.checked)}
-                                        className="mt-1 h-4 w-4 rounded border-slate-300 text-coral-600 focus:ring-coral-200"
+                                        className="mt-1 h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-200"
                                     />
                                     <span className="text-sm text-slate-700">{POST_ETHICS_LABEL}</span>
                                 </label>

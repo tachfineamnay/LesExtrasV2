@@ -63,7 +63,7 @@ export function PreJoinScreen({
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={onJoin}
-                className="px-8 py-3 bg-coral-500 text-white font-semibold rounded-xl shadow-xl shadow-coral-500/20 hover:bg-coral-600 transition-colors"
+                className="px-8 py-3 bg-live-500 text-white font-semibold rounded-xl shadow-xl shadow-live-500/20 hover:bg-live-600 transition-colors"
             >
                 Rejoindre la salle
             </motion.button>

@@ -35,43 +35,43 @@ export interface SkillsTagsProps {
 }
 
 // Skill category styling - Premium Soft Pill Design
-// Default: slate-100 background, Highlighted: coral-50 background
+// Default: slate-100 background, Highlighted: brand-50 background
 const categoryStyles: Record<string, { bg: string; text: string; border: string; hoverBorder: string }> = {
     medical: {
         bg: 'bg-slate-100',
         text: 'text-slate-700',
         border: 'border-transparent',
-        hoverBorder: 'hover:border-coral-200',
+        hoverBorder: 'hover:border-brand-200',
     },
     soft: {
         bg: 'bg-slate-100',
         text: 'text-slate-700',
         border: 'border-transparent',
-        hoverBorder: 'hover:border-coral-200',
+        hoverBorder: 'hover:border-brand-200',
     },
     transport: {
         bg: 'bg-slate-100',
         text: 'text-slate-700',
         border: 'border-transparent',
-        hoverBorder: 'hover:border-coral-200',
+        hoverBorder: 'hover:border-brand-200',
     },
     language: {
         bg: 'bg-slate-100',
         text: 'text-slate-700',
         border: 'border-transparent',
-        hoverBorder: 'hover:border-coral-200',
+        hoverBorder: 'hover:border-brand-200',
     },
     certification: {
         bg: 'bg-slate-100',
         text: 'text-slate-700',
         border: 'border-transparent',
-        hoverBorder: 'hover:border-coral-200',
+        hoverBorder: 'hover:border-brand-200',
     },
     default: {
         bg: 'bg-slate-100',
         text: 'text-slate-700',
         border: 'border-transparent',
-        hoverBorder: 'hover:border-coral-200',
+        hoverBorder: 'hover:border-brand-200',
     },
 };
 

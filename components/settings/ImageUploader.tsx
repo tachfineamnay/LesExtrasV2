@@ -109,7 +109,7 @@ export function ImageUploader({
                 disabled={disabled}
                 className={`
                     relative ${sizeClasses[size]} ${shapeClasses[shape]}
-                    bg-gradient-to-br from-coral-100 to-orange-100
+                    bg-gradient-to-br from-brand-100 to-indigo-100
                     flex items-center justify-center
                     overflow-hidden border-4 border-white shadow-lg
                     transition-all cursor-pointer
@@ -126,7 +126,7 @@ export function ImageUploader({
                         className="w-full h-full object-cover"
                     />
                 ) : (
-                    <span className="text-2xl font-bold text-coral-600">
+                    <span className="text-2xl font-bold text-brand-600">
                         {initials.slice(0, 2).toUpperCase()}
                     </span>
                 )}

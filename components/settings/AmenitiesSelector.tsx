@@ -78,7 +78,7 @@ export function AmenitiesSelector({
                             relative flex flex-col items-center gap-2 p-4 rounded-2xl
                             border-2 transition-all
                             ${isSelected
-                                ? 'border-coral-500 bg-coral-50 text-coral-600'
+                                ? 'border-brand-500 bg-brand-50 text-brand-600'
                                 : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
                             }
                             ${disabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}
@@ -89,13 +89,13 @@ export function AmenitiesSelector({
                             <motion.div
                                 initial={{ scale: 0 }}
                                 animate={{ scale: 1 }}
-                                className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-coral-500 text-white flex items-center justify-center"
+                                className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-brand-600 text-white flex items-center justify-center"
                             >
                                 <CheckCircle className="w-3.5 h-3.5" />
                             </motion.div>
                         )}
 
-                        <Icon className={`w-6 h-6 ${isSelected ? 'text-coral-500' : 'text-slate-400'}`} />
+                        <Icon className={`w-6 h-6 ${isSelected ? 'text-brand-600' : 'text-slate-400'}`} />
                         <span className="text-sm font-medium">{amenity.label}</span>
                     </motion.button>
                 );
