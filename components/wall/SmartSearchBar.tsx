@@ -75,7 +75,7 @@ export function SmartSearchBar({
                     const style = ORBIT_POSITIONS[index % ORBIT_POSITIONS.length];
                     const duration = 5.4 + index * 0.55;
                     const delay = index * 0.18;
-                    const ringColor = index % 2 === 0 ? 'ring-[#FF6B6B]/30' : 'ring-indigo-500/25';
+                    const ringColor = index % 2 === 0 ? 'ring-indigo-500/30' : 'ring-teal-500/25';
 
                     return (
                         <motion.div
@@ -118,7 +118,7 @@ export function SmartSearchBar({
             >
                 <motion.div
                     aria-hidden
-                    className="absolute -inset-2 rounded-[2rem] bg-gradient-to-r from-[#FF6B6B]/35 via-indigo-500/30 to-[#FF6B6B]/25 blur-2xl"
+                    className="absolute -inset-2 rounded-[2rem] bg-gradient-to-r from-indigo-500/35 via-teal-500/30 to-indigo-500/25 blur-2xl"
                     animate={{ opacity: isFocused ? 1 : 0.35 }}
                     transition={{ duration: 0.35, ease: 'easeOut' }}
                 />

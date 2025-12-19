@@ -103,7 +103,7 @@ export function OfferCard({
                 {/* Provider Info */}
                 <div className="flex items-center gap-3 mb-3">
                     {/* Avatar */}
-                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-orange-100 to-coral-100 flex items-center justify-center overflow-hidden ring-2 ring-white shadow-sm">
+                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-indigo-100 to-teal-100 flex items-center justify-center overflow-hidden ring-2 ring-white shadow-sm">
                         {providerAvatar ? (
                             <img src={providerAvatar} alt={providerName} className="w-full h-full object-cover" />
                         ) : (
@@ -140,7 +140,7 @@ export function OfferCard({
 
                 {/* Category Badge */}
                 {category && (
-                    <span className="inline-block px-3 py-1 rounded-xl bg-coral-50 text-coral-700 text-xs font-medium mb-3">
+                    <span className="inline-block px-3 py-1 rounded-xl bg-teal-50 text-teal-700 text-xs font-medium mb-3">
                         {category}
                     </span>
                 )}
@@ -174,7 +174,7 @@ export function OfferCard({
                         <button
                             type="button"
                             onClick={handleContact}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-coral-500 text-white text-xs font-semibold hover:bg-coral-600 shadow-sm hover:shadow-md active:scale-95 transition-all"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-600 text-white text-xs font-semibold hover:bg-brand-700 shadow-sm hover:shadow-md active:scale-95 transition-all"
                             aria-label={`Contacter ${providerName}`}
                         >
                             <Mail className="w-3.5 h-3.5" />

@@ -37,7 +37,7 @@ const MODE_OPTIONS = [
         id: 'FIELD' as const,
         label: 'Renfort Terrain',
         icon: MapPin,
-        accentClass: 'text-[#FF6B6B]',
+        accentClass: 'text-rose-500',
     },
     {
         id: 'VISIO' as const,
@@ -53,8 +53,8 @@ const QUICK_ACTIONS = [
         label: 'SOS Renfort',
         description: 'Créer une mission urgente en 30 sec',
         icon: Siren,
-        iconClass: 'text-[#FF6B6B]',
-        bgClass: 'from-[#FF6B6B]/18 via-orange-500/12 to-white/40',
+        iconClass: 'text-rose-500',
+        bgClass: 'from-rose-500/18 via-rose-400/12 to-white/40',
     },
     {
         href: '/bookings',
@@ -347,8 +347,8 @@ export function WallFeedClient({
         <div className="relative min-h-screen bg-canvas overflow-hidden">
             {/* Aurora background */}
             <div aria-hidden className="absolute inset-0 -z-10">
-                <div className="absolute -top-48 left-1/2 h-[520px] w-[760px] -translate-x-1/2 rounded-full bg-gradient-to-r from-[#FF6B6B]/18 via-indigo-500/12 to-emerald-400/10 blur-3xl" />
-                <div className="absolute top-[22%] -left-40 h-[460px] w-[460px] rounded-full bg-[#FF6B6B]/12 blur-3xl" />
+                <div className="absolute -top-48 left-1/2 h-[520px] w-[760px] -translate-x-1/2 rounded-full bg-gradient-to-r from-indigo-500/18 via-teal-500/12 to-emerald-400/10 blur-3xl" />
+                <div className="absolute top-[22%] -left-40 h-[460px] w-[460px] rounded-full bg-indigo-500/12 blur-3xl" />
                 <div className="absolute bottom-[-220px] right-[-140px] h-[560px] w-[560px] rounded-full bg-indigo-500/14 blur-3xl" />
             </div>
 
@@ -362,8 +362,8 @@ export function WallFeedClient({
                 >
                     <div className="relative group">
                         {/* Glow effect */}
-                        <div className="absolute -inset-1 bg-gradient-to-r from-coral-400 via-rose-400 to-coral-400 rounded-full opacity-30 blur-md group-hover:opacity-50 transition-opacity" />
-                        <div className="relative inline-flex items-center gap-3 rounded-full bg-gradient-to-r from-coral-500 to-rose-500 px-6 py-3 text-base font-bold text-white shadow-lg">
+                        <div className="absolute -inset-1 bg-gradient-to-r from-brand-400 via-brand-500 to-brand-400 rounded-full opacity-30 blur-md group-hover:opacity-50 transition-opacity" />
+                        <div className="relative inline-flex items-center gap-3 rounded-full bg-gradient-to-r from-brand-600 to-brand-700 px-6 py-3 text-base font-bold text-white shadow-lg">
                             <Sparkles className="h-5 w-5 text-white animate-pulse" />
                             <span className="tracking-wide">LES EXTRAS • Le hub du social</span>
                             <Sparkles className="h-5 w-5 text-white animate-pulse" />
@@ -542,7 +542,7 @@ export function WallFeedClient({
                                 <p className="text-lg font-semibold text-slate-900">Demandes urgentes</p>
                             </div>
                             <div className="flex items-center gap-3">
-                                <span className="text-sm font-medium text-coral-500">{needs.length} demandes</span>
+                                <span className="text-sm font-medium text-rose-500">{needs.length} demandes</span>
                                 <div className="flex gap-1.5">
                                     <button
                                         type="button"

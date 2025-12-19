@@ -45,7 +45,7 @@ export function ImmersiveCard({
                         className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.06]"
                     />
                 ) : (
-                    <div className="h-full w-full bg-gradient-to-br from-indigo-500/20 via-white/5 to-[#FF6B6B]/20" />
+                    <div className="h-full w-full bg-gradient-to-br from-indigo-500/20 via-white/5 to-teal-500/20" />
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent" />
             </div>

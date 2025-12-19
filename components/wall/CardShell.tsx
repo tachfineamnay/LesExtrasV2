@@ -35,8 +35,8 @@ const variantStyles = {
         hoverBorder: 'group-hover:border-blue-200',
     },
     offer: {
-        border: 'border-l-4 border-coral-500',
-        hoverBorder: 'group-hover:border-coral-200',
+        border: 'border-l-4 border-rose-500',
+        hoverBorder: 'group-hover:border-rose-200',
     },
 };
 
@@ -104,10 +104,10 @@ export function CardShell({
                                     whileHover={{ scale: 1.1 }}
                                     whileTap={{ scale: 0.9 }}
                                     onClick={handleFavorite}
-                                    className={`btn-social ${isFavorite ? 'text-coral-500 border-coral-200 bg-coral-50' : ''}`}
+                                    className={`btn-social ${isFavorite ? 'text-rose-500 border-rose-200 bg-rose-50' : ''}`}
                                     aria-label={isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
                                 >
-                                    <Heart className={`w-4 h-4 ${isFavorite ? 'fill-coral-500' : ''}`} />
+                                    <Heart className={`w-4 h-4 ${isFavorite ? 'fill-rose-500' : ''}`} />
                                 </motion.button>
                                 <motion.button
                                     whileHover={{ scale: 1.1 }}

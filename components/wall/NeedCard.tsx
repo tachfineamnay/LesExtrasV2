@@ -124,7 +124,7 @@ export function NeedCard({
 
             {/* Job Title Badge */}
             <div className="mb-3">
-                <span className="inline-block px-3 py-1 rounded-xl bg-coral-50 text-coral-700 text-xs font-medium">
+                <span className="inline-block px-3 py-1 rounded-xl bg-rose-50 text-rose-700 text-xs font-medium">
                     {missionType}
                 </span>
             </div>
@@ -173,7 +173,7 @@ export function NeedCard({
                 <button
                     type="button"
                     onClick={handleView}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-coral-500 text-white text-sm font-semibold hover:bg-coral-600 shadow-sm hover:shadow-md active:scale-95 transition-all"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-500 text-white text-sm font-semibold hover:bg-rose-600 shadow-sm hover:shadow-md active:scale-95 transition-all"
                     aria-label={`Voir la mission ${missionTitle}`}
                 >
                     Voir
