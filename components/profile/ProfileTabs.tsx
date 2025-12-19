@@ -29,7 +29,7 @@ export function ProfileTabs({ tabs, activeTab, onTabChange }: ProfileTabsProps) 
                             className={`
                                 relative flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors
                                 ${isActive 
-                                    ? 'text-coral-600' 
+                                    ? 'text-brand-600'
                                     : 'text-slate-500 hover:text-slate-700'
                                 }
                             `}
@@ -37,7 +37,7 @@ export function ProfileTabs({ tabs, activeTab, onTabChange }: ProfileTabsProps) 
                             role="tab"
                         >
                             {tab.icon && (
-                                <span className={isActive ? 'text-coral-500' : 'text-slate-400'}>
+                                <span className={isActive ? 'text-brand-500' : 'text-slate-400'}>
                                     {tab.icon}
                                 </span>
                             )}
@@ -47,7 +47,7 @@ export function ProfileTabs({ tabs, activeTab, onTabChange }: ProfileTabsProps) 
                             {isActive && (
                                 <motion.div
                                     layoutId="activeTab"
-                                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-coral-600 rounded-t-full"
+                                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-600 rounded-t-full"
                                     transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                                 />
                             )}

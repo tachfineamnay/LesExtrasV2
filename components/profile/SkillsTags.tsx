@@ -75,12 +75,12 @@ const categoryStyles: Record<string, { bg: string; text: string; border: string;
     },
 };
 
-// Highlighted skill style (coral theme)
+// Highlighted skill style (brand theme)
 const highlightedStyle = {
-    bg: 'bg-coral-50',
-    text: 'text-coral-700',
-    border: 'border-coral-200',
-    hoverBorder: 'hover:border-coral-300',
+    bg: 'bg-brand-50',
+    text: 'text-brand-700',
+    border: 'border-brand-200',
+    hoverBorder: 'hover:border-brand-300',
 };
 
 // Auto-detect category from skill name
@@ -182,7 +182,7 @@ export function SkillsTags({
                                 transition-all duration-200
                             `}
                         >
-                            {skill.isHighlighted && <Sparkles className="w-3.5 h-3.5 text-coral-500" />}
+                            {skill.isHighlighted && <Sparkles className="w-3.5 h-3.5 text-brand-500" />}
                             {skill.name}
                         </Item>
                     );
@@ -237,13 +237,13 @@ export function SkillsTags({
                             text-sm font-medium cursor-default
                             transition-all duration-200
                             ${isHighlighted 
-                                ? 'bg-coral-50 text-coral-700 border-coral-200 hover:border-coral-300' 
-                                : 'bg-slate-100 text-slate-700 border-transparent hover:border-coral-200'
+                                ? 'bg-brand-50 text-brand-700 border-brand-200 hover:border-brand-300' 
+                                : 'bg-slate-100 text-slate-700 border-transparent hover:border-brand-200'
                             }
                         `}
                     >
                         {isHighlighted && (
-                            <Sparkles className="w-3.5 h-3.5 text-coral-500" />
+                            <Sparkles className="w-3.5 h-3.5 text-brand-500" />
                         )}
                         {skill.name}
                     </Item>
@@ -252,7 +252,7 @@ export function SkillsTags({
             {hiddenCount > 0 && (
                 <Item
                     {...getItemProps({ name: 'more' }, visibleSkills.length)}
-                    className="inline-flex items-center justify-center px-3 py-2 rounded-full bg-slate-100 text-slate-500 text-sm font-medium border border-transparent hover:border-coral-200 hover:text-coral-600 transition-all duration-200 cursor-pointer"
+                    className="inline-flex items-center justify-center px-3 py-2 rounded-full bg-slate-100 text-slate-500 text-sm font-medium border border-transparent hover:border-brand-200 hover:text-brand-600 transition-all duration-200 cursor-pointer"
                     title={`${hiddenCount} compétences supplémentaires`}
                 >
                     +{hiddenCount}

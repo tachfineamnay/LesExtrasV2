@@ -138,7 +138,7 @@ function ReviewCard({ review }: { review: ReviewItem }) {
             <div className="flex items-start justify-between gap-3 mb-4">
                 <div className="flex items-center gap-3">
                     {/* Avatar */}
-                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-coral-100 to-orange-100 flex items-center justify-center overflow-hidden">
+                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-brand-100 to-indigo-100 flex items-center justify-center overflow-hidden">
                         {review.reviewerAvatar ? (
                             <img
                                 src={review.reviewerAvatar}
@@ -146,7 +146,7 @@ function ReviewCard({ review }: { review: ReviewItem }) {
                                 className="w-full h-full object-cover"
                             />
                         ) : (
-                            <span className="text-sm font-semibold text-coral-600">
+                            <span className="text-sm font-semibold text-brand-600">
                                 {initials}
                             </span>
                         )}
@@ -159,7 +159,7 @@ function ReviewCard({ review }: { review: ReviewItem }) {
                                 {review.reviewerName}
                             </h4>
                             {review.isVerifiedMission && (
-                                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-lg bg-coral-50 text-coral-600">
+                                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-lg bg-brand-50 text-brand-600">
                                     <BadgeCheck className="w-3 h-3" />
                                     <span className="text-[10px] font-medium">Vérifié</span>
                                 </span>
@@ -202,19 +202,19 @@ function ReviewCard({ review }: { review: ReviewItem }) {
 
             {/* Provider Response */}
             {review.response && (
-                <div className="mt-4 pl-4 border-l-2 border-coral-200 bg-coral-50/50 rounded-r-lg p-3">
+                <div className="mt-4 pl-4 border-l-2 border-brand-200 bg-brand-50/50 rounded-r-lg p-3">
                     <div className="flex items-center gap-2 mb-1">
-                        <MessageCircle className="w-3.5 h-3.5 text-coral-500" />
-                        <span className="text-xs font-semibold text-coral-700">
+                        <MessageCircle className="w-3.5 h-3.5 text-brand-500" />
+                        <span className="text-xs font-semibold text-brand-700">
                             Réponse du professionnel
                         </span>
                         {review.responseDate && (
-                            <span className="text-xs text-coral-400">
+                            <span className="text-xs text-brand-400">
                                 • {formatReviewDate(review.responseDate)}
                             </span>
                         )}
                     </div>
-                    <p className="text-sm text-coral-900/80 leading-relaxed">
+                    <p className="text-sm text-brand-900/80 leading-relaxed">
                         {review.response}
                     </p>
                 </div>

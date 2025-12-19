@@ -73,7 +73,7 @@ export function ProfileHeader({
                         className="w-full h-full object-cover"
                     />
                 ) : (
-                    <div className="w-full h-full bg-gradient-to-r from-coral-50 via-slate-50 to-coral-100" />
+                    <div className="w-full h-full bg-gradient-to-r from-brand-50 via-slate-50 to-indigo-100" />
                 )}
 
                 {/* Gradient overlay for better text readability */}
@@ -106,7 +106,7 @@ export function ProfileHeader({
                             className="relative"
                         >
                             {/* Avatar Circle */}
-                            <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg overflow-hidden bg-gradient-to-br from-coral-100 to-coral-200">
+                            <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg overflow-hidden bg-gradient-to-br from-brand-100 to-brand-200">
                                 {avatarUrl ? (
                                     <img
                                         src={avatarUrl}
@@ -115,7 +115,7 @@ export function ProfileHeader({
                                     />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center">
-                                        <span className="text-3xl font-bold text-coral-600">
+                                        <span className="text-3xl font-bold text-brand-600">
                                             {initials}
                                         </span>
                                     </div>
@@ -128,7 +128,7 @@ export function ProfileHeader({
                                     whileHover={{ scale: 1.1 }}
                                     whileTap={{ scale: 0.9 }}
                                     onClick={onEditAvatar}
-                                    className="absolute bottom-1 right-1 w-9 h-9 rounded-full bg-coral-500 text-white flex items-center justify-center shadow-lg hover:bg-coral-600 transition-colors"
+                                    className="absolute bottom-1 right-1 w-9 h-9 rounded-full bg-brand-600 text-white flex items-center justify-center shadow-lg hover:bg-brand-700 transition-colors"
                                 >
                                     <Camera className="w-4 h-4" />
                                 </motion.button>
@@ -138,7 +138,7 @@ export function ProfileHeader({
 
                     {/* Role Badge (Mobile) */}
                     <div className="sm:hidden mb-2">
-                        <span className="inline-flex px-3 py-1 rounded-full bg-coral-100 text-coral-700 text-xs font-semibold">
+                        <span className="inline-flex px-3 py-1 rounded-full bg-brand-100 text-brand-700 text-xs font-semibold">
                             {roleLabel}
                         </span>
                     </div>
