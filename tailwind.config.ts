@@ -9,19 +9,50 @@ const config: Config = {
     theme: {
         extend: {
             colors: {
-                // ADEPA Brand Colors
+                // SOCIOPULSE Design System - Tech & Care
                 canvas: "#FAFAFA",
-                coral: {
-                    50: "#FFF1F1",
-                    100: "#FFE4E4",
-                    200: "#FEC8C8",
-                    300: "#FEA0A0",
-                    400: "#FF8585",
-                    500: "#FF6B6B", // 2026 Coral (Renfort/Action)
-                    600: "#F15353",
-                    700: "#D94242",
-                    800: "#B93232",
-                    900: "#7F1D1D",
+                
+                // Brand (Indigo) - Actions principales, CTA, Login
+                brand: {
+                    50: "#EEF2FF",
+                    100: "#E0E7FF",
+                    200: "#C7D2FE",
+                    300: "#A5B4FC",
+                    400: "#818CF8",
+                    500: "#6366F1",
+                    600: "#4F46E5", // Primary Action
+                    700: "#4338CA", // brand-dark
+                    800: "#3730A3",
+                    900: "#312E81",
+                    DEFAULT: "#4F46E5",
+                },
+                // Live (Teal) - SocioLive, Visio, Services
+                live: {
+                    50: "#F0FDFA",
+                    100: "#CCFBF1",
+                    200: "#99F6E4",
+                    300: "#5EEAD4",
+                    400: "#2DD4BF",
+                    500: "#14B8A6", // SocioLive
+                    600: "#0D9488",
+                    700: "#0F766E",
+                    800: "#115E59",
+                    900: "#134E4A",
+                    DEFAULT: "#14B8A6",
+                },
+                // Alert (Rose) - Missions SOS, Urgences
+                alert: {
+                    50: "#FFF1F2",
+                    100: "#FFE4E6",
+                    200: "#FECDD3",
+                    300: "#FDA4AF",
+                    400: "#FB7185",
+                    500: "#F43F5E", // Missions SOS
+                    600: "#E11D48",
+                    700: "#BE123C",
+                    800: "#9F1239",
+                    900: "#881337",
+                    DEFAULT: "#F43F5E",
                 },
                 gray: {
                     // ADEPA Cool Grays
