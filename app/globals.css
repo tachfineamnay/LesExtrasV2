@@ -28,7 +28,7 @@
 
   /* Gradient Text */
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-coral-500 to-coral-600;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-600 to-brand-700;
   }
 
   /* Label Style */
@@ -73,7 +73,7 @@
   .input-premium {
     @apply w-full px-4 py-3 rounded-xl border border-slate-200 
            bg-white text-slate-900 placeholder:text-slate-400
-           focus:ring-2 focus:ring-coral-200 focus:border-coral-400
+           focus:ring-2 focus:ring-brand-200 focus:border-brand-400
            transition-all duration-200 outline-none;
   }
 
@@ -83,12 +83,12 @@
            hover:shadow-soft-lg transition-shadow duration-300;
   }
 
-  /* Primary Button - Coral (for Detail Pages) */
+  /* Primary Button - Brand (for Detail Pages) */
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 
-           px-4 py-2.5 rounded-xl bg-coral-500 text-white 
+           px-4 py-2.5 rounded-xl bg-brand-600 text-white
            font-semibold text-sm
-           hover:bg-coral-600 active:scale-[0.98]
+           hover:bg-brand-700 active:scale-[0.98]
            transition-all duration-200;
   }
 
@@ -105,24 +105,24 @@
   .btn-social {
     @apply inline-flex items-center justify-center 
            w-9 h-9 rounded-full border border-slate-200 
-           text-slate-500 hover:text-coral-500 hover:border-coral-200
-           hover:bg-coral-50 active:scale-95 transition-all duration-200;
+           text-slate-500 hover:text-brand-600 hover:border-brand-200
+           hover:bg-brand-50 active:scale-95 transition-all duration-200;
   }
 
   /* Pattern Hero for cards without images */
   .pattern-hero {
     @apply relative h-36 overflow-hidden rounded-t-2xl;
     background: linear-gradient(135deg, 
-      #FFF1F1 0%,   /* coral-50 */
+      #EEF2FF 0%,   /* brand-50 (indigo) */
       #F8FAFC 50%,  /* slate-50 */
-      #FFE4E4 100%  /* coral-100 */
+      #E0E7FF 100%  /* brand-100 (indigo) */
     );
   }
 
   .pattern-hero::before {
     content: '';
     @apply absolute inset-0 opacity-30;
-    background-image: radial-gradient(circle at 2px 2px, #FEC8C8 1px, transparent 1px);
+    background-image: radial-gradient(circle at 2px 2px, #C7D2FE 1px, transparent 1px);
     background-size: 24px 24px;
   }
 
