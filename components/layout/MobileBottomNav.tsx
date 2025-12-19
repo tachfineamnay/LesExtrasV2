@@ -58,7 +58,7 @@ export function MobileBottomNav() {
                             trigger={
                                 <button
                                     type="button"
-                                    className="w-14 h-14 rounded-full bg-gradient-to-br from-coral-500 to-rose-500 flex items-center justify-center shadow-lg shadow-coral-500/30"
+                                    className="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-600 to-teal-500 flex items-center justify-center shadow-lg shadow-indigo-500/30"
                                     aria-label="Publier"
                                 >
                                     <Plus className="w-6 h-6 text-white" />
@@ -84,11 +84,11 @@ export function MobileBottomNav() {
                                 >
                                     <motion.div
                                         whileTap={{ scale: 0.9 }}
-                                        className="w-14 h-14 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-lg shadow-red-500/30"
+                                        className="w-14 h-14 rounded-full bg-gradient-to-br from-rose-500 to-rose-600 flex items-center justify-center shadow-lg shadow-rose-500/30"
                                     >
                                         <Icon className="w-6 h-6 text-white" />
                                     </motion.div>
-                                    <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-medium text-red-600">
+                                    <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-medium text-rose-600">
                                         {item.label}
                                     </span>
                                 </Link>
@@ -105,17 +105,17 @@ export function MobileBottomNav() {
                                     whileTap={{ scale: 0.9 }}
                                     className={`
                     p-2 rounded-xl transition-colors
-                    ${isActive ? (isAdminItem ? 'bg-purple-100' : 'bg-coral-100') : ''}
+                    ${isActive ? (isAdminItem ? 'bg-purple-100' : 'bg-brand-100') : ''}
                   `}
                                 >
                                     <Icon className={`
                     w-5 h-5 transition-colors
-                    ${isActive ? (isAdminItem ? 'text-purple-600' : 'text-coral-600') : 'text-gray-400'}
+                    ${isActive ? (isAdminItem ? 'text-purple-600' : 'text-brand-600') : 'text-gray-400'}
                   `} />
                                 </motion.div>
                                 <span className={`
                   text-[10px] font-medium transition-colors
-                  ${isActive ? (isAdminItem ? 'text-purple-600' : 'text-coral-600') : 'text-gray-400'}
+                  ${isActive ? (isAdminItem ? 'text-purple-600' : 'text-brand-600') : 'text-gray-400'}
                 `}>
                                     {item.label}
                                 </span>
