@@ -2,6 +2,7 @@ import {
   BookingStatus,
   MissionStatus,
   MissionUrgency,
+  TagCategory,
   PostCategory,
   PostType,
   PrismaClient,
@@ -50,9 +51,50 @@ async function main() {
   await prisma.establishment.deleteMany();
   await prisma.notification.deleteMany();
   await prisma.post.deleteMany();
+  await prisma.pointLog.deleteMany();
+  await prisma.tag.deleteMany();
   await prisma.user.deleteMany();
 
   const passwordHash = await bcrypt.hash('password123', 10);
+
+  console.log('🏷️ Seeding tags (Growth Engine)...');
+  await prisma.tag.createMany({
+    data: [
+      // JOB (Socio-éducatif / Soin / Psy)
+      { name: 'Éducateur Spé', category: TagCategory.JOB },
+      { name: 'Moniteur-Éducateur', category: TagCategory.JOB },
+      { name: 'AES', category: TagCategory.JOB },
+      { name: 'Aide-Soignant', category: TagCategory.JOB },
+      { name: 'Infirmier', category: TagCategory.JOB },
+      { name: 'Psychologue', category: TagCategory.JOB },
+      { name: 'Ergothérapeute', category: TagCategory.JOB },
+      { name: 'Psychomotricien', category: TagCategory.JOB },
+      { name: 'Orthophoniste', category: TagCategory.JOB },
+      { name: 'Animateur', category: TagCategory.JOB },
+
+      // STRUCTURE
+      { name: 'EHPAD', category: TagCategory.STRUCTURE },
+      { name: 'MECS', category: TagCategory.STRUCTURE },
+      { name: 'IME', category: TagCategory.STRUCTURE },
+      { name: 'ITEP', category: TagCategory.STRUCTURE },
+      { name: 'FAM', category: TagCategory.STRUCTURE },
+      { name: 'MAS', category: TagCategory.STRUCTURE },
+      { name: 'Crèche', category: TagCategory.STRUCTURE },
+      { name: 'Hôpital', category: TagCategory.STRUCTURE },
+      { name: 'Centre d’hébergement', category: TagCategory.STRUCTURE },
+
+      // SKILL
+      { name: 'TSA', category: TagCategory.SKILL },
+      { name: 'Autisme', category: TagCategory.SKILL },
+      { name: 'Gériatrie', category: TagCategory.SKILL },
+      { name: 'Petite enfance', category: TagCategory.SKILL },
+      { name: 'Gestion de crise', category: TagCategory.SKILL },
+      { name: 'Troubles du comportement', category: TagCategory.SKILL },
+      { name: 'Soins infirmiers', category: TagCategory.SKILL },
+      { name: 'Animation atelier', category: TagCategory.SKILL },
+    ],
+    skipDuplicates: true,
+  });
 
   console.log('👤 Creating admin...');
   const admin = await prisma.user.create({
@@ -62,6 +104,7 @@ async function main() {
       role: 'ADMIN',
       status: UserStatus.VERIFIED,
       walletBalance: 500000,
+      referralCode: 'admin0001',
       profile: {
         create: {
           firstName: 'Admin',

@@ -76,6 +76,18 @@ enum PostCategory {
   NEWS
 }
 
+enum TagCategory {
+  JOB
+  STRUCTURE
+  SKILL
+}
+
+enum PointLogStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
 enum TransactionType {
   BOOKING_PAYMENT   // Paiement d'une réservation
   MISSION_PAYMENT   // Paiement d'une mission SOS
@@ -128,6 +140,13 @@ model User {
   email         String     @unique
   passwordHash  String?
   phone         String?    @unique
+
+  // Growth Engine
+  referralCode  String?    @unique
+  referrerId    String?
+  referrer      User?      @relation("UserReferrals", fields: [referrerId], references: [id])
+  referrals     User[]     @relation("UserReferrals")
+  points        Int        @default(0)
   
   // Rôle et statut
   role          UserRole   @default(CLIENT)
@@ -171,6 +190,8 @@ model User {
   quotesAsExtra       Quote[]           @relation("QuoteExtra")
   quotesAsClient      Quote[]           @relation("QuoteClient")
   documents           UserDocument[]
+  tags                Tag[]
+  pointLogs           PointLog[]
   adminNotesWritten   AdminNote[]       @relation("AdminAuthor")
   adminNotesReceived  AdminNote[]       @relation("AdminTarget")
   auditLogsPerformed  AuditLog[]        @relation("AuditAdmin")
@@ -186,9 +207,53 @@ model User {
   @@index([stripeAccountId])
   @@index([clientType])
   @@index([isVerified])
+  @@index([referralCode])
+  @@index([referrerId])
   
   // Composite indexes for optimized queries
   @@index([role, status])  // Find verified Extras quickly
+}
+
+// =============================================================================
+// TAG (GROWTH) - Tags onboarding (métier / structure / skills)
+// =============================================================================
+
+model Tag {
+  id        String      @id @default(cuid())
+  name      String
+  category  TagCategory
+
+  users     User[]
+
+  createdAt DateTime    @default(now())
+
+  @@unique([name, category])
+  @@index([category])
+}
+
+// =============================================================================
+// POINT LOG (GROWTH) - Historique points + idempotence
+// =============================================================================
+
+model PointLog {
+  id          String        @id @default(cuid())
+
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  action      String
+  referenceId String        @default("")
+  amount      Int
+  status      PointLogStatus @default(CONFIRMED)
+
+  createdAt   DateTime      @default(now())
+  confirmedAt DateTime?
+
+  @@unique([userId, action, referenceId])
+  @@index([userId])
+  @@index([action])
+  @@index([status])
+  @@index([createdAt])
 }
 
 // =============================================================================

@@ -1,6 +1,7 @@
 import { Injectable, Logger, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { CreateAdminNoteDto } from './dto';
+import { GamificationService } from '../growth/gamification.service';
 
 export interface UserFilter {
     role?: string;
@@ -26,7 +27,10 @@ export interface PaginatedResult<T> {
 export class AdminService {
     private readonly logger = new Logger(AdminService.name);
 
-    constructor(private readonly prisma: PrismaService) {}
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly gamificationService: GamificationService,
+    ) {}
 
     /**
      * Vérifie que l'utilisateur est un admin
@@ -338,6 +342,11 @@ export class AdminService {
             },
         });
 
+        const isIdentityDoc = this.isIdentityDocumentType(document.type);
+        if (status === 'APPROVED' && isIdentityDoc) {
+            await this.gamificationService.confirmReferralPointsForReferredUser(document.userId);
+        }
+
         // Log dans AuditLog
         await this.createAuditLog({
             adminId,
@@ -351,6 +360,11 @@ export class AdminService {
         this.logger.log(`Document ${documentId} mis à jour: ${status}`);
 
         return document;
+    }
+
+    private isIdentityDocumentType(type: string): boolean {
+        const normalized = String(type || '').toUpperCase();
+        return normalized === 'ID_CARD' || normalized === 'IDENTITY' || normalized === 'CNI' || normalized === 'PASSPORT';
     }
 
     /**

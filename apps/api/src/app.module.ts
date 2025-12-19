@@ -17,6 +17,7 @@ import { ContractsModule } from './contracts/contracts.module';
 import { MessagesModule } from './messages/messages.module';
 import { PaymentsModule } from './payments/payments.module';
 import { HealthModule } from './health/health.module';
+import { GrowthModule } from './growth/growth.module';
 
 @Module({
     imports: [
@@ -59,6 +60,7 @@ import { HealthModule } from './health/health.module';
         MessagesModule,
         PaymentsModule,
         HealthModule,
+        GrowthModule,
     ],
     providers: [
         {

@@ -2,6 +2,7 @@ import {
     Injectable,
     UnauthorizedException,
     ConflictException,
+    BadRequestException,
     InternalServerErrorException,
     Logger,
 } from '@nestjs/common';
@@ -10,6 +11,9 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { RegisterDto, LoginDto, AuthResponseDto } from './dto';
+import { randomBytes } from 'crypto';
+import { PointLogStatus, Prisma } from '@prisma/client';
+import { UserRole } from '@lesextras/types';
 
 @Injectable()
 export class AuthService {
@@ -39,8 +43,20 @@ export class AuthService {
             // Hash password
             const passwordHash = await bcrypt.hash(dto.password, this.SALT_ROUNDS);
 
+            const normalizedReferrerCode = dto.referrerCode?.trim() || null;
+
             // Create user with profile/establishment in a transaction
             const user = await this.prisma.$transaction(async (tx) => {
+                const referralCode = await this.generateUniqueReferralCode(tx);
+
+                const referrer = normalizedReferrerCode
+                    ? await tx.user.findUnique({ where: { referralCode: normalizedReferrerCode } })
+                    : null;
+
+                if (normalizedReferrerCode && !referrer) {
+                    throw new BadRequestException('Code parrain invalide');
+                }
+
                 // 1. Create the user
                 const newUser = await tx.user.create({
                     data: {
@@ -52,7 +68,10 @@ export class AuthService {
                         clientType: dto.clientType,
                         isVerified: false,
                         onboardingStep: 1,
-                    } as any,
+                        referralCode,
+                        referrerId: referrer?.id ?? null,
+                        points: 0,
+                    },
                 });
 
                 // 2. Create Profile if firstName/lastName provided (for EXTRA or CLIENT)
@@ -79,6 +98,27 @@ export class AuthService {
                     });
                 }
 
+                // Referral points are pending until identity verification (anti-fraud)
+                if (referrer) {
+                    await tx.pointLog.upsert({
+                        where: {
+                            userId_action_referenceId: {
+                                userId: referrer.id,
+                                action: 'REFERRAL',
+                                referenceId: newUser.id,
+                            },
+                        },
+                        create: {
+                            userId: referrer.id,
+                            action: 'REFERRAL',
+                            referenceId: newUser.id,
+                            amount: 200,
+                            status: PointLogStatus.PENDING,
+                        },
+                        update: {},
+                    });
+                }
+
                 return newUser;
             });
 
@@ -87,7 +127,7 @@ export class AuthService {
             // Generate tokens
             return this.generateAuthResponse(user);
         } catch (error) {
-            if (error instanceof ConflictException) {
+            if (error instanceof ConflictException || error instanceof BadRequestException) {
                 throw error;
             }
             this.logger.error(`Registration failed: ${error.message}`, error.stack);
@@ -194,6 +234,9 @@ export class AuthService {
                     role: true,
                     status: true,
                     walletBalance: true,
+                    points: true,
+                    referralCode: true,
+                    tags: { select: { id: true, name: true, category: true } },
                     createdAt: true,
                     profile: true,
                     establishment: true,
@@ -220,7 +263,7 @@ export class AuthService {
     private async generateAuthResponse(user: {
         id: string;
         email: string;
-        role: string;
+        role: UserRole;
         status: string;
     }): Promise<AuthResponseDto> {
         const payload = {
@@ -247,9 +290,27 @@ export class AuthService {
             user: {
                 id: user.id,
                 email: user.email,
-                role: user.role as any,
+                role: user.role,
                 status: user.status,
             },
         };
+    }
+
+    private async generateUniqueReferralCode(tx: Prisma.TransactionClient): Promise<string> {
+        for (let attempt = 0; attempt < 12; attempt += 1) {
+            const code = this.generateReferralCode(8);
+            const exists = await tx.user.findUnique({
+                where: { referralCode: code },
+                select: { id: true },
+            });
+            if (!exists) return code;
+        }
+
+        return this.generateReferralCode(12);
+    }
+
+    private generateReferralCode(length: number): string {
+        const bytes = randomBytes(Math.ceil((length * 3) / 4));
+        return bytes.toString('base64url').slice(0, length);
     }
 }

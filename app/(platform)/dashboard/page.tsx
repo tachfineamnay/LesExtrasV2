@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Siren, Calendar, User, Search, ArrowRight } from 'lucide-react';
+import { GrowthDashboardWidgets } from '@/components/growth';
 
 export default function DashboardHubPage() {
     return (
@@ -19,6 +20,9 @@ export default function DashboardHubPage() {
 
             {/* Main Content */}
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                <div className="mb-10">
+                    <GrowthDashboardWidgets />
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
                     {/* SOS Renfort - Primary Card */}

@@ -43,6 +43,11 @@ export class RegisterDto {
     @IsOptional()
     @IsString()
     establishmentName?: string;
+
+    @ApiPropertyOptional({ example: 'aB3kLm9_', description: 'Code parrain (optionnel)' })
+    @IsOptional()
+    @IsString()
+    referrerCode?: string;
 }
 
 export class LoginDto {

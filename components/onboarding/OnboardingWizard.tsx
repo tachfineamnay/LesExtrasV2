@@ -1,51 +1,53 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Cookies from 'js-cookie';
+import { toast } from 'sonner';
 import {
-    UserCheck,
-    Search,
-    Building2,
-    Heart,
-    ChevronRight,
-    ChevronLeft,
     Check,
+    ChevronLeft,
+    ChevronRight,
     Loader2,
-    Mail,
     Lock,
-    User,
-    Phone,
+    Mail,
+    Search,
+    Sparkles,
+    UserCheck,
 } from 'lucide-react';
-
-// ===========================================
-// TYPES & SCHEMAS
-// ===========================================
+import { TagSelector, type GrowthTag } from '@/components/growth/TagSelector';
+import { auth } from '@/lib/auth';
 
 type UserType = 'TALENT' | 'SEEKER' | null;
-type ClientType = 'ESTABLISHMENT' | 'FAMILY' | null;
 
-const accountSchema = z.object({
-    firstName: z.string().min(2, 'Prénom requis (min 2 caractères)'),
-    lastName: z.string().min(2, 'Nom requis (min 2 caractères)'),
-    email: z.string().email('Email invalide'),
-    phone: z.string().min(10, 'Téléphone requis'),
-    password: z.string().min(8, 'Mot de passe min 8 caractères'),
-    confirmPassword: z.string(),
-    establishmentName: z.string().optional(),
-}).refine((data) => data.password === data.confirmPassword, {
-    message: 'Les mots de passe ne correspondent pas',
-    path: ['confirmPassword'],
-});
+const accountSchema = z
+    .object({
+        email: z.string().email('Email invalide'),
+        password: z.string().min(8, 'Mot de passe min 8 caractères'),
+        confirmPassword: z.string(),
+        referrerCode: z.string().trim().optional(),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+        message: 'Les mots de passe ne correspondent pas',
+        path: ['confirmPassword'],
+    });
 
 type AccountFormData = z.infer<typeof accountSchema>;
 
-// ===========================================
-// ANIMATION VARIANTS
-// ===========================================
+type RegisterResponse = {
+    accessToken: string;
+    refreshToken: string;
+    user: {
+        id: string;
+        email: string;
+        role: string;
+        status: string;
+    };
+};
 
 const slideVariants = {
     enter: { opacity: 0, x: 30 },
@@ -58,96 +60,170 @@ const cardVariants = {
     hover: { scale: 1.02, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' },
 };
 
-// ===========================================
-// COMPONENT
-// ===========================================
+const getApiBase = () => {
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || 'http://localhost:4000';
+    const normalized = apiBase.replace(/\/+$/, '');
+    return normalized.endsWith('/api/v1') ? normalized : `${normalized}/api/v1`;
+};
 
 export function OnboardingWizard() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+
     const [step, setStep] = useState(1);
     const [userType, setUserType] = useState<UserType>(null);
-    const [clientType, setClientType] = useState<ClientType>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [hasCreatedAccount, setHasCreatedAccount] = useState(false);
+
+    const [isLoadingTags, setIsLoadingTags] = useState(false);
+    const [tags, setTags] = useState<GrowthTag[]>([]);
+    const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+
+    const totalSteps = 3;
+    const progressPercentage = (Math.min(step, totalSteps) / totalSteps) * 100;
+
+    const refFromUrl = searchParams.get('ref')?.trim() || '';
 
     const {
         register,
         handleSubmit,
+        setValue,
         formState: { errors },
     } = useForm<AccountFormData>({
         resolver: zodResolver(accountSchema),
+        defaultValues: { referrerCode: refFromUrl || undefined },
     });
 
-    const totalSteps = userType === 'SEEKER' ? 4 : 3;
-    const progressPercentage = (step / totalSteps) * 100;
+    useEffect(() => {
+        if (!refFromUrl) return;
+        setValue('referrerCode', refFromUrl, { shouldValidate: true });
+    }, [refFromUrl, setValue]);
 
-    // ===========================================
-    // HANDLERS
-    // ===========================================
+    const apiBase = useMemo(() => getApiBase(), []);
+
+    const goBack = () => {
+        if (step === 3) {
+            setStep(2);
+            return;
+        }
+        if (step === 2) {
+            setStep(1);
+            setUserType(null);
+        }
+    };
 
     const handleUserTypeSelect = (type: UserType) => {
         setUserType(type);
-        if (type === 'TALENT') {
-            setStep(3);
-        } else {
-            setStep(2);
-        }
+        setStep(2);
     };
 
-    const handleClientTypeSelect = (type: ClientType) => {
-        setClientType(type);
-        setStep(3);
-    };
-
-    const goBack = () => {
-        if (step === 3 && userType === 'TALENT') {
+    const onSubmitAccount = async (data: AccountFormData) => {
+        if (!userType) {
+            toast.error('Sélectionnez votre profil pour continuer.');
             setStep(1);
-            setUserType(null);
-        } else if (step === 3 && userType === 'SEEKER') {
-            setStep(2);
-        } else if (step === 2) {
-            setStep(1);
-            setUserType(null);
+            return;
         }
-    };
 
-    const onSubmit = async (data: AccountFormData) => {
         setIsSubmitting(true);
         try {
             const payload = {
-                ...data,
+                email: data.email,
+                password: data.password,
                 role: userType === 'TALENT' ? 'EXTRA' : 'CLIENT',
-                clientType: userType === 'SEEKER' ? (clientType === 'ESTABLISHMENT' ? 'ESTABLISHMENT' : 'PARTICULAR') : null,
+                referrerCode: data.referrerCode?.trim() || undefined,
             };
 
-            const res = await fetch('/api/v1/auth/register', {
+            const res = await fetch(`${apiBase}/auth/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
+                cache: 'no-store',
             });
 
-            if (res.ok) {
-                setStep(4);
-                setTimeout(() => {
-                    router.push('/dashboard');
-                }, 2000);
-            } else {
-                const error = await res.json();
-                alert(error.message || 'Erreur lors de l\'inscription');
+            if (!res.ok) {
+                const errorText = await res.text().catch(() => '');
+                toast.error(errorText || "Erreur lors de l'inscription");
+                return;
             }
-        } catch (error) {
-            alert('Erreur de connexion au serveur');
+
+            const response = (await res.json()) as RegisterResponse;
+            auth.setToken(response.accessToken);
+            setHasCreatedAccount(true);
+            toast.success('Compte créé. Choisissez vos tags.');
+            setStep(3);
+        } catch {
+            toast.error('Erreur de connexion au serveur');
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    // ===========================================
-    // RENDER
-    // ===========================================
+    useEffect(() => {
+        if (step !== 3 || tags.length > 0 || isLoadingTags) return;
+
+        setIsLoadingTags(true);
+        fetch(`${apiBase}/growth/tags`, { cache: 'no-store' })
+            .then(async (res) => {
+                if (!res.ok) throw new Error('Failed to load tags');
+                const data = (await res.json()) as GrowthTag[];
+                setTags(Array.isArray(data) ? data : []);
+            })
+            .catch(() => {
+                toast.error("Impossible de charger les tags pour l'instant.");
+                setTags([]);
+            })
+            .finally(() => setIsLoadingTags(false));
+    }, [apiBase, isLoadingTags, step, tags.length]);
+
+    const submitTags = async () => {
+        if (!hasCreatedAccount) {
+            toast.error('Créez votre compte avant de sélectionner des tags.');
+            setStep(2);
+            return;
+        }
+
+        if (selectedTagIds.length === 0) {
+            toast.error('Sélectionnez au moins 1 tag.');
+            return;
+        }
+
+        const token = Cookies.get('accessToken');
+        if (!token) {
+            toast.error('Session expirée, reconnectez-vous.');
+            router.push('/auth/login');
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            const res = await fetch(`${apiBase}/growth/me/tags`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ tagIds: selectedTagIds }),
+                cache: 'no-store',
+            });
+
+            if (!res.ok) {
+                const errorText = await res.text().catch(() => '');
+                toast.error(errorText || 'Erreur lors de la sauvegarde des tags');
+                return;
+            }
+
+            toast.success('✅ Tags enregistrés. Bienvenue !');
+            setStep(4);
+            setTimeout(() => router.push('/dashboard'), 650);
+        } catch {
+            toast.error('Erreur de connexion au serveur');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col">
-            {/* Header */}
             <header className="bg-white border-b border-slate-100 sticky top-0 z-40">
                 <div className="max-w-2xl mx-auto px-4 py-4">
                     <div className="flex items-center justify-between mb-3">
@@ -155,11 +231,10 @@ export function OnboardingWizard() {
                             Les <span className="text-coral-500">Extras</span>
                         </h1>
                         <span className="text-sm text-slate-500">
-                            Étape {step} sur {totalSteps}
+                            Étape {Math.min(step, totalSteps)} sur {totalSteps}
                         </span>
                     </div>
 
-                    {/* Progress Bar */}
                     <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
                         <motion.div
                             className="h-full bg-coral-500"
@@ -171,14 +246,10 @@ export function OnboardingWizard() {
                 </div>
             </header>
 
-            {/* Main Content */}
             <main className="flex-1 flex items-center justify-center px-4 py-8">
                 <div className="w-full max-w-2xl">
                     <AnimatePresence mode="wait">
-                        {/* ========================================= */}
-                        {/* STEP 1: Choix du profil */}
-                        {/* ========================================= */}
-                        {step === 1 && (
+                        {step === 1 ? (
                             <motion.div
                                 key="step1"
                                 variants={slideVariants}
@@ -190,13 +261,12 @@ export function OnboardingWizard() {
                             >
                                 <div className="text-center">
                                     <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">
-                                        Bienvenue. Quel est votre profil ?
+                                        Qui êtes-vous ?
                                     </h2>
-                                    <p className="text-slate-500">Choisissez l'option qui vous correspond</p>
+                                    <p className="text-slate-500">Inscription en 30 secondes.</p>
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {/* Carte Talent */}
                                     <motion.button
                                         type="button"
                                         variants={cardVariants}
@@ -212,25 +282,28 @@ export function OnboardingWizard() {
                                         `}
                                     >
                                         <div className="flex items-center gap-4">
-                                            <div className={`
-                                                w-14 h-14 rounded-xl flex items-center justify-center
-                                                ${userType === 'TALENT' ? 'bg-coral-50' : 'bg-slate-100'}
-                                            `}>
-                                                <UserCheck className={`w-7 h-7 ${userType === 'TALENT' ? 'text-coral-500' : 'text-slate-600'}`} />
+                                            <div
+                                                className={`
+                                                    w-14 h-14 rounded-xl flex items-center justify-center
+                                                    ${userType === 'TALENT' ? 'bg-coral-50' : 'bg-slate-100'}
+                                                `}
+                                            >
+                                                <UserCheck
+                                                    className={`w-7 h-7 ${userType === 'TALENT' ? 'text-coral-500' : 'text-slate-600'}`}
+                                                />
                                             </div>
                                             <div>
-                                                <h3 className="text-lg font-semibold text-slate-900">Je suis un Talent</h3>
+                                                <h3 className="text-lg font-semibold text-slate-900">Je suis un Extra</h3>
                                                 <p className="text-sm text-slate-500">Professionnel du médico-social</p>
                                             </div>
                                         </div>
-                                        {userType === 'TALENT' && (
+                                        {userType === 'TALENT' ? (
                                             <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-coral-500 flex items-center justify-center">
                                                 <Check className="w-4 h-4 text-white" />
                                             </div>
-                                        )}
+                                        ) : null}
                                     </motion.button>
 
-                                    {/* Carte Cherche Talent */}
                                     <motion.button
                                         type="button"
                                         variants={cardVariants}
@@ -246,31 +319,32 @@ export function OnboardingWizard() {
                                         `}
                                     >
                                         <div className="flex items-center gap-4">
-                                            <div className={`
-                                                w-14 h-14 rounded-xl flex items-center justify-center
-                                                ${userType === 'SEEKER' ? 'bg-coral-50' : 'bg-slate-100'}
-                                            `}>
-                                                <Search className={`w-7 h-7 ${userType === 'SEEKER' ? 'text-coral-500' : 'text-slate-600'}`} />
+                                            <div
+                                                className={`
+                                                    w-14 h-14 rounded-xl flex items-center justify-center
+                                                    ${userType === 'SEEKER' ? 'bg-coral-50' : 'bg-slate-100'}
+                                                `}
+                                            >
+                                                <Search
+                                                    className={`w-7 h-7 ${userType === 'SEEKER' ? 'text-coral-500' : 'text-slate-600'}`}
+                                                />
                                             </div>
                                             <div>
-                                                <h3 className="text-lg font-semibold text-slate-900">Je cherche un Talent</h3>
-                                                <p className="text-sm text-slate-500">Établissement ou famille</p>
+                                                <h3 className="text-lg font-semibold text-slate-900">Je suis un Client</h3>
+                                                <p className="text-sm text-slate-500">Établissement, structure ou particulier</p>
                                             </div>
                                         </div>
-                                        {userType === 'SEEKER' && (
+                                        {userType === 'SEEKER' ? (
                                             <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-coral-500 flex items-center justify-center">
                                                 <Check className="w-4 h-4 text-white" />
                                             </div>
-                                        )}
+                                        ) : null}
                                     </motion.button>
                                 </div>
                             </motion.div>
-                        )}
+                        ) : null}
 
-                        {/* ========================================= */}
-                        {/* STEP 2: Précision (si SEEKER) */}
-                        {/* ========================================= */}
-                        {step === 2 && userType === 'SEEKER' && (
+                        {step === 2 ? (
                             <motion.div
                                 key="step2"
                                 variants={slideVariants}
@@ -282,232 +356,71 @@ export function OnboardingWizard() {
                             >
                                 <div className="text-center">
                                     <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">
-                                        Vous représentez...
-                                    </h2>
-                                    <p className="text-slate-500">Précisez votre situation</p>
-                                </div>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {/* Carte Établissement */}
-                                    <motion.button
-                                        type="button"
-                                        variants={cardVariants}
-                                        initial="idle"
-                                        whileHover="hover"
-                                        onClick={() => handleClientTypeSelect('ESTABLISHMENT')}
-                                        className={`
-                                            relative p-6 rounded-2xl bg-white border-2 text-left transition-all
-                                            ${clientType === 'ESTABLISHMENT'
-                                                ? 'border-coral-500 ring-2 ring-coral-200'
-                                                : 'border-slate-200 hover:border-slate-300'
-                                            }
-                                        `}
-                                    >
-                                        <div className="flex items-center gap-4">
-                                            <div className={`
-                                                w-14 h-14 rounded-xl flex items-center justify-center
-                                                ${clientType === 'ESTABLISHMENT' ? 'bg-coral-50' : 'bg-slate-100'}
-                                            `}>
-                                                <Building2 className={`w-7 h-7 ${clientType === 'ESTABLISHMENT' ? 'text-coral-500' : 'text-slate-600'}`} />
-                                            </div>
-                                            <div>
-                                                <h3 className="text-lg font-semibold text-slate-900">Un Établissement</h3>
-                                                <p className="text-sm text-slate-500">EHPAD, IME, Crèche, Hôpital...</p>
-                                            </div>
-                                        </div>
-                                        {clientType === 'ESTABLISHMENT' && (
-                                            <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-coral-500 flex items-center justify-center">
-                                                <Check className="w-4 h-4 text-white" />
-                                            </div>
-                                        )}
-                                    </motion.button>
-
-                                    {/* Carte Famille */}
-                                    <motion.button
-                                        type="button"
-                                        variants={cardVariants}
-                                        initial="idle"
-                                        whileHover="hover"
-                                        onClick={() => handleClientTypeSelect('FAMILY')}
-                                        className={`
-                                            relative p-6 rounded-2xl bg-white border-2 text-left transition-all
-                                            ${clientType === 'FAMILY'
-                                                ? 'border-coral-500 ring-2 ring-coral-200'
-                                                : 'border-slate-200 hover:border-slate-300'
-                                            }
-                                        `}
-                                    >
-                                        <div className="flex items-center gap-4">
-                                            <div className={`
-                                                w-14 h-14 rounded-xl flex items-center justify-center
-                                                ${clientType === 'FAMILY' ? 'bg-coral-50' : 'bg-slate-100'}
-                                            `}>
-                                                <Heart className={`w-7 h-7 ${clientType === 'FAMILY' ? 'text-coral-500' : 'text-slate-600'}`} />
-                                            </div>
-                                            <div>
-                                                <h3 className="text-lg font-semibold text-slate-900">Une Famille</h3>
-                                                <p className="text-sm text-slate-500">Aidant, parent, tuteur...</p>
-                                            </div>
-                                        </div>
-                                        {clientType === 'FAMILY' && (
-                                            <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-coral-500 flex items-center justify-center">
-                                                <Check className="w-4 h-4 text-white" />
-                                            </div>
-                                        )}
-                                    </motion.button>
-                                </div>
-
-                                {/* Bouton Retour */}
-                                <div className="flex justify-start">
-                                    <button
-                                        type="button"
-                                        onClick={goBack}
-                                        className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-slate-900 transition-colors"
-                                    >
-                                        <ChevronLeft className="w-5 h-5" />
-                                        Retour
-                                    </button>
-                                </div>
-                            </motion.div>
-                        )}
-
-                        {/* ========================================= */}
-                        {/* STEP 3: Création de compte */}
-                        {/* ========================================= */}
-                        {step === 3 && (
-                            <motion.div
-                                key="step3"
-                                variants={slideVariants}
-                                initial="enter"
-                                animate="center"
-                                exit="exit"
-                                transition={{ duration: 0.25 }}
-                                className="space-y-6"
-                            >
-                                <div className="text-center">
-                                    <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">
                                         Créez votre compte
                                     </h2>
-                                    <p className="text-slate-500">
-                                        {userType === 'TALENT'
-                                            ? 'Rejoignez notre communauté de professionnels'
-                                            : clientType === 'ESTABLISHMENT'
-                                                ? 'Inscrivez votre établissement'
-                                                : 'Trouvez l\'accompagnement adapté'
-                                        }
-                                    </p>
+                                    <p className="text-slate-500">Email + mot de passe. C’est tout.</p>
                                 </div>
 
-                                <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
-                                    {/* Nom de l'établissement (si ESTABLISHMENT) */}
-                                    {clientType === 'ESTABLISHMENT' && (
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">
-                                                <Building2 className="w-4 h-4 inline mr-1" />
-                                                Nom de la structure *
-                                            </label>
-                                            <input
-                                                type="text"
-                                                {...register('establishmentName')}
-                                                className="input-premium"
-                                                placeholder="EHPAD Les Oliviers"
-                                            />
-                                        </div>
-                                    )}
-
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">
-                                                <User className="w-4 h-4 inline mr-1" />
-                                                Prénom *
-                                            </label>
-                                            <input
-                                                type="text"
-                                                {...register('firstName')}
-                                                className="input-premium"
-                                                placeholder="Marie"
-                                            />
-                                            {errors.firstName && (
-                                                <p className="text-sm text-red-500 mt-1">{errors.firstName.message}</p>
-                                            )}
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">Nom *</label>
-                                            <input
-                                                type="text"
-                                                {...register('lastName')}
-                                                className="input-premium"
-                                                placeholder="Dupont"
-                                            />
-                                            {errors.lastName && (
-                                                <p className="text-sm text-red-500 mt-1">{errors.lastName.message}</p>
-                                            )}
-                                        </div>
-                                    </div>
-
+                                <form onSubmit={handleSubmit(onSubmitAccount)} className="space-y-6">
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-700 mb-1">
-                                            <Mail className="w-4 h-4 inline mr-1" />
-                                            Email *
-                                        </label>
-                                        <input
-                                            type="email"
-                                            {...register('email')}
-                                            className="input-premium"
-                                            placeholder="marie@exemple.com"
-                                        />
-                                        {errors.email && (
+                                        <label className="text-sm font-semibold text-slate-700 mb-1">Email *</label>
+                                        <div className="relative">
+                                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                                            <input
+                                                type="email"
+                                                {...register('email')}
+                                                className="input-premium !pl-10"
+                                                placeholder="vous@exemple.com"
+                                            />
+                                        </div>
+                                        {errors.email ? (
                                             <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>
-                                        )}
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-700 mb-1">
-                                            <Phone className="w-4 h-4 inline mr-1" />
-                                            Téléphone *
-                                        </label>
-                                        <input
-                                            type="tel"
-                                            {...register('phone')}
-                                            className="input-premium"
-                                            placeholder="06 12 34 56 78"
-                                        />
-                                        {errors.phone && (
-                                            <p className="text-sm text-red-500 mt-1">{errors.phone.message}</p>
-                                        )}
+                                        ) : null}
                                     </div>
 
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">
-                                                <Lock className="w-4 h-4 inline mr-1" />
-                                                Mot de passe *
-                                            </label>
-                                            <input
-                                                type="password"
-                                                {...register('password')}
-                                                className="input-premium"
-                                                placeholder="••••••••"
-                                            />
-                                            {errors.password && (
+                                            <label className="text-sm font-semibold text-slate-700 mb-1">Mot de passe *</label>
+                                            <div className="relative">
+                                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                                                <input
+                                                    type="password"
+                                                    {...register('password')}
+                                                    className="input-premium !pl-10"
+                                                    placeholder="••••••••"
+                                                />
+                                            </div>
+                                            {errors.password ? (
                                                 <p className="text-sm text-red-500 mt-1">{errors.password.message}</p>
-                                            )}
+                                            ) : null}
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">Confirmer *</label>
+                                            <label className="text-sm font-semibold text-slate-700 mb-1">Confirmer *</label>
                                             <input
                                                 type="password"
                                                 {...register('confirmPassword')}
                                                 className="input-premium"
                                                 placeholder="••••••••"
                                             />
-                                            {errors.confirmPassword && (
+                                            {errors.confirmPassword ? (
                                                 <p className="text-sm text-red-500 mt-1">{errors.confirmPassword.message}</p>
-                                            )}
+                                            ) : null}
                                         </div>
                                     </div>
 
-                                    {/* Actions */}
+                                    <div>
+                                        <label className="text-sm font-semibold text-slate-700 mb-1">Code parrain (optionnel)</label>
+                                        <input
+                                            type="text"
+                                            {...register('referrerCode')}
+                                            className="input-premium"
+                                            placeholder={refFromUrl || 'Ex: aB3kLm9_'}
+                                        />
+                                        {refFromUrl ? (
+                                            <p className="text-xs text-slate-500 mt-2">Parrainage détecté via votre lien.</p>
+                                        ) : null}
+                                    </div>
+
                                     <div className="flex items-center justify-between pt-4">
                                         <button
                                             type="button"
@@ -526,11 +439,11 @@ export function OnboardingWizard() {
                                             {isSubmitting ? (
                                                 <>
                                                     <Loader2 className="w-5 h-5 animate-spin" />
-                                                    Création...
+                                                    Création…
                                                 </>
                                             ) : (
                                                 <>
-                                                    Créer mon compte
+                                                    Continuer
                                                     <ChevronRight className="w-5 h-5" />
                                                 </>
                                             )}
@@ -538,12 +451,79 @@ export function OnboardingWizard() {
                                     </div>
                                 </form>
                             </motion.div>
-                        )}
+                        ) : null}
 
-                        {/* ========================================= */}
-                        {/* STEP 4: Succès */}
-                        {/* ========================================= */}
-                        {step === 4 && (
+                        {step === 3 ? (
+                            <motion.div
+                                key="step3"
+                                variants={slideVariants}
+                                initial="enter"
+                                animate="center"
+                                exit="exit"
+                                transition={{ duration: 0.25 }}
+                                className="space-y-6"
+                            >
+                                <div className="text-center space-y-2">
+                                    <div className="mx-auto h-12 w-12 rounded-2xl bg-coral-500/10 flex items-center justify-center">
+                                        <Sparkles className="h-6 w-6 text-coral-600" />
+                                    </div>
+                                    <h2 className="text-2xl sm:text-3xl font-bold text-slate-900">
+                                        Qui êtes-vous ?
+                                    </h2>
+                                    <p className="text-slate-500">
+                                        Choisissez quelques tags pour personnaliser votre expérience.
+                                    </p>
+                                </div>
+
+                                <div className="bg-white rounded-3xl border border-slate-200 shadow-soft p-6">
+                                    {isLoadingTags ? (
+                                        <div className="flex items-center justify-center gap-3 py-10 text-slate-600">
+                                            <Loader2 className="h-5 w-5 animate-spin" />
+                                            Chargement des tags…
+                                        </div>
+                                    ) : (
+                                        <TagSelector
+                                            tags={tags}
+                                            selectedIds={selectedTagIds}
+                                            onChange={setSelectedTagIds}
+                                            maxSelected={10}
+                                        />
+                                    )}
+
+                                    <div className="flex items-center justify-between pt-6">
+                                        <button
+                                            type="button"
+                                            onClick={goBack}
+                                            className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-slate-900 transition-colors"
+                                        >
+                                            <ChevronLeft className="w-5 h-5" />
+                                            Retour
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={submitTags}
+                                            disabled={isSubmitting || isLoadingTags}
+                                            className="btn-primary !px-6 !py-3 shadow-soft hover:shadow-soft-lg disabled:opacity-70"
+                                        >
+                                            {isSubmitting ? (
+                                                <>
+                                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                                    Enregistrement…
+                                                </>
+                                            ) : (
+                                                <>
+                                                    Terminer
+                                                    <ChevronRight className="w-5 h-5" />
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        ) : null}
+
+                        {step === 4 ? (
                             <motion.div
                                 key="step4"
                                 variants={slideVariants}
@@ -566,20 +546,19 @@ export function OnboardingWizard() {
                                     <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">
                                         Bienvenue chez Les Extras !
                                     </h2>
-                                    <p className="text-slate-500">
-                                        Votre compte a été créé avec succès.
-                                    </p>
+                                    <p className="text-slate-500">Votre compte est prêt.</p>
                                 </div>
 
                                 <div className="flex items-center justify-center gap-2 text-slate-500">
                                     <Loader2 className="w-5 h-5 animate-spin" />
-                                    <span>Redirection vers votre tableau de bord...</span>
+                                    <span>Redirection vers votre tableau de bord…</span>
                                 </div>
                             </motion.div>
-                        )}
+                        ) : null}
                     </AnimatePresence>
                 </div>
             </main>
         </div>
     );
 }
+
