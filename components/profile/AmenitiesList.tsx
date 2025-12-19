@@ -177,7 +177,7 @@ export function AmenitiesList({
                     return (
                         <span
                             key={index}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-transparent hover:border-coral-200 transition-all duration-200"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-transparent hover:border-brand-200 transition-all duration-200"
                             title={amenity.label || config.label}
                         >
                             <span className="w-4 h-4 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
@@ -213,7 +213,7 @@ export function AmenitiesList({
                             key={index}
                             variants={itemVariants}
                             whileHover={{ scale: 1.02 }}
-                            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-slate-100 hover:border-coral-200 shadow-sm hover:shadow transition-all duration-200"
+                            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-slate-100 hover:border-brand-200 shadow-sm hover:shadow transition-all duration-200"
                         >
                             <span className="w-6 h-6 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
                                 <Icon className="w-3.5 h-3.5 text-blue-600" />
@@ -246,7 +246,7 @@ export function AmenitiesList({
                         key={index}
                         variants={itemVariants}
                         whileHover={{ scale: 1.02 }}
-                        className="flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-100 hover:border-coral-200 shadow-sm hover:shadow transition-all duration-200 cursor-default"
+                        className="flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-100 hover:border-brand-200 shadow-sm hover:shadow transition-all duration-200 cursor-default"
                     >
                         {/* Icon Circle - Blue theme */}
                         <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
@@ -263,7 +263,7 @@ export function AmenitiesList({
                 <motion.button
                     variants={itemVariants}
                     whileHover={{ scale: 1.02 }}
-                    className="flex items-center justify-center gap-2 p-3 rounded-xl bg-slate-50 border border-slate-200 text-sm font-medium text-slate-500 hover:text-coral-600 hover:border-coral-200 transition-all duration-200 cursor-pointer"
+                    className="flex items-center justify-center gap-2 p-3 rounded-xl bg-slate-50 border border-slate-200 text-sm font-medium text-slate-500 hover:text-brand-600 hover:border-brand-200 transition-all duration-200 cursor-pointer"
                 >
                     +{hiddenCount} autres
                 </motion.button>

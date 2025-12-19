@@ -19,14 +19,14 @@ export function WalletCard({ stats, onWithdraw }: WalletCardProps) {
                     </div>
                 </div>
                 <div className="p-3 bg-white/10 rounded-xl backdrop-blur-md">
-                    <Wallet className="w-6 h-6 text-coral-400" />
+                    <Wallet className="w-6 h-6 text-brand-400" />
                 </div>
             </div>
 
             <div className="flex items-center gap-4">
                 <button
                     onClick={onWithdraw}
-                    className="flex-1 bg-coral-500 hover:bg-coral-600 text-white font-semibold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2"
+                    className="flex-1 bg-brand-600 hover:bg-brand-700 text-white font-semibold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2"
                 >
                     Demander un virement
                     <ArrowUpRight className="w-4 h-4" />

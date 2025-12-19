@@ -204,11 +204,11 @@ function AboutSection({ about, role, isOwnProfile }: AboutSectionProps) {
                         </div>
                     )}
                     {about.hourlyRate && (
-                        <div className="p-4 rounded-xl bg-coral-50 border border-coral-100 text-center">
-                            <div className="text-lg font-bold text-coral-600">
+                        <div className="p-4 rounded-xl bg-brand-50 border border-brand-100 text-center">
+                            <div className="text-lg font-bold text-brand-600">
                                 {about.hourlyRate}€/h
                             </div>
-                            <div className="text-xs text-coral-500">Taux horaire</div>
+                            <div className="text-xs text-brand-500">Taux horaire</div>
                         </div>
                     )}
                     {about.radiusKm && (

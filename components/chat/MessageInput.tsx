@@ -106,7 +106,7 @@ export function MessageInput({
                         flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center
                         transition-colors
                         ${canSend
-                            ? 'bg-coral-500 text-white shadow-lg shadow-coral-500/30 hover:bg-coral-600'
+                            ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/30 hover:bg-brand-700'
                             : 'bg-slate-100 text-slate-400 cursor-not-allowed'
                         }
                     `}

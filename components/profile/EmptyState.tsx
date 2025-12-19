@@ -148,7 +148,7 @@ export function EmptyState({
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={onAction}
-                    className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-coral-500 text-white font-medium text-sm hover:bg-coral-600 transition-all duration-200 shadow-lg shadow-coral-500/25 border border-transparent hover:border-coral-400"
+                    className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-brand-600 text-white font-medium text-sm hover:bg-brand-700 transition-all duration-200 shadow-lg shadow-brand-600/25 border border-transparent hover:border-brand-500"
                 >
                     {type === 'missions' && <Briefcase className="w-4 h-4" />}
                     {type === 'reviews' && <Star className="w-4 h-4" />}

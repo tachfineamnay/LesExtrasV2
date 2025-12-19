@@ -16,7 +16,7 @@ export function PaymentForm() {
                         <p className="text-xs text-slate-500">Visa, Mastercard, Amex</p>
                     </div>
                 </div>
-                <div className="w-4 h-4 rounded-full border-[5px] border-coral-500 bg-white" />
+                <div className="w-4 h-4 rounded-full border-[5px] border-brand-600 bg-white" />
             </div>
 
             <div className="space-y-4">
@@ -62,7 +62,7 @@ export function PaymentForm() {
                 <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="w-full bg-coral-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-coral-500/20 hover:bg-coral-600 transition-all flex items-center justify-center gap-2"
+                    className="w-full bg-brand-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-brand-600/20 hover:bg-brand-700 transition-all flex items-center justify-center gap-2"
                 >
                     <Lock className="w-4 h-4" />
                     Payer 237,60 €

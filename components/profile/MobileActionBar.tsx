@@ -73,14 +73,14 @@ export function MobileActionBar({
                                 className={`
                                     btn-social !w-11 !h-11
                                     ${isFavorite
-                                        ? 'bg-coral-50 border-coral-200 text-coral-500'
+                                        ? 'bg-rose-50 border-rose-200 text-rose-500'
                                         : ''
                                     }
                                 `}
                                 aria-label={isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
                             >
                                 <Heart
-                                    className={`w-5 h-5 ${isFavorite ? 'fill-coral-500' : ''}`}
+                                    className={`w-5 h-5 ${isFavorite ? 'fill-rose-500' : ''}`}
                                 />
                             </motion.button>
 
@@ -110,7 +110,7 @@ export function MobileActionBar({
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={onPrimaryAction}
-                            className="btn-primary flex-1 !py-3 shadow-lg shadow-coral-500/30"
+                            className="btn-primary flex-1 !py-3 shadow-lg shadow-brand-600/30"
                         >
                             <PrimaryIcon className="w-5 h-5" />
                             <span>{primaryCTA}</span>
@@ -160,7 +160,7 @@ export function DesktopActions({
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={onPrimaryAction}
-                className="btn-primary !py-3 shadow-lg shadow-coral-500/25"
+                className="btn-primary !py-3 shadow-lg shadow-brand-600/25"
             >
                 <PrimaryIcon className="w-5 h-5" />
                 {primaryCTA}
@@ -198,13 +198,13 @@ export function DesktopActions({
                 className={`
                     btn-social !w-11 !h-11
                     ${isFavorite
-                        ? '!bg-coral-100 !text-coral-500'
+                        ? '!bg-rose-100 !text-rose-500'
                         : ''
                     }
                 `}
                 aria-label={isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
             >
-                <Heart className={`w-5 h-5 ${isFavorite ? 'fill-coral-500' : ''}`} />
+                <Heart className={`w-5 h-5 ${isFavorite ? 'fill-rose-500' : ''}`} />
             </motion.button>
 
             {/* Share Button */}

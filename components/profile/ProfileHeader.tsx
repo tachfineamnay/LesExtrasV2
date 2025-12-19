@@ -168,7 +168,7 @@ export function ProfileHeader({
                         )}
 
                         {/* Role Badge (Desktop) */}
-                        <span className="hidden sm:inline-flex px-3 py-1 rounded-full bg-coral-100 text-coral-700 text-xs font-semibold">
+                        <span className="hidden sm:inline-flex px-3 py-1 rounded-full bg-brand-100 text-brand-700 text-xs font-semibold">
                             {roleLabel}
                         </span>
 

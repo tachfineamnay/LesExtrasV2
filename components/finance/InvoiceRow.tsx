@@ -60,7 +60,7 @@ export function InvoiceRow({ transaction }: InvoiceRowProps) {
 
                 {transaction.downloadUrl && (
                     <button
-                        className="p-2 text-slate-400 hover:text-coral-600 hover:bg-coral-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                        className="p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
                         title="Télécharger la facture"
                     >
                         <Download className="w-4 h-4" />

@@ -36,14 +36,14 @@ export function MessageBubble({
                 className={`
                     relative max-w-[75%] sm:max-w-[65%] px-4 py-2.5 rounded-2xl
                     ${isOwn
-                        ? 'bg-coral-500 text-white rounded-br-md'
+                        ? 'bg-brand-600 text-white rounded-br-md'
                         : 'bg-slate-100 text-slate-800 rounded-bl-md'
                     }
                 `}
             >
                 {/* Sender Name (for group chats) */}
                 {!isOwn && senderName && (
-                    <p className="text-xs font-semibold text-coral-600 mb-1">
+                    <p className="text-xs font-semibold text-brand-600 mb-1">
                         {senderName}
                     </p>
                 )}

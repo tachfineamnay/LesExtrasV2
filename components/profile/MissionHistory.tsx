@@ -173,7 +173,7 @@ export function MissionHistory({
                                 <div className={`
                                     w-3 h-3 rounded-full border-2 border-white shadow-sm
                                     ${mission.status === 'COMPLETED' ? 'bg-green-500' :
-                                        mission.status === 'IN_PROGRESS' ? 'bg-coral-500' :
+                                        mission.status === 'IN_PROGRESS' ? 'bg-brand-600' :
                                             mission.status === 'CANCELLED' ? 'bg-red-400' :
                                                 'bg-slate-300'
                                     }
@@ -185,7 +185,7 @@ export function MissionHistory({
                                 <div className="flex flex-wrap items-start justify-between gap-2">
                                     {/* Mission Info */}
                                     <div className="min-w-0">
-                                        <h4 className="text-sm font-semibold text-slate-900 truncate group-hover:text-coral-600 transition-colors">
+                                        <h4 className="text-sm font-semibold text-slate-900 truncate group-hover:text-brand-600 transition-colors">
                                             {mission.title}
                                         </h4>
                                         <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-500">
