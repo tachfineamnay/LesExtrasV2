@@ -18,6 +18,7 @@ export {
     MissionUrgency,
     BookingStatus,
     PostType,
+    PostCategory,
     TransactionType,
     TransactionStatus,
 
@@ -86,7 +87,7 @@ export interface GeocodingResult {
  */
 export interface FeedItem {
     id: string;
-    type: 'POST' | 'MISSION';
+    type: 'POST' | 'MISSION' | 'SERVICE';
     title: string;
     content: string;
     category?: string;
@@ -100,12 +101,16 @@ export interface FeedItem {
     };
     // Post-specific
     postType?: import('@prisma/client').PostType;
+    mediaUrls?: string[];
     tags?: string[];
     // Mission-specific
     urgency?: import('@prisma/client').MissionUrgency;
     status?: import('@prisma/client').MissionStatus;
     hourlyRate?: number;
     jobTitle?: string;
+    // Service-specific
+    serviceType?: import('@prisma/client').ServiceType;
+    basePrice?: number;
 }
 
 /**

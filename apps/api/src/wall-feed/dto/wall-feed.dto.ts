@@ -1,16 +1,13 @@
-import { IsString, IsEnum, IsOptional, IsNumber, IsArray, Min, Max, IsDateString } from 'class-validator';
+import { IsString, IsEnum, IsOptional, IsNumber, IsArray, Min, Max, IsBoolean, Equals } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
+import { PostCategory, ServiceType } from '@prisma/client';
 
 export enum FeedItemType {
     POST = 'POST',
     MISSION = 'MISSION',
+    SERVICE = 'SERVICE',
     ALL = 'ALL',
-}
-
-export enum PostType {
-    OFFER = 'OFFER',
-    NEED = 'NEED',
 }
 
 export class GetFeedDto {
@@ -18,6 +15,11 @@ export class GetFeedDto {
     @IsOptional()
     @IsEnum(FeedItemType)
     type?: FeedItemType = FeedItemType.ALL;
+
+    @ApiPropertyOptional({ description: 'Cursor (pagination cursor-based, base64 JSON)' })
+    @IsOptional()
+    @IsString()
+    cursor?: string;
 
     @ApiPropertyOptional({ description: 'Filtrer par ville' })
     @IsOptional()
@@ -63,7 +65,7 @@ export class GetFeedDto {
     @Max(200)
     radiusKm?: number = 50;
 
-    @ApiPropertyOptional({ description: 'Page', default: 1 })
+    @ApiPropertyOptional({ description: 'Page (legacy offset pagination, ignorée si cursor présent)', default: 1 })
     @IsOptional()
     @IsNumber()
     @Min(1)
@@ -78,13 +80,10 @@ export class GetFeedDto {
 }
 
 export class CreatePostDto {
-    @ApiPropertyOptional({ enum: PostType })
-    @IsEnum(PostType)
-    type: PostType;
-
     @ApiPropertyOptional()
+    @IsOptional()
     @IsString()
-    title: string;
+    title?: string;
 
     @ApiPropertyOptional()
     @IsString()
@@ -106,13 +105,69 @@ export class CreatePostDto {
     @IsString({ each: true })
     tags?: string[];
 
-    @ApiPropertyOptional()
+    @ApiPropertyOptional({ enum: PostCategory, description: 'Catégorie de post social' })
+    @IsEnum(PostCategory)
+    category: PostCategory;
+
+    @ApiPropertyOptional({ type: [String], description: 'URLs des médias (images)' })
+    @IsOptional()
+    @IsArray()
+    @IsString({ each: true })
+    mediaUrls?: string[];
+
+    @ApiPropertyOptional({
+        description: 'Obligatoire: certifie ne pas divulguer d’informations confidentielles ni de visages sans autorisation',
+        default: false,
+    })
+    @IsBoolean()
+    @Equals(true)
+    ethicsConfirmed: boolean;
+}
+
+export class CreateServiceDto {
+    @ApiPropertyOptional({ description: 'Nom du service' })
+    @IsString()
+    name: string;
+
+    @ApiPropertyOptional({ description: 'Description courte (pour les cartes)' })
+    @IsOptional()
+    @IsString()
+    shortDescription?: string;
+
+    @ApiPropertyOptional({ description: 'Description détaillée' })
+    @IsOptional()
+    @IsString()
+    description?: string;
+
+    @ApiPropertyOptional({ enum: ServiceType, default: ServiceType.WORKSHOP })
+    @IsOptional()
+    @IsEnum(ServiceType)
+    type?: ServiceType = ServiceType.WORKSHOP;
+
+    @ApiPropertyOptional({ description: 'Catégorie (ex: Bien-être, Art-thérapie)' })
     @IsOptional()
     @IsString()
     category?: string;
 
-    @ApiPropertyOptional()
+    @ApiPropertyOptional({ description: 'Prix de base' })
     @IsOptional()
-    @IsDateString()
-    validUntil?: string;
+    @IsNumber()
+    basePrice?: number;
+
+    @ApiPropertyOptional({ description: 'Image principale (URL)' })
+    @IsOptional()
+    @IsString()
+    imageUrl?: string;
+
+    @ApiPropertyOptional({ type: [String], description: 'Tags (array)' })
+    @IsOptional()
+    @IsArray()
+    @IsString({ each: true })
+    tags?: string[];
+
+    @ApiPropertyOptional({ type: [String], description: 'Galerie d’images (URLs)' })
+    @IsOptional()
+    @IsArray()
+    @IsString({ each: true })
+    galleryUrls?: string[];
 }

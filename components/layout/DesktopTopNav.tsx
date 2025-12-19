@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Home, MessageCircle, Siren, LogIn, UserPlus, Bell, User, LogOut, Settings, ChevronDown, Shield } from 'lucide-react';
 import { useAuth } from '@/lib/useAuth';
+import { CreateActionModal } from '@/components/create/CreateActionModal';
 
 const NAV_ITEMS = [
     { href: '/wall', label: 'Wall', icon: Home },
@@ -110,6 +111,8 @@ export function DesktopTopNav() {
                     <div className="flex items-center gap-3">
                         {isAuthenticated ? (
                             <>
+                                {user ? <CreateActionModal user={user} /> : null}
+
                                 {/* Notifications avec badge */}
                                 <button 
                                     onClick={() => {/* TODO: implement notifications panel */}} 

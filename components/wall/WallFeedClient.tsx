@@ -26,6 +26,8 @@ export interface ActivityItem {
 interface WallFeedClientProps {
     initialData?: any[];
     initialFeed?: any[];
+    initialNextCursor?: string | null;
+    initialHasNextPage?: boolean;
     talentPool?: TalentPoolItem[];
     activity?: ActivityItem[];
 }
@@ -131,6 +133,8 @@ const extractHeroAvatars = (items: any[]): FloatingAvatar[] => {
 export function WallFeedClient({
     initialData,
     initialFeed,
+    initialNextCursor = null,
+    initialHasNextPage = false,
 }: WallFeedClientProps) {
     const resolvedInitialData = Array.isArray(initialData)
         ? initialData
@@ -142,6 +146,9 @@ export function WallFeedClient({
     const [searchTerm, setSearchTerm] = useState('');
     const [allItems, setAllItems] = useState<any[]>(resolvedInitialData);
     const [isLoading, setIsLoading] = useState(false);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const [nextCursor, setNextCursor] = useState<string | null>(initialNextCursor);
+    const [hasMore, setHasMore] = useState<boolean>(Boolean(initialHasNextPage && initialNextCursor));
     const didInitFetchRef = useRef(false);
 
     const heroAvatars = useMemo(() => extractHeroAvatars(resolvedInitialData), [resolvedInitialData]);
@@ -173,7 +180,51 @@ export function WallFeedClient({
     useEffect(() => {
         if (searchTerm.trim()) return;
         setAllItems(resolvedInitialData);
-    }, [mode, resolvedInitialData, searchTerm]);
+        setNextCursor(initialNextCursor);
+        setHasMore(Boolean(initialHasNextPage && initialNextCursor));
+    }, [initialHasNextPage, initialNextCursor, resolvedInitialData, searchTerm]);
+
+    useEffect(() => {
+        const handler = (event: Event) => {
+            const customEvent = event as CustomEvent<unknown>;
+            const detail = customEvent.detail;
+
+            if (!detail || typeof detail !== 'object') return;
+            const record = detail as Record<string, unknown>;
+            const status = record.status;
+            const optimisticId = record.optimisticId;
+
+            if (typeof status !== 'string' || typeof optimisticId !== 'string') return;
+
+            if (status === 'optimistic') {
+                const item = record.item;
+                if (!item) return;
+                setAllItems((prev) => [item as any, ...prev]);
+                return;
+            }
+
+            if (status === 'confirmed') {
+                const item = record.item;
+                if (!item) return;
+
+                setAllItems((prev) => {
+                    const index = prev.findIndex((existing) => String((existing as any)?.id) === optimisticId);
+                    if (index === -1) return [item as any, ...prev];
+                    const next = [...prev];
+                    next[index] = item as any;
+                    return next;
+                });
+                return;
+            }
+
+            if (status === 'failed') {
+                setAllItems((prev) => prev.filter((existing) => String((existing as any)?.id) !== optimisticId));
+            }
+        };
+
+        window.addEventListener('lesextras:wall:feed-item', handler as EventListener);
+        return () => window.removeEventListener('lesextras:wall:feed-item', handler as EventListener);
+    }, []);
 
     const fetchFeed = useCallback(async () => {
         setIsLoading(true);
@@ -194,12 +245,78 @@ export function WallFeedClient({
                 [];
 
             setAllItems(Array.isArray(rawItems) ? rawItems : []);
+
+            const pageInfo =
+                (data?.pageInfo && data.pageInfo) ||
+                (data?.data?.pageInfo && data.data.pageInfo) ||
+                (data?.feed?.pageInfo && data.feed.pageInfo) ||
+                null;
+
+            const next =
+                pageInfo && typeof pageInfo?.nextCursor === 'string' ? pageInfo.nextCursor : null;
+            const hasNext = Boolean(pageInfo?.hasNextPage);
+
+            setNextCursor(next);
+            setHasMore(Boolean(hasNext && next));
         } catch (error) {
             console.error('Erreur lors du chargement du wall', error);
         } finally {
             setIsLoading(false);
         }
     }, [searchTerm]);
+
+    const fetchMore = useCallback(async () => {
+        if (!hasMore || !nextCursor || isLoadingMore) return;
+
+        setIsLoadingMore(true);
+        try {
+            const params: Record<string, any> = { cursor: nextCursor };
+            const normalizedSearch = searchTerm.trim();
+            if (normalizedSearch) params.search = normalizedSearch;
+
+            const response = await getFeed(params);
+            const data = response as any;
+
+            const rawItems =
+                (Array.isArray(data?.items) && data.items) ||
+                (Array.isArray(data?.data?.items) && data.data.items) ||
+                (Array.isArray(data?.feed?.items) && data.feed.items) ||
+                (Array.isArray(data?.feed) && data.feed) ||
+                (Array.isArray(data) && data) ||
+                [];
+
+            const pageInfo =
+                (data?.pageInfo && data.pageInfo) ||
+                (data?.data?.pageInfo && data.data.pageInfo) ||
+                (data?.feed?.pageInfo && data.feed.pageInfo) ||
+                null;
+
+            const next =
+                pageInfo && typeof pageInfo?.nextCursor === 'string' ? pageInfo.nextCursor : null;
+            const hasNext = Boolean(pageInfo?.hasNextPage);
+
+            setNextCursor(next);
+            setHasMore(Boolean(hasNext && next));
+
+            if (Array.isArray(rawItems) && rawItems.length > 0) {
+                setAllItems((prev) => {
+                    const seen = new Set(prev.map((item) => String((item as any)?.id)));
+                    const merged = [...prev];
+                    for (const item of rawItems) {
+                        const id = String((item as any)?.id || '');
+                        if (!id || seen.has(id)) continue;
+                        seen.add(id);
+                        merged.push(item);
+                    }
+                    return merged;
+                });
+            }
+        } catch (error) {
+            console.error('Erreur lors du chargement du wall (pagination)', error);
+        } finally {
+            setIsLoadingMore(false);
+        }
+    }, [hasMore, isLoadingMore, nextCursor, searchTerm]);
 
     useEffect(() => {
         const hasInitialData = resolvedInitialData.length > 0;
@@ -475,6 +592,19 @@ export function WallFeedClient({
                     </div>
 
                     <BentoFeed items={visibleItems} mode={mode} isLoading={isLoading} />
+
+                    {hasMore && nextCursor ? (
+                        <div className="flex justify-center pt-10">
+                            <button
+                                type="button"
+                                onClick={fetchMore}
+                                className="btn-secondary"
+                                disabled={isLoadingMore}
+                            >
+                                {isLoadingMore ? 'Chargement…' : 'Charger plus'}
+                            </button>
+                        </div>
+                    ) : null}
 
                     {emptyState ? (
                         <div className="col-span-full text-center py-20">

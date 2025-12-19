@@ -2,15 +2,30 @@
 
 export type WallFeedParams = Record<string, string | number | boolean | undefined | null>;
 
-export interface CreatePostPayload {
-    type: 'OFFER' | 'NEED';
-    title: string;
+export type PostCategory = 'EXPERIENCE' | 'NEWS';
+export type ServiceType = 'WORKSHOP' | 'COACHING_VIDEO';
+
+export interface CreateSocialPostPayload {
+    title?: string;
     content: string;
+    category: PostCategory;
+    mediaUrls?: string[];
+    ethicsConfirmed: true;
     city?: string;
     postalCode?: string;
     tags?: string[];
+}
+
+export interface CreateServicePayload {
+    name: string;
+    shortDescription?: string;
+    description?: string;
+    type?: ServiceType;
     category?: string;
-    validUntil?: string;
+    basePrice?: number;
+    imageUrl?: string;
+    tags?: string[];
+    galleryUrls?: string[];
 }
 
 const getApiBase = () => {
@@ -18,6 +33,47 @@ const getApiBase = () => {
     const normalized = apiBase.replace(/\/+$/, '');
     return normalized.endsWith('/api/v1') ? normalized : `${normalized}/api/v1`;
 };
+
+const getToken = () => {
+    if (typeof window === 'undefined') return null;
+
+    const candidates = [
+        window.localStorage.getItem('accessToken'),
+        window.localStorage.getItem('token'),
+        window.localStorage.getItem('jwt'),
+    ].filter(Boolean) as string[];
+
+    if (candidates.length > 0) return candidates[0];
+
+    const cookieToken = document.cookie
+        ?.split(';')
+        .map((c) => c.trim())
+        .find((c) => c.startsWith('accessToken=') || c.startsWith('token='));
+
+    if (cookieToken) {
+        const [, value] = cookieToken.split('=');
+        return value;
+    }
+
+    return null;
+};
+
+const getAuthHeaders = (): Record<string, string> => {
+    const token = getToken();
+    if (!token) return {};
+
+    const cleaned = token.replace(/^Bearer\s+/i, '').trim();
+    return { Authorization: `Bearer ${cleaned}` };
+};
+
+async function handleResponse<T>(response: Response): Promise<T> {
+    if (!response.ok) {
+        const errorText = await response.text().catch(() => '');
+        throw new Error(`Request failed ${response.status}: ${errorText}`);
+    }
+
+    return response.json() as Promise<T>;
+}
 
 export async function getFeed(params: WallFeedParams = {}) {
     const search = new URLSearchParams();
@@ -43,72 +99,34 @@ export async function getFeed(params: WallFeedParams = {}) {
     }
 }
 
-export async function createPost(payload: CreatePostPayload) {
+export async function createSocialPost(payload: CreateSocialPostPayload) {
     const url = `${getApiBase()}/wall/posts`;
 
     const response = await fetch(url, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            ...getAuthHeaders(),
         },
         body: JSON.stringify(payload),
         cache: 'no-store',
     });
 
-    if (!response.ok) {
-        throw new Error(`createPost failed with status ${response.status}`);
-    }
-
-    return response.json();
+    return handleResponse<unknown>(response);
 }
 
-// Helper to map API items to FeedItem format
-export function mapApiItemToFeedItem(item: any): any {
-    if (!item) return null;
+export async function createService(payload: CreateServicePayload) {
+    const url = `${getApiBase()}/wall/services`;
 
-    const authorId = item.authorId || item?.author?.id || undefined;
-    const normalizedTags = Array.isArray(item.tags) ? item.tags.filter(Boolean) : [];
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeaders(),
+        },
+        body: JSON.stringify(payload),
+        cache: 'no-store',
+    });
 
-    // Helper for date conversion
-    const toIsoString = (value: any) => {
-        if (!value) return new Date().toISOString();
-        const date = typeof value === 'string' ? new Date(value) : value;
-        return isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
-    };
-
-    if (item.type === 'MISSION' || item.postType === 'NEED' || item.type === 'NEED') {
-        const startDate = item.validUntil || item.startDate;
-        return {
-            id: item.id,
-            authorId,
-            type: 'NEED',
-            title: item.title || 'Annonce',
-            establishment: item.establishment || item.authorName || 'Établissement',
-            city: item.city || '',
-            description: item.content || item.description || '',
-            urgencyLevel: item.urgencyLevel || 'MEDIUM',
-            hourlyRate: item.hourlyRate ?? 0,
-            jobTitle: item.category || 'Mission',
-            startDate: toIsoString(startDate),
-            isNightShift: Boolean(item.isNightShift),
-            tags: normalizedTags,
-        };
-    }
-
-    return {
-        id: item.id,
-        authorId,
-        type: 'OFFER',
-        title: item.title || 'Offre',
-        providerName: item.providerName || item.authorName || 'Prestataire',
-        providerRating: item.providerRating ?? 0,
-        providerReviews: item.providerReviews ?? 0,
-        city: item.city || '',
-        description: item.content || item.description || '',
-        serviceType: item.serviceType || 'WORKSHOP',
-        category: item.category || undefined,
-        basePrice: item.basePrice ?? item.hourlyRate ?? undefined,
-        imageUrl: item.imageUrl || (Array.isArray(item.imageUrls) ? item.imageUrls[0] : undefined),
-        tags: normalizedTags,
-    };
+    return handleResponse<unknown>(response);
 }

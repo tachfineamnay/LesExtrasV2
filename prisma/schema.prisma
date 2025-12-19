@@ -68,6 +68,12 @@ enum BookingStatus {
 enum PostType {
   OFFER        // Offre de service (Extra → Établissement)
   NEED         // Besoin exprimé (Établissement → Extras)
+  SOCIAL       // Post social (expérience / actu)
+}
+
+enum PostCategory {
+  EXPERIENCE
+  NEWS
 }
 
 enum TransactionType {
@@ -771,10 +777,10 @@ model Post {
   
   // Catégorisation
   tags          Json      @default("[]")  // Array de tags
-  category      String?
+  category      PostCategory?
   
   // Média
-  imageUrls     Json      @default("[]")  // Array d'URLs
+  mediaUrls     Json      @default("[]") @map("imageUrls")  // Array d'URLs
   
   // Date de validité (pour les besoins urgents)
   validUntil    DateTime?

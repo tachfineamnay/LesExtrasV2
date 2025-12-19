@@ -2,6 +2,7 @@ import {
   BookingStatus,
   MissionStatus,
   MissionUrgency,
+  PostCategory,
   PostType,
   PrismaClient,
   ServiceType,
@@ -708,10 +709,9 @@ async function main() {
         city: profile.city || undefined,
         postalCode: profile.postalCode || undefined,
         tags,
-        category: profile.isVideoEnabled ? 'Visio' : template.category,
         validUntil: daysFromNow(14),
         createdAt: hoursAgo(2 + index),
-        imageUrls: [pic(`post-offer-${index + 1}`, 900, 600)],
+        mediaUrls: [pic(`post-offer-${index + 1}`, 900, 600)],
       },
     });
   }
@@ -754,10 +754,46 @@ async function main() {
         city: est?.city || undefined,
         postalCode: est?.postalCode || undefined,
         tags: template.tags,
-        category: template.category,
         validUntil: daysFromNow(template.validInDays),
         createdAt: hoursAgo(1 + index),
-        imageUrls: [pic(`post-need-${index + 1}`, 900, 600)],
+        mediaUrls: [pic(`post-need-${index + 1}`, 900, 600)],
+      },
+    });
+  }
+
+  console.log('📝 Creating a few social posts (experience/news)...');
+  const socialPosts = [
+    {
+      authorId: extras[0]?.id,
+      category: PostCategory.EXPERIENCE,
+      title: "Retour de mission : une équipe au top",
+      content:
+        "Aujourd'hui j'ai accompagné un groupe sur un atelier sensoriel. Super accueil et vraie collaboration avec l'équipe. Ça fait du bien.",
+      mediaUrls: [pic('social-experience-1', 900, 600), pic('social-experience-2', 900, 600)],
+      createdAt: hoursAgo(0.5),
+    },
+    {
+      authorId: clients[0]?.id,
+      category: PostCategory.NEWS,
+      title: 'Nouvelle organisation des renforts week-end',
+      content:
+        "Nous ouvrons de nouveaux créneaux de renforts le week-end. Merci aux pros qui se mobilisent, on vous tient au courant des prochains besoins.",
+      mediaUrls: [pic('social-news-1', 900, 600)],
+      createdAt: hoursAgo(0.7),
+    },
+  ];
+
+  for (const post of socialPosts) {
+    if (!post.authorId) continue;
+    await prisma.post.create({
+      data: {
+        authorId: post.authorId,
+        type: PostType.SOCIAL,
+        category: post.category,
+        title: post.title,
+        content: post.content,
+        mediaUrls: post.mediaUrls,
+        createdAt: post.createdAt,
       },
     });
   }

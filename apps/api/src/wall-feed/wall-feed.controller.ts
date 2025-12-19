@@ -15,7 +15,7 @@ import {
     ApiBearerAuth,
 } from '@nestjs/swagger';
 import { WallFeedService } from './wall-feed.service';
-import { GetFeedDto, CreatePostDto } from './dto';
+import { GetFeedDto, CreatePostDto, CreateServiceDto } from './dto';
 import { JwtAuthGuard } from '../common/guards';
 import { CurrentUser, CurrentUserPayload } from '../common/decorators';
 
@@ -25,7 +25,7 @@ export class WallFeedController {
     constructor(private readonly wallService: WallFeedService) { }
 
     @Get('feed')
-    @ApiOperation({ summary: 'Obtenir le fil d\'actualité mixte (Posts + Missions)' })
+    @ApiOperation({ summary: 'Obtenir le fil d\'actualité unifié (Missions + Services + Posts)' })
     @ApiResponse({ status: 200, description: 'Liste paginée des éléments du fil' })
     async getFeed(@Query() filters: GetFeedDto): Promise<any> {
         return this.wallService.getFeed(filters);
@@ -34,13 +34,25 @@ export class WallFeedController {
     @Post('posts')
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
-    @ApiOperation({ summary: 'Créer une nouvelle annonce' })
-    @ApiResponse({ status: 201, description: 'Annonce créée' })
+    @ApiOperation({ summary: 'Créer un post social (expérience / actu)' })
+    @ApiResponse({ status: 201, description: 'Post créé' })
     async createPost(
         @CurrentUser() user: CurrentUserPayload,
         @Body() dto: CreatePostDto,
     ): Promise<any> {
         return this.wallService.createPost(user.id, dto);
+    }
+
+    @Post('services')
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Créer un service (Offre)' })
+    @ApiResponse({ status: 201, description: 'Service créé' })
+    async createService(
+        @CurrentUser() user: CurrentUserPayload,
+        @Body() dto: CreateServiceDto,
+    ) {
+        return this.wallService.createService(user.id, user.role, dto);
     }
 
     @Get('posts/:id')

@@ -17,17 +17,24 @@ const getApiBase = () => {
     return normalized.endsWith('/api/v1') ? normalized : `${normalized}/api/v1`;
 };
 
-async function getInitialFeed(): Promise<any[]> {
+type InitialFeed = {
+    items: any[];
+    nextCursor: string | null;
+    hasNextPage: boolean;
+};
+
+async function getInitialFeed(): Promise<InitialFeed> {
     try {
         const response = await fetch(`${getApiBase()}/wall/feed`, { cache: 'no-store' });
-        if (!response.ok) return [];
+        if (!response.ok) return { items: [], nextCursor: null, hasNextPage: false };
 
         const data = await response.json();
-        if (Array.isArray(data?.items)) return data.items;
-        if (Array.isArray(data)) return data;
-        return [];
+        const items = Array.isArray(data?.items) ? data.items : Array.isArray(data) ? data : [];
+        const nextCursor = typeof data?.pageInfo?.nextCursor === 'string' ? data.pageInfo.nextCursor : null;
+        const hasNextPage = Boolean(data?.pageInfo?.hasNextPage);
+        return { items, nextCursor, hasNextPage };
     } catch {
-        return [];
+        return { items: [], nextCursor: null, hasNextPage: false };
     }
 }
 
@@ -36,7 +43,9 @@ export default async function HomePage() {
 
     return (
         <WallFeedClient
-            initialData={feed}
+            initialData={feed.items}
+            initialNextCursor={feed.nextCursor}
+            initialHasNextPage={feed.hasNextPage}
             talentPool={[]}
             activity={[]}
         />

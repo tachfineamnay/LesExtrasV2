@@ -9,9 +9,11 @@ import {
     Siren,
     Calendar,
     User,
+    Plus,
     Shield
 } from 'lucide-react';
 import { useAuth } from '@/lib/useAuth';
+import { CreateActionModal } from '@/components/create/CreateActionModal';
 
 const NAV_ITEMS = [
     { href: '/wall', label: 'Accueil', icon: Home },
@@ -25,6 +27,7 @@ export function MobileBottomNav() {
     const pathname = usePathname();
     const { user } = useAuth();
     const isAdmin = user?.role === 'ADMIN';
+    const canPublish = Boolean(user && (user.role === 'CLIENT' || user.role === 'EXTRA'));
 
     // Hide on auth pages and onboarding
     if (pathname.startsWith('/auth/') || pathname.startsWith('/onboarding')) {
@@ -48,6 +51,23 @@ export function MobileBottomNav() {
 
             {/* Safe area padding for iPhone */}
             <div className="relative px-2 pb-safe">
+                {canPublish && user ? (
+                    <div className="absolute right-4 -top-6 z-10">
+                        <CreateActionModal
+                            user={user}
+                            trigger={
+                                <button
+                                    type="button"
+                                    className="w-14 h-14 rounded-full bg-gradient-to-br from-coral-500 to-rose-500 flex items-center justify-center shadow-lg shadow-coral-500/30"
+                                    aria-label="Publier"
+                                >
+                                    <Plus className="w-6 h-6 text-white" />
+                                </button>
+                            }
+                        />
+                    </div>
+                ) : null}
+
                 <div className="flex items-center justify-around h-16">
                     {navItems.map((item) => {
                         const Icon = item.icon;

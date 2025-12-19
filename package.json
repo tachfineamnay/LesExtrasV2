@@ -28,6 +28,7 @@
     "@livekit/components-react": "^2.9.17",
     "@livekit/components-styles": "^1.2.0",
     "@prisma/client": "^5.22.0",
+    "@radix-ui/react-dialog": "^1.1.15",
     "@stripe/react-stripe-js": "^5.4.1",
     "@stripe/stripe-js": "^8.5.3",
     "@types/js-cookie": "^3.0.6",

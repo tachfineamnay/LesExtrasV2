@@ -5,46 +5,45 @@ import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { Search } from 'lucide-react';
 import { NeedCard, OfferCard } from '@/components/wall';
+import { SocialPostCard, type SocialPostCardItem } from './SocialPostCard';
 import { FeedSkeleton } from './FeedSkeleton';
 
 // ===========================================
 // TYPES
 // ===========================================
 
-export interface NeedItem {
+export interface MissionItem {
     id: string;
     authorId?: string;
-    type: 'NEED';
+    type: 'MISSION';
     title: string;
-    establishment: string;
-    city: string;
-    description: string;
+    city?: string | null;
+    content?: string;
     urgencyLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-    hourlyRate: number;
-    jobTitle: string;
-    startDate: string;
-    isNightShift: boolean;
-    tags: string[];
+    hourlyRate?: number | null;
+    category?: string | null;
+    createdAt?: string | Date;
+    tags?: string[];
 }
 
-export interface OfferItem {
+export interface ServiceItem {
     id: string;
     authorId?: string;
-    type: 'OFFER';
-    title: string;
-    providerName: string;
-    providerRating: number;
-    providerReviews: number;
-    city: string;
-    description: string;
-    serviceType: 'WORKSHOP' | 'COACHING_VIDEO';
-    category?: string;
-    basePrice?: number;
-    imageUrl?: string;
-    tags: string[];
+    type: 'SERVICE';
+    title?: string;
+    name?: string;
+    city?: string | null;
+    content?: string;
+    serviceType?: 'WORKSHOP' | 'COACHING_VIDEO' | string | null;
+    category?: string | null;
+    basePrice?: number | null;
+    imageUrl?: string | null;
+    tags?: string[];
 }
 
-export type FeedItem = NeedItem | OfferItem;
+export type SocialPostItem = SocialPostCardItem;
+
+export type FeedItem = MissionItem | ServiceItem | SocialPostItem;
 
 export interface FeedListProps {
     items: FeedItem[];
@@ -175,18 +174,20 @@ export function FeedList({
                         variants={itemVariants}
                         className="break-inside-avoid"
                     >
-                        {item.type === 'NEED' ? (
+                        {item.type === 'MISSION' ? (
                             <NeedCard
                                 data={item}
                                 onClick={() => router.push(`/need/${item.id}`)}
                             />
-                        ) : (
+                        ) : item.type === 'SERVICE' ? (
                             <OfferCard
                                 data={item}
                                 currentUserId={currentUserId || undefined}
                                 onSelfContact={onSelfContact}
                                 onClick={() => router.push(`/offer/${item.id}`)}
                             />
+                        ) : (
+                            <SocialPostCard item={item} />
                         )}
                     </motion.div>
                 ))}

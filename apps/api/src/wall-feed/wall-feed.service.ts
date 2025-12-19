@@ -1,12 +1,23 @@
 import {
     Injectable,
     NotFoundException,
+    BadRequestException,
+    ForbiddenException,
     InternalServerErrorException,
     Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service';
-import { GetFeedDto, FeedItemType, CreatePostDto } from './dto';
-import { Prisma, Post, ReliefMission, User, Profile, Establishment, Service } from '@prisma/client';
+import { GetFeedDto, FeedItemType, CreatePostDto, CreateServiceDto } from './dto';
+import { Prisma, Post, ReliefMission, User, Profile, Establishment, Service, PostType, PostCategory, ServiceType, MissionStatus } from '@prisma/client';
+
+type DecodedFeedCursor = {
+    createdAt: Date;
+    skip: {
+        postIds: string[];
+        serviceIds: string[];
+        missionIds: string[];
+    };
+};
 
 interface FeedItem {
     id: string;
@@ -32,6 +43,7 @@ interface FeedItem {
     // Post-specific fields
     postType?: string;
     viewCount?: number;
+    mediaUrls?: string[];
     // Service-specific fields
     basePrice?: number | null;
     serviceType?: string | null;
@@ -43,13 +55,10 @@ interface FeedItem {
 
 interface PaginatedFeedResult {
     items: FeedItem[];
-    pagination: {
-        page: number;
+    pageInfo: {
         limit: number;
-        total: number;
-        totalPages: number;
-        hasNext: boolean;
-        hasPrev: boolean;
+        hasNextPage: boolean;
+        nextCursor: string | null;
     };
 }
 
@@ -66,6 +75,7 @@ export class WallFeedService {
     async getFeed(filters: GetFeedDto): Promise<PaginatedFeedResult> {
         const {
             type = FeedItemType.ALL,
+            cursor: cursorRaw,
             city,
             postalCode,
             tags,
@@ -74,88 +84,109 @@ export class WallFeedService {
             latitude,
             longitude,
             radiusKm = 50,
-            page = 1,
             limit = 20,
         } = filters;
 
+        const safeLimit = Math.min(Math.max(Number(limit) || 20, 1), 50);
+        const take = safeLimit + 1;
+        const decodedCursor = this.decodeFeedCursor(cursorRaw);
+
+        const normalizedSearch = search?.trim() || undefined;
+        const normalizedCategory = category?.trim() || undefined;
+        const normalizedCity = city?.trim() || undefined;
+        const normalizedPostalCode = postalCode?.trim() || undefined;
+        const normalizedTags = Array.isArray(tags)
+            ? tags
+                .filter((t): t is string => typeof t === 'string')
+                .map((t) => t.trim())
+                .filter(Boolean)
+            : undefined;
+
         try {
-            const skip = (page - 1) * limit;
-            const feedItems: FeedItem[] = [];
-            let totalCount = 0;
-            const normalizedSearch = search?.trim();
-            const normalizedCategory = category?.trim();
+            const shouldFetchPosts = type === FeedItemType.ALL || type === FeedItemType.POST;
+            const shouldFetchServices = type === FeedItemType.ALL || type === FeedItemType.SERVICE;
+            const shouldFetchMissions = type === FeedItemType.ALL || type === FeedItemType.MISSION;
 
-            // Build common where clauses
-            const locationFilter = this.buildLocationFilter(city, postalCode);
+            const [posts, services, missions] = await Promise.all([
+                shouldFetchPosts
+                    ? this.prisma.post.findMany({
+                        where: this.buildPostWhere({
+                            cursor: decodedCursor,
+                            search: normalizedSearch,
+                            category: normalizedCategory,
+                            city: normalizedCity,
+                            postalCode: normalizedPostalCode,
+                            tags: normalizedTags,
+                        }),
+                        include: {
+                            author: { include: { profile: true, establishment: true } },
+                        },
+                        orderBy: { createdAt: 'desc' },
+                        take,
+                    })
+                    : Promise.resolve([]),
+                shouldFetchServices
+                    ? this.prisma.service.findMany({
+                        where: this.buildServiceWhere({
+                            cursor: decodedCursor,
+                            search: normalizedSearch,
+                            category: normalizedCategory,
+                            city: normalizedCity,
+                            postalCode: normalizedPostalCode,
+                            tags: normalizedTags,
+                        }),
+                        include: {
+                            profile: { include: { user: true } },
+                        },
+                        orderBy: { createdAt: 'desc' },
+                        take,
+                    })
+                    : Promise.resolve([]),
+                shouldFetchMissions
+                    ? this.prisma.reliefMission.findMany({
+                        where: this.buildMissionWhere({
+                            cursor: decodedCursor,
+                            search: normalizedSearch,
+                            category: normalizedCategory,
+                            city: normalizedCity,
+                            postalCode: normalizedPostalCode,
+                            tags: normalizedTags,
+                        }),
+                        include: {
+                            client: { include: { profile: true, establishment: true } },
+                        },
+                        orderBy: { createdAt: 'desc' },
+                        take,
+                    })
+                    : Promise.resolve([]),
+            ]);
 
-            // Fetch Posts if requested
-            if (type === FeedItemType.ALL || type === FeedItemType.POST) {
-                const { posts, count: postCount } = await this.fetchPosts({
-                    locationFilter,
-                    tags,
-                    category: normalizedCategory,
-                    search: normalizedSearch,
-                    skip: type === FeedItemType.POST ? skip : 0,
-                    take: type === FeedItemType.POST ? limit : Math.ceil(limit / 2),
-                });
+            const merged: FeedItem[] = [
+                ...posts.map((post) => this.mapPostToFeedItem(post)),
+                ...services.map((service) => this.mapServiceToFeedItem(service)),
+                ...missions.map((mission) => this.mapMissionToFeedItem(mission)),
+            ];
 
-                feedItems.push(...posts);
-                totalCount += postCount;
+            merged.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-                const { services, count: serviceCount } = await this.fetchServices({
-                    tags,
-                    category: normalizedCategory,
-                    search: normalizedSearch,
-                    skip: type === FeedItemType.POST ? skip : 0,
-                    take: type === FeedItemType.POST ? limit : Math.ceil(limit / 2),
-                });
+            const distanceFiltered =
+                latitude && longitude
+                    ? this.filterByDistance(merged, latitude, longitude, radiusKm)
+                    : merged;
 
-                feedItems.push(...services);
-                totalCount += serviceCount;
-            }
+            const pageItems = distanceFiltered.slice(0, safeLimit);
+            const hasNextPage = distanceFiltered.length > safeLimit;
 
-            // Fetch ReliefMissions if requested
-            if (type === FeedItemType.ALL || type === FeedItemType.MISSION) {
-                const { missions, count: missionCount } = await this.fetchMissions({
-                    locationFilter: locationFilter as any,
-                    tags,
-                    category: normalizedCategory,
-                    search: normalizedSearch,
-                    skip: type === FeedItemType.MISSION ? skip : 0,
-                    take: type === FeedItemType.MISSION ? limit : Math.ceil(limit / 2),
-                });
-
-                feedItems.push(...missions);
-                totalCount += missionCount;
-            }
-
-            // Sort all items by createdAt (newest first)
-            feedItems.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-
-            // Apply geo-filtering if coordinates provided
-            let filteredItems = feedItems;
-            if (latitude && longitude) {
-                filteredItems = this.filterByDistance(feedItems, latitude, longitude, radiusKm);
-            }
-
-            // Paginate the mixed results for 'ALL' type
-            const paginatedItems = type === FeedItemType.ALL
-                ? filteredItems.slice(skip, skip + limit)
-                : filteredItems;
-
-            const totalForPagination = type === FeedItemType.ALL
-                ? filteredItems.length
-                : totalCount;
+            const nextCursor = hasNextPage && pageItems.length > 0
+                ? this.encodeNextCursor(pageItems, decodedCursor)
+                : null;
 
             return {
-                items: paginatedItems,
-                pagination: {
-                    page,
-                    limit,
-                    total: totalForPagination,
-                    totalPages: Math.ceil(totalForPagination / limit),
-                    hasNext: page * limit < totalForPagination,
-                    hasPrev: page > 1,
+                items: pageItems,
+                pageInfo: {
+                    limit: safeLimit,
+                    hasNextPage,
+                    nextCursor,
                 },
             };
         } catch (error) {
@@ -267,21 +298,36 @@ export class WallFeedService {
      */
     async createPost(authorId: string, dto: CreatePostDto): Promise<FeedItem> {
         try {
+            if (!dto.ethicsConfirmed) {
+                throw new BadRequestException('La validation éthique est obligatoire.');
+            }
+
+            const normalizedContent = dto.content?.trim();
+            if (!normalizedContent) {
+                throw new BadRequestException('Le contenu du post est requis.');
+            }
+
+            const normalizedTitle = dto.title?.trim();
+            const prefix = dto.category === PostCategory.EXPERIENCE ? 'Expérience' : 'Actu';
+            const snippet = normalizedContent.replace(/\s+/g, ' ').slice(0, 60);
+            const title = normalizedTitle || `${prefix}: ${snippet}${normalizedContent.length > 60 ? '…' : ''}`;
+
             const post = await this.prisma.post.create({
                 data: {
                     authorId,
-                    type: dto.type,
-                    title: dto.title,
-                    content: dto.content,
+                    type: PostType.SOCIAL,
+                    title,
+                    content: normalizedContent,
                     city: dto.city,
                     postalCode: dto.postalCode,
                     tags: dto.tags || [],
                     category: dto.category,
-                    validUntil: dto.validUntil ? new Date(dto.validUntil) : null,
+                    mediaUrls: dto.mediaUrls || [],
+                    validUntil: null,
                 },
                 include: {
                     author: {
-                        include: { profile: true },
+                        include: { profile: true, establishment: true },
                     },
                 },
             });
@@ -304,7 +350,7 @@ export class WallFeedService {
                 where: { id: postId },
                 include: {
                     author: {
-                        include: { profile: true },
+                        include: { profile: true, establishment: true },
                     },
                 },
             });
@@ -356,6 +402,62 @@ export class WallFeedService {
     }
 
     /**
+     * Create a new service (Offer) for EXTRA users
+     */
+    async createService(userId: string, userRole: string, dto: CreateServiceDto) {
+        try {
+            if (userRole !== 'EXTRA') {
+                throw new ForbiddenException('Seuls les profils EXTRA peuvent créer une offre.');
+            }
+
+            const name = dto.name?.trim();
+            if (!name) {
+                throw new BadRequestException('Le nom du service est requis.');
+            }
+
+            const profile = await this.prisma.profile.findUnique({
+                where: { userId },
+            });
+
+            if (!profile) {
+                throw new BadRequestException('Profil EXTRA requis pour créer une offre.');
+            }
+
+            const slug = await this.generateUniqueServiceSlug(name);
+
+            const service = await this.prisma.service.create({
+                data: {
+                    profileId: profile.id,
+                    name,
+                    slug,
+                    shortDescription: dto.shortDescription?.trim() || null,
+                    description: dto.description?.trim() || null,
+                    type: dto.type ?? ServiceType.WORKSHOP,
+                    category: dto.category?.trim() || null,
+                    basePrice: dto.basePrice ?? null,
+                    imageUrl: dto.imageUrl?.trim() || null,
+                    galleryUrls: dto.galleryUrls || [],
+                    tags: dto.tags || [],
+                    isActive: true,
+                },
+                include: {
+                    profile: {
+                        include: { user: true },
+                    },
+                },
+            });
+
+            this.logger.log(`Service created: ${service.id} by user ${userId}`);
+
+            return service;
+        } catch (error) {
+            if (error instanceof BadRequestException || error instanceof ForbiddenException) throw error;
+            this.logger.error(`createService failed: ${error.message}`, error.stack);
+            throw new InternalServerErrorException('Erreur lors de la création du service');
+        }
+    }
+
+    /**
      * Delete a post
      */
     async deletePost(postId: string, userId: string): Promise<void> {
@@ -384,6 +486,323 @@ export class WallFeedService {
     }
 
     // ==================== Private Helper Methods ====================
+
+    private asStringArray(value: Prisma.JsonValue): string[] {
+        if (!Array.isArray(value)) return [];
+        return value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0);
+    }
+
+    private uniqueStrings(values: string[]): string[] {
+        return Array.from(new Set(values.filter(Boolean)));
+    }
+
+    private decodeFeedCursor(raw?: string): DecodedFeedCursor | null {
+        if (!raw || typeof raw !== 'string') return null;
+
+        try {
+            const json = Buffer.from(raw, 'base64').toString('utf8');
+            const parsed: unknown = JSON.parse(json);
+
+            if (!parsed || typeof parsed !== 'object') return null;
+
+            const record = parsed as Record<string, unknown>;
+            const createdAtRaw = record['createdAt'];
+            if (typeof createdAtRaw !== 'string') return null;
+
+            const createdAt = new Date(createdAtRaw);
+            if (Number.isNaN(createdAt.getTime())) return null;
+
+            const skipRaw = record['skip'];
+            const skipRecord = skipRaw && typeof skipRaw === 'object' ? (skipRaw as Record<string, unknown>) : {};
+
+            const toStringArray = (value: unknown) =>
+                Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : [];
+
+            return {
+                createdAt,
+                skip: {
+                    postIds: toStringArray(skipRecord['postIds']),
+                    serviceIds: toStringArray(skipRecord['serviceIds']),
+                    missionIds: toStringArray(skipRecord['missionIds']),
+                },
+            };
+        } catch {
+            return null;
+        }
+    }
+
+    private encodeNextCursor(items: FeedItem[], previous: DecodedFeedCursor | null): string {
+        const lastItem = items[items.length - 1];
+        const createdAt = lastItem.createdAt;
+
+        const boundaryItems = items.filter((item) => item.createdAt.getTime() === createdAt.getTime());
+
+        const skip = {
+            postIds: boundaryItems.filter((item) => item.type === 'POST').map((item) => item.id),
+            serviceIds: boundaryItems.filter((item) => item.type === 'SERVICE').map((item) => item.id),
+            missionIds: boundaryItems.filter((item) => item.type === 'MISSION').map((item) => item.id),
+        };
+
+        const mergedSkip =
+            previous && previous.createdAt.getTime() === createdAt.getTime()
+                ? {
+                    postIds: this.uniqueStrings([...previous.skip.postIds, ...skip.postIds]),
+                    serviceIds: this.uniqueStrings([...previous.skip.serviceIds, ...skip.serviceIds]),
+                    missionIds: this.uniqueStrings([...previous.skip.missionIds, ...skip.missionIds]),
+                }
+                : skip;
+
+        const payload = {
+            createdAt: createdAt.toISOString(),
+            skip: mergedSkip,
+        };
+
+        return Buffer.from(JSON.stringify(payload)).toString('base64');
+    }
+
+    private buildPostWhere(filters: {
+        cursor: DecodedFeedCursor | null;
+        search?: string;
+        category?: string;
+        city?: string;
+        postalCode?: string;
+        tags?: string[];
+    }): Prisma.PostWhereInput {
+        const { cursor, search, category, city, postalCode, tags } = filters;
+        const and: Prisma.PostWhereInput[] = [
+            {
+                OR: [
+                    { validUntil: null },
+                    { validUntil: { gte: new Date() } },
+                ],
+            },
+        ];
+
+        if (city) {
+            and.push({ city: { contains: city, mode: 'insensitive' } });
+        }
+
+        if (postalCode) {
+            and.push({ postalCode: { startsWith: postalCode } });
+        }
+
+        if (search) {
+            and.push({
+                OR: [
+                    { title: { contains: search, mode: 'insensitive' } },
+                    { content: { contains: search, mode: 'insensitive' } },
+                ],
+            });
+        }
+
+        if (category) {
+            const upper = category.toUpperCase();
+            const postCategory = (Object.values(PostCategory) as string[]).includes(upper)
+                ? (upper as PostCategory)
+                : null;
+
+            and.push({
+                OR: [
+                    ...(postCategory ? [{ category: postCategory }] : []),
+                    { title: { contains: category, mode: 'insensitive' } },
+                    { content: { contains: category, mode: 'insensitive' } },
+                    { tags: { array_contains: [category] } },
+                ],
+            });
+        }
+
+        if (tags && tags.length > 0) {
+            and.push({
+                OR: tags.map((tag) => ({ tags: { array_contains: [tag] } })),
+            });
+        }
+
+        if (cursor) {
+            and.push({
+                OR: [
+                    { createdAt: { lt: cursor.createdAt } },
+                    {
+                        AND: [
+                            { createdAt: cursor.createdAt },
+                            { id: { notIn: cursor.skip.postIds } },
+                        ],
+                    },
+                ],
+            });
+        }
+
+        return {
+            isActive: true,
+            type: PostType.SOCIAL,
+            AND: and,
+        };
+    }
+
+    private buildServiceWhere(filters: {
+        cursor: DecodedFeedCursor | null;
+        search?: string;
+        category?: string;
+        city?: string;
+        postalCode?: string;
+        tags?: string[];
+    }): Prisma.ServiceWhereInput {
+        const { cursor, search, category, city, postalCode, tags } = filters;
+        const and: Prisma.ServiceWhereInput[] = [];
+
+        if (city || postalCode) {
+            const profileWhere: Prisma.ProfileWhereInput = {};
+            if (city) profileWhere.city = { contains: city, mode: 'insensitive' };
+            if (postalCode) profileWhere.postalCode = { startsWith: postalCode };
+            and.push({ profile: profileWhere });
+        }
+
+        if (search) {
+            and.push({
+                OR: [
+                    { name: { contains: search, mode: 'insensitive' } },
+                    { description: { contains: search, mode: 'insensitive' } },
+                    { shortDescription: { contains: search, mode: 'insensitive' } },
+                    { category: { contains: search, mode: 'insensitive' } },
+                ],
+            });
+        }
+
+        if (category) {
+            const upper = category.toUpperCase();
+            const serviceType = (Object.values(ServiceType) as string[]).includes(upper)
+                ? (upper as ServiceType)
+                : null;
+
+            and.push({
+                OR: [
+                    ...(serviceType ? [{ type: serviceType }] : []),
+                    { category: { contains: category, mode: 'insensitive' } },
+                    { tags: { array_contains: [category] } },
+                ],
+            });
+        }
+
+        if (tags && tags.length > 0) {
+            and.push({
+                OR: tags.map((tag) => ({ tags: { array_contains: [tag] } })),
+            });
+        }
+
+        if (cursor) {
+            and.push({
+                OR: [
+                    { createdAt: { lt: cursor.createdAt } },
+                    {
+                        AND: [
+                            { createdAt: cursor.createdAt },
+                            { id: { notIn: cursor.skip.serviceIds } },
+                        ],
+                    },
+                ],
+            });
+        }
+
+        return {
+            isActive: true,
+            AND: and.length > 0 ? and : undefined,
+        };
+    }
+
+    private buildMissionWhere(filters: {
+        cursor: DecodedFeedCursor | null;
+        search?: string;
+        category?: string;
+        city?: string;
+        postalCode?: string;
+        tags?: string[];
+    }): Prisma.ReliefMissionWhereInput {
+        const { cursor, search, category, city, postalCode, tags } = filters;
+        const and: Prisma.ReliefMissionWhereInput[] = [];
+
+        if (city) {
+            and.push({ city: { contains: city, mode: 'insensitive' } });
+        }
+
+        if (postalCode) {
+            and.push({ postalCode: { startsWith: postalCode } });
+        }
+
+        if (search) {
+            and.push({
+                OR: [
+                    { title: { contains: search, mode: 'insensitive' } },
+                    { description: { contains: search, mode: 'insensitive' } },
+                    { jobTitle: { contains: search, mode: 'insensitive' } },
+                ],
+            });
+        }
+
+        if (category) {
+            and.push({
+                OR: [
+                    { jobTitle: { contains: category, mode: 'insensitive' } },
+                    { requiredSkills: { array_contains: [category] } },
+                ],
+            });
+        }
+
+        if (tags && tags.length > 0) {
+            and.push({
+                OR: tags.map((tag) => ({ requiredSkills: { array_contains: [tag] } })),
+            });
+        }
+
+        if (cursor) {
+            and.push({
+                OR: [
+                    { createdAt: { lt: cursor.createdAt } },
+                    {
+                        AND: [
+                            { createdAt: cursor.createdAt },
+                            { id: { notIn: cursor.skip.missionIds } },
+                        ],
+                    },
+                ],
+            });
+        }
+
+        return {
+            status: MissionStatus.OPEN,
+            startDate: { gte: new Date() },
+            AND: and.length > 0 ? and : undefined,
+        };
+    }
+
+    private slugify(value: string): string {
+        const normalized = value
+            .normalize('NFD')
+            .replace(/\p{Diacritic}/gu, '')
+            .toLowerCase()
+            .trim();
+
+        const slug = normalized
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+
+        return slug || 'service';
+    }
+
+    private async generateUniqueServiceSlug(name: string): Promise<string> {
+        const base = this.slugify(name);
+        let candidate = base;
+
+        for (let attempt = 0; attempt < 50; attempt += 1) {
+            const exists = await this.prisma.service.findUnique({
+                where: { slug: candidate },
+                select: { id: true },
+            });
+
+            if (!exists) return candidate;
+            candidate = `${base}-${attempt + 1}`;
+        }
+
+        return `${base}-${Date.now()}`;
+    }
 
     private buildLocationFilter(city?: string, postalCode?: string): Prisma.PostWhereInput | undefined {
         const filter: Prisma.PostWhereInput = {};
@@ -437,22 +856,30 @@ export class WallFeedService {
 
         if (category) {
             const normalizedCategory = category.trim();
+            const upper = normalizedCategory.toUpperCase();
             const possiblePostType = ['OFFER', 'NEED'].includes(normalizedCategory.toUpperCase())
                 ? normalizedCategory.toUpperCase()
+                : undefined;
+            const possiblePostCategory = (Object.values(PostCategory) as string[]).includes(upper)
+                ? (upper as PostCategory)
                 : undefined;
 
             andConditions.push({
                 OR: [
-                    { category: { contains: normalizedCategory, mode: 'insensitive' } },
-                    { tags: { has: normalizedCategory } as any },
+                    ...(possiblePostCategory ? [{ category: possiblePostCategory }] : []),
+                    { title: { contains: normalizedCategory, mode: 'insensitive' } },
+                    { content: { contains: normalizedCategory, mode: 'insensitive' } },
+                    { tags: { array_contains: [normalizedCategory] } },
                     ...(possiblePostType ? [{ type: possiblePostType as any }] : []),
                 ],
             });
         }
 
-        // Tags filtering using JSON contains (PostgreSQL)
+        // Tags filtering using JSON contains
         if (tags && tags.length > 0) {
-            andConditions.push({ tags: { hasSome: tags } as any });
+            andConditions.push({
+                OR: tags.map((tag) => ({ tags: { array_contains: [tag] } })),
+            });
         }
 
         if (andConditions.length > 0) {
@@ -465,7 +892,7 @@ export class WallFeedService {
                 where,
                 include: {
                     author: {
-                        include: { profile: true },
+                        include: { profile: true, establishment: true },
                     },
                 },
                 orderBy: { createdAt: 'desc' },
@@ -626,8 +1053,19 @@ export class WallFeedService {
         };
     }
 
-    private mapPostToFeedItem(post: Post & { author: User & { profile: Profile | null } }): FeedItem {
+    private mapPostToFeedItem(
+        post: Post & { author: User & { profile: Profile | null; establishment: Establishment | null } },
+    ): FeedItem {
         const profile = post.author?.profile;
+        const establishment = post.author?.establishment;
+
+        const authorName =
+            establishment?.name ||
+            (profile ? `${profile.firstName} ${profile.lastName}`.trim() : null) ||
+            post.author?.email ||
+            'Utilisateur';
+
+        const authorAvatar = establishment?.logoUrl || profile?.avatarUrl || null;
 
         return {
             id: post.id,
@@ -636,19 +1074,18 @@ export class WallFeedService {
             name: post.title,
             content: post.content,
             authorId: post.authorId,
-            authorName: profile
-                ? `${profile.firstName} ${profile.lastName}`
-                : post.author?.email || 'Utilisateur',
-            authorAvatar: profile?.avatarUrl || null,
+            authorName,
+            authorAvatar,
             authorRole: post.author?.role || 'CLIENT',
             city: post.city,
             postalCode: post.postalCode,
-            tags: post.tags as string[] || [],
+            tags: this.asStringArray(post.tags),
             category: post.category,
             createdAt: post.createdAt,
             validUntil: post.validUntil,
             postType: post.type,
             viewCount: post.viewCount,
+            mediaUrls: this.asStringArray(post.mediaUrls),
         };
     }
 
@@ -674,7 +1111,7 @@ export class WallFeedService {
             authorRole: 'CLIENT',
             city: mission.city,
             postalCode: mission.postalCode,
-            tags: mission.requiredSkills as string[] || [],
+            tags: this.asStringArray(mission.requiredSkills),
             category: mission.jobTitle,
             createdAt: mission.createdAt,
             validUntil: mission.startDate,
@@ -705,15 +1142,15 @@ export class WallFeedService {
             authorRole: 'EXTRA',
             city: profile?.city || null,
             postalCode: profile?.postalCode || null,
-            tags: service.tags as string[] || [],
+            tags: this.asStringArray(service.tags),
             category: service.category || null,
             createdAt: service.createdAt,
             validUntil: null,
             postType: 'OFFER',
             serviceType: service.type,
             basePrice: service.basePrice,
-            providerRating: (profile as any)?.averageRating || null,
-            providerReviews: (profile as any)?.totalReviews || null,
+            providerRating: profile?.averageRating ?? null,
+            providerReviews: profile?.totalReviews ?? null,
             imageUrl: service.imageUrl || null,
             profile,
         };

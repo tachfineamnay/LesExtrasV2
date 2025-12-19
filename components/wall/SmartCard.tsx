@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { ArrowUpRight, Clock, MapPin, Video } from 'lucide-react';
 import { ImmersiveCard } from './ImmersiveCard';
+import { SocialPostCard, type SocialPostCardItem } from '@/components/feed/SocialPostCard';
 
 export type DiscoveryMode = 'FIELD' | 'VISIO';
 
@@ -167,6 +168,27 @@ export function SmartCard({ item, mode }: SmartCardProps) {
         );
     }
 
+    const isSocialPost = rawType === 'POST' && String(item?.postType || '').toUpperCase() === 'SOCIAL';
+    if (isSocialPost) {
+        const socialItem: SocialPostCardItem = {
+            id: String(item?.id || ''),
+            type: 'POST',
+            postType: String(item?.postType || 'SOCIAL'),
+            title: typeof item?.title === 'string' ? item.title : undefined,
+            content: String(item?.content || ''),
+            category: typeof item?.category === 'string' ? item.category : null,
+            mediaUrls: Array.isArray(item?.mediaUrls) ? item.mediaUrls.filter((url: unknown): url is string => typeof url === 'string' && url.trim().length > 0) : [],
+            createdAt: item?.createdAt,
+            authorName: typeof item?.authorName === 'string' ? item.authorName : undefined,
+            authorAvatar: typeof item?.authorAvatar === 'string' ? item.authorAvatar : null,
+            isOptimistic: Boolean(item?.isOptimistic),
+        };
+
+        if (socialItem.id && socialItem.content) {
+            return <SocialPostCard item={socialItem} />;
+        }
+    }
+
     const title = String(item?.title || item?.name || 'Publication');
     const content = String(item?.content || '');
     const tags = asStringArray(item?.tags);
@@ -199,4 +221,3 @@ export function SmartCard({ item, mode }: SmartCardProps) {
         </motion.article>
     );
 }
-
