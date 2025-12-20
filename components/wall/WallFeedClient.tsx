@@ -4,15 +4,14 @@ import type { ReactNode } from 'react';
 import { useMemo, useRef } from 'react';
 import Link from 'next/link';
 import type { LucideIcon } from 'lucide-react';
-import { ChevronLeft, ChevronRight, Flame, Loader2, MessageCircle, Plus, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Flame, Loader2, Plus, Sparkles } from 'lucide-react';
 import { useAuth } from '@/lib/useAuth';
 import { CreateActionModal, type CreateActionModalUser } from '@/components/create/CreateActionModal';
-import { SocialPostCard, type SocialPostCardItem } from '@/components/feed/SocialPostCard';
-import { Logo } from '@/components/ui/Logo';
+import type { SocialPostCardItem } from '@/components/feed/SocialPostCard';
+import { FeedSidebar } from './FeedSidebar';
 import { MissionCard } from './MissionCard';
 import { ServiceCard } from './ServiceCard';
 import { SmartSearchBar, type FloatingAvatar } from './SmartSearchBar';
-import { FeedSidebar, type SidebarData } from './FeedSidebar';
 import { useWallFeed } from './useWallFeed';
 
 export interface TalentPoolItem {
@@ -36,7 +35,6 @@ interface WallFeedClientProps {
     initialHasNextPage?: boolean;
     talentPool?: TalentPoolItem[];
     activity?: ActivityItem[];
-    sidebarData?: SidebarData;
 }
 
 const extractHeroAvatars = (items: any[]): FloatingAvatar[] => {
@@ -93,31 +91,22 @@ const isUrgentMission = (mission: any) => {
     return urgency === 'HIGH' || urgency === 'CRITICAL';
 };
 
-const getServiceSpanClass = (_service: any, index: number) => {
-    if (index % 7 === 0) return 'sm:col-span-2 xl:row-span-2';
-    if (index % 11 === 5) return 'xl:col-span-2';
-    return '';
-};
-
 function SectionEmptyState({
     icon: Icon,
     title,
     description,
-    action,
 }: {
     icon: LucideIcon;
     title: string;
     description: string;
-    action?: ReactNode;
 }) {
     return (
-        <div className="rounded-3xl border-2 border-dashed border-slate-200 bg-white/60 backdrop-blur-md p-10 text-center">
-            <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-white shadow-soft">
-                <Icon className="h-7 w-7 text-slate-300" />
+        <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-10 text-center">
+            <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-white shadow-sm">
+                <Icon className="h-6 w-6 text-slate-300" />
             </div>
             <h3 className="text-base font-semibold text-slate-900">{title}</h3>
             <p className="mt-1 text-sm text-slate-600">{description}</p>
-            {action ? <div className="mt-5 flex justify-center">{action}</div> : null}
         </div>
     );
 }
@@ -127,8 +116,6 @@ export function WallFeedClient({
     initialFeed,
     initialNextCursor = null,
     initialHasNextPage = false,
-    talentPool = [],
-    sidebarData,
 }: WallFeedClientProps) {
     const resolvedInitialData = Array.isArray(initialData)
         ? initialData
@@ -149,16 +136,30 @@ export function WallFeedClient({
 
     const missions = useMemo(() => feed.filter((item) => isType(item, 'MISSION')), [feed]);
     const services = useMemo(() => feed.filter((item) => isType(item, 'SERVICE')), [feed]);
-    const posts = useMemo(() => {
-        const socialItems = feed
-            .filter((item) => isType(item, 'POST'))
-            .map(toSocialPostCardItem)
-            .filter(Boolean) as SocialPostCardItem[];
-
-        return socialItems;
-    }, [feed]);
+    const posts = useMemo(
+        () =>
+            feed
+                .filter((item) => isType(item, 'POST'))
+                .map(toSocialPostCardItem)
+                .filter(Boolean) as SocialPostCardItem[],
+        [feed],
+    );
 
     const urgentMissions = useMemo(() => missions.filter(isUrgentMission).slice(0, 12), [missions]);
+
+    const topCategories = useMemo(() => {
+        const counts = new Map<string, number>();
+        for (const item of services) {
+            const label = String(item?.category || '').trim();
+            if (!label) continue;
+            counts.set(label, (counts.get(label) || 0) + 1);
+        }
+
+        return Array.from(counts.entries())
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 8)
+            .map(([label, count]) => ({ label, count }));
+    }, [services]);
 
     const urgentRailRef = useRef<HTMLDivElement>(null);
 
@@ -170,120 +171,116 @@ export function WallFeedClient({
     };
 
     return (
-        <div className="relative min-h-screen bg-canvas overflow-hidden">
-            <div aria-hidden className="absolute inset-0 -z-10">
-                <div className="absolute -top-56 left-1/2 h-[520px] w-[760px] -translate-x-1/2 rounded-full bg-gradient-to-r from-indigo-500/12 via-teal-400/10 to-rose-400/10 blur-3xl" />
-                <div className="absolute top-[24%] -left-44 h-[460px] w-[460px] rounded-full bg-teal-400/10 blur-3xl" />
-                <div className="absolute bottom-[-220px] right-[-140px] h-[560px] w-[560px] rounded-full bg-indigo-500/12 blur-3xl" />
-            </div>
+        <div className="min-h-screen bg-slate-50">
+            <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    <section className="lg:col-span-9 space-y-8">
+                        <div className="rounded-2xl border border-slate-200/70 bg-white shadow-sm p-6 md:p-8">
+                            <div className="max-w-3xl mx-auto text-center space-y-5">
+                                <p className="text-[11px] font-semibold tracking-[0.28em] uppercase text-slate-500">
+                                    SOCIOPULSE COCKPIT
+                                </p>
+                                <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-slate-900">
+                                    Trouvez un expert, un atelier ou un renfort.
+                                </h1>
+                                <p className="text-sm md:text-base text-slate-600">
+                                    Une interface wide &amp; clean pour piloter vos besoins et vos opportunités en un coup d&apos;oeil.
+                                </p>
 
-            <header className="sticky top-0 lg:top-[72px] z-40">
-                <div className="bg-white/80 backdrop-blur-md border-b border-slate-200/60 pt-safe">
-                    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[auto,1fr,auto] sm:items-center">
-                            <div className="flex items-center gap-3">
-                                <Logo size="sm" showBaseline={false} href="/wall" className="items-start" />
-                            </div>
+                                <div className="pt-2">
+                                    <SmartSearchBar value={searchTerm} onChange={setSearchTerm} avatars={heroAvatars} />
+                                </div>
 
-                            <div className="w-full sm:max-w-3xl sm:justify-self-center">
-                                <SmartSearchBar value={searchTerm} onChange={setSearchTerm} avatars={heroAvatars} />
-                            </div>
-
-                            <div className="flex justify-end">
-                                {canPublish && user ? (
-                                    <CreateActionModal
-                                        user={user as unknown as CreateActionModalUser}
-                                        trigger={
-                                            <button
-                                                type="button"
-                                                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-teal-500 px-4 py-3 text-sm font-semibold text-white shadow-soft hover:shadow-soft-lg active:scale-[0.99] transition-all whitespace-nowrap"
-                                                aria-label="Publier"
-                                            >
-                                                <Plus className="h-4 w-4" />
-                                                Publier
-                                            </button>
-                                        }
-                                    />
-                                ) : (
-                                    <Link href="/auth/login" className="btn-secondary whitespace-nowrap">
-                                        Se connecter
-                                    </Link>
-                                )}
+                                <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-3">
+                                    {canPublish && user ? (
+                                        <CreateActionModal
+                                            user={user as unknown as CreateActionModalUser}
+                                            trigger={
+                                                <button
+                                                    type="button"
+                                                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 active:bg-indigo-800 transition-colors"
+                                                >
+                                                    <Plus className="h-4 w-4" />
+                                                    Publier
+                                                </button>
+                                            }
+                                        />
+                                    ) : (
+                                        <>
+                                            <Link href="/onboarding" className="btn-secondary">
+                                                S&apos;inscrire
+                                            </Link>
+                                            <Link href="/auth/login" className="btn-primary">
+                                                Se connecter
+                                            </Link>
+                                        </>
+                                    )}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </header>
 
-            <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-safe">
-                {/* Main Grid: Feed + Sidebar */}
-                <div className="flex gap-8">
-                    {/* Main Content Area */}
-                    <div className="flex-1 min-w-0">
                         {urgentMissions.length > 0 ? (
-                    <section className="pt-8">
-                        <div className="flex items-center justify-between gap-4 mb-4">
-                            <div className="flex items-center gap-3">
-                                <div className="h-10 w-10 rounded-2xl bg-rose-50 border border-rose-100 grid place-items-center">
-                                    <Flame className="h-5 w-5 text-rose-500" />
-                                </div>
-                                <div>
-                                    <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
-                                        🔥 Urgences à pourvoir
-                                    </p>
-                                    <h2 className="text-lg font-semibold tracking-tight text-slate-900">
-                                        Missions de renfort
-                                    </h2>
-                                </div>
-                            </div>
+                            <div className="rounded-2xl border border-slate-200/70 bg-white shadow-sm p-6">
+                                <div className="flex items-center justify-between gap-4 mb-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="h-10 w-10 rounded-2xl bg-rose-50 border border-rose-100 grid place-items-center">
+                                            <Flame className="h-5 w-5 text-rose-500" />
+                                        </div>
+                                        <div>
+                                            <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
+                                                Urgences à pourvoir
+                                            </p>
+                                            <h2 className="text-lg font-semibold tracking-tight text-slate-900">
+                                                Missions de renfort
+                                            </h2>
+                                        </div>
+                                    </div>
 
-                            <div className="hidden md:flex items-center gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => scrollUrgentRail('prev')}
-                                    className="h-10 w-10 rounded-2xl bg-white/80 border border-slate-200 hover:bg-slate-50 transition-colors shadow-soft grid place-items-center"
-                                    aria-label="Précédent"
-                                >
-                                    <ChevronLeft className="h-5 w-5 text-slate-700" />
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => scrollUrgentRail('next')}
-                                    className="h-10 w-10 rounded-2xl bg-white/80 border border-slate-200 hover:bg-slate-50 transition-colors shadow-soft grid place-items-center"
-                                    aria-label="Suivant"
-                                >
-                                    <ChevronRight className="h-5 w-5 text-slate-700" />
-                                </button>
-                            </div>
-                        </div>
+                                    <div className="hidden md:flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => scrollUrgentRail('prev')}
+                                            className="h-10 w-10 rounded-2xl bg-white border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm grid place-items-center"
+                                            aria-label="Précédent"
+                                        >
+                                            <ChevronLeft className="h-5 w-5 text-slate-700" />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => scrollUrgentRail('next')}
+                                            className="h-10 w-10 rounded-2xl bg-white border border-slate-200 hover:bg-slate-50 transition-colors shadow-sm grid place-items-center"
+                                            aria-label="Suivant"
+                                        >
+                                            <ChevronRight className="h-5 w-5 text-slate-700" />
+                                        </button>
+                                    </div>
+                                </div>
 
-                        <div
-                            ref={urgentRailRef}
-                            className="flex gap-4 overflow-x-auto pb-4 scrollbar-none snap-x scroll-smooth"
-                        >
-                            {urgentMissions.map((mission, index) => (
                                 <div
-                                    key={String(mission?.id ?? index)}
-                                    className="flex-shrink-0 w-[280px] sm:w-[320px] snap-start"
+                                    ref={urgentRailRef}
+                                    className="flex gap-4 overflow-x-auto pb-2 scrollbar-none snap-x scroll-smooth"
                                 >
-                                    <MissionCard data={mission} />
+                                    {urgentMissions.map((mission, index) => (
+                                        <div
+                                            key={String(mission?.id ?? index)}
+                                            className="flex-shrink-0 w-[300px] sm:w-[340px] snap-start"
+                                        >
+                                            <MissionCard data={mission} />
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
-                        </div>
-                    </section>
-                ) : null}
+                            </div>
+                        ) : null}
 
-                <section className="pt-10 pb-16">
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                        <div className="lg:col-span-8 space-y-6">
-                            <div className="flex items-center justify-between gap-4">
+                        <div className="rounded-2xl border border-slate-200/70 bg-white shadow-sm p-6">
+                            <div className="flex items-center justify-between gap-4 mb-6">
                                 <div className="flex items-center gap-3">
                                     <div className="h-10 w-10 rounded-2xl bg-teal-50 border border-teal-100 grid place-items-center">
                                         <Sparkles className="h-5 w-5 text-teal-600" />
                                     </div>
                                     <div>
                                         <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
-                                            💎 Experts & Ateliers
+                                            Experts &amp; ateliers
                                         </p>
                                         <h2 className="text-lg font-semibold tracking-tight text-slate-900">
                                             Catalogue
@@ -297,23 +294,18 @@ export function WallFeedClient({
                             </div>
 
                             {isLoading && services.length === 0 ? (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 auto-rows-[18rem] gap-6 [grid-auto-flow:dense]">
-                                    {Array.from({ length: 9 }).map((_, index) => (
+                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 items-stretch">
+                                    {Array.from({ length: 6 }).map((_, index) => (
                                         <div
                                             key={index}
-                                            className={`rounded-3xl bg-white/60 backdrop-blur-md border border-white/60 shadow-soft animate-pulse ${
-                                                index % 7 === 0 ? 'sm:col-span-2 xl:row-span-2' : ''
-                                            }`}
+                                            className="h-[22rem] rounded-2xl border border-slate-200/60 bg-slate-50 animate-pulse"
                                         />
                                     ))}
                                 </div>
                             ) : services.length > 0 ? (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 auto-rows-[18rem] gap-6 [grid-auto-flow:dense]">
+                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 items-stretch">
                                     {services.map((service, index) => (
-                                        <div
-                                            key={String(service?.id ?? index)}
-                                            className={`h-full ${getServiceSpanClass(service, index)}`}
-                                        >
+                                        <div key={String(service?.id ?? index)} className="h-full">
                                             <ServiceCard data={service} currentUserId={user?.id ?? undefined} />
                                         </div>
                                     ))}
@@ -346,72 +338,19 @@ export function WallFeedClient({
                                 </div>
                             ) : null}
                         </div>
+                    </section>
 
-                        <aside className="lg:col-span-4 space-y-6">
-                            <div className="flex items-center gap-3">
-                                <div className="h-10 w-10 rounded-2xl bg-indigo-50 border border-indigo-100 grid place-items-center">
-                                    <MessageCircle className="h-5 w-5 text-indigo-600" />
-                                </div>
-                                <div>
-                                    <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
-                                        💬 L'actu du réseau
-                                    </p>
-                                    <h2 className="text-lg font-semibold tracking-tight text-slate-900">
-                                        Communauté
-                                    </h2>
-                                </div>
-                            </div>
-
-                            {isLoading && posts.length === 0 ? (
-                                <div className="space-y-4">
-                                    {Array.from({ length: 3 }).map((_, index) => (
-                                        <div
-                                            key={index}
-                                            className="h-52 rounded-3xl bg-white/60 backdrop-blur-md border border-white/60 shadow-soft animate-pulse"
-                                        />
-                                    ))}
-                                </div>
-                            ) : posts.length > 0 ? (
-                                <div className="space-y-4">
-                                    {posts.slice(0, 8).map((post) => (
-                                        <SocialPostCard key={post.id} item={post} />
-                                    ))}
-                                </div>
-                            ) : (
-                                <SectionEmptyState
-                                    icon={MessageCircle}
-                                    title="Aucune actu pour l’instant"
-                                    description="Partagez une expérience ou une info utile pour lancer la discussion."
-                                    action={
-                                        canPublish && user ? (
-                                            <CreateActionModal
-                                                user={user as unknown as CreateActionModalUser}
-                                                trigger={
-                                                    <button
-                                                        type="button"
-                                                        className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-teal-500 px-4 py-2.5 text-sm font-semibold text-white shadow-soft hover:shadow-soft-lg active:scale-[0.99] transition-all"
-                                                    >
-                                                        <Plus className="h-4 w-4" />
-                                                        Publier
-                                                    </button>
-                                                }
-                                            />
-                                        ) : undefined
-                                    }
-                                />
-                            )}
-                        </aside>
-                    </div>
-                </section>
+                    <FeedSidebar
+                        isLoading={isLoading}
+                        posts={posts}
+                        topCategories={topCategories}
+                        stats={{ missions: missions.length, services: services.length }}
+                        canPublish={canPublish}
+                        user={user ? (user as unknown as CreateActionModalUser) : null}
+                    />
                 </div>
-
-                {/* Right Sidebar - Sticky Intelligent */}
-                <FeedSidebar 
-                    talentPool={talentPool} 
-                    initialData={sidebarData} 
-                />
             </div>
-            </main>
         </div>
     );
 }
+
