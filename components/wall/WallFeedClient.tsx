@@ -188,10 +188,10 @@ export function WallFeedClient({
                         className="mb-8"
                     >
                         <h1 className="hero-title">
-                            <span className="text-reveal" style={{ animationDelay: '0.1s' }}>LE RÉSEAU</span>
+                            <span className="text-reveal" style={{ animationDelay: '0.1s' }}>LA PLATEFORME</span>
                             <br />
                             <span className="hero-title-gradient text-reveal" style={{ animationDelay: '0.3s' }}>
-                                DU SOCIAL
+                                DU MÉDICO-SOCIAL
                             </span>
                         </h1>
                     </motion.div>
@@ -216,7 +216,7 @@ export function WallFeedClient({
                         transition={{ duration: 0.8, delay: 0.5 }}
                         className="mt-6 text-base sm:text-lg font-medium text-slate-400 max-w-xl mx-auto"
                     >
-                        Le Réseau Social des professionnels de l'éducation spécialisée et du médico-social.
+                        La plateforme des pro de l'éducation spécialisée et du médico-social.
                     </motion.p>
 
                     {/* Mode Switcher - Premium Pill Design */}
@@ -326,7 +326,7 @@ export function WallFeedClient({
                                     </div>
                                     <div>
                                         <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
-                                            {feedMode === 'renfort' ? '📍 Missions terrain' : feedMode === 'services' ? '✨ Experts & Ateliers' : '🌍 Tout le réseau'}
+                                            {feedMode === 'renfort' ? '📍 Missions terrain' : feedMode === 'services' ? '✨ Experts & Ateliers' : '🌍 La plateforme'}
                                         </p>
                                         <h2 className="text-lg font-bold tracking-tight text-slate-900">
                                             {feedMode === 'renfort' ? 'Offres de Renfort' : feedMode === 'services' ? 'Catalogue SocioLive' : 'Fil d\'actualité'}

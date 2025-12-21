@@ -8,18 +8,18 @@ import { WallFeedClient } from '@/components/wall/WallFeedClient';
 // ===========================================
 
 export const metadata: Metadata = {
-    title: 'Sociopulse - Le réseau du Social | Renfort & SocioLive',
+    title: 'Sociopulse - La plateforme du médico-social | Renfort & SocioLive',
     description: 'La plateforme de mise en relation médico-sociale. Un renfort demain, une visio ou un atelier maintenant. Trouvez votre mission ou expert en temps réel.',
     keywords: 'renfort médico-social, interim social, SocioLive, atelier, EHPAD, IDE, aide-soignant, éducateur',
     openGraph: {
-        title: 'Sociopulse - Le réseau du Social',
-        description: 'Plateforme de mise en relation médico-sociale B2B2C. Missions de renfort et services SocioLive.',
+        title: 'Sociopulse - La plateforme du médico-social',
+        description: 'La plateforme de mise en relation médico-sociale B2B2C. Missions de renfort et services SocioLive.',
         type: 'website',
         siteName: 'Sociopulse',
     },
     twitter: {
         card: 'summary_large_image',
-        title: 'Sociopulse - Le réseau du Social',
+        title: 'Sociopulse - La plateforme du médico-social',
         description: 'Un renfort demain. Une Visio ou un Atelier maintenant.',
     },
 };
