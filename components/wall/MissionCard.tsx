@@ -25,13 +25,6 @@ const urgencyConfig = {
     CRITICAL: { label: 'Urgent !', color: 'bg-rose-500 text-white', urgent: true, dot: 'bg-white', border: 'border-l-rose-600' },
 };
 
-const getInitials = (value?: string) => {
-    if (!value) return 'LX';
-    const parts = value.split(' ').filter(Boolean);
-    if (parts.length === 0) return 'LX';
-    return parts.map((part) => part[0]?.toUpperCase()).join('').slice(0, 2);
-};
-
 const formatRelativeTime = (value?: string | Date | null) => {
     if (!value) return '';
     const date = typeof value === 'string' ? new Date(value) : value;
@@ -75,7 +68,6 @@ export function MissionCard({ data, onClick }: MissionCardProps) {
     const missionTitle = mission?.title || mission?.jobTitle || 'Mission de renfort';
     const jobType = mission?.jobTitle || mission?.missionType || '';
     const startDate = mission?.startDate;
-    const endDate = mission?.endDate;
     const isNightShift = Boolean(mission?.isNightShift);
     const postedLabel = formatRelativeTime(mission?.createdAt);
     const detailHref = missionId ? `/need/${missionId}` : undefined;
@@ -83,7 +75,6 @@ export function MissionCard({ data, onClick }: MissionCardProps) {
     const isUrgent = urgency.urgent;
     const router = useRouter();
 
-    // Tags/Skills
     const rawTags = Array.isArray(mission?.requiredSkills)
         ? mission.requiredSkills
         : Array.isArray(mission?.tags)
@@ -98,7 +89,6 @@ export function MissionCard({ data, onClick }: MissionCardProps) {
         router.push(`/dashboard/missions/${missionId}`);
     };
 
-    // Price display
     const priceDisplay = hourlyRate !== null
         ? `${hourlyRate}€/h`
         : totalPrice !== null
@@ -113,49 +103,31 @@ export function MissionCard({ data, onClick }: MissionCardProps) {
             className={`group relative bg-white rounded-2xl overflow-hidden cursor-pointer
                        border-l-4 ${urgency.border}
                        shadow-soft hover:shadow-soft-lg
-                       transition-all duration-300`}
+                       transition-all duration-300 h-full flex flex-col`}
             itemScope
             itemType="https://schema.org/JobPosting"
         >
-            {/* ========== HEADER - Établissement ========== */}
+            {/* HEADER */}
             <div className="px-5 pt-5 pb-3 border-b border-slate-100">
                 <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
-                        {/* Logo Établissement */}
                         <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-200">
                             {establishmentLogo ? (
-                                <img
-                                    src={establishmentLogo}
-                                    alt={`Logo ${establishment}`}
-                                    className="w-full h-full object-cover"
-                                    loading="lazy"
-                                    decoding="async"
-                                />
+                                <img src={establishmentLogo} alt={establishment} className="w-full h-full object-cover" loading="lazy" />
                             ) : (
                                 <Building2 className="w-5 h-5 text-slate-400" />
                             )}
                         </div>
-
                         <div className="min-w-0">
-                            <p className="text-sm font-semibold text-slate-900 truncate" itemProp="hiringOrganization">
-                                {establishment}
-                            </p>
+                            <p className="text-sm font-semibold text-slate-900 truncate" itemProp="hiringOrganization">{establishment}</p>
                             <p className="text-xs text-slate-500 flex items-center gap-1.5">
                                 <Clock className="w-3 h-3" />
                                 <span>{postedLabel || 'Récemment'}</span>
-                                {establishmentType && (
-                                    <>
-                                        <span>•</span>
-                                        <span className="truncate">{establishmentType}</span>
-                                    </>
-                                )}
+                                {establishmentType && <><span>•</span><span className="truncate">{establishmentType}</span></>}
                             </p>
                         </div>
                     </div>
-
-                    {/* Badge Urgence */}
                     <motion.div
-                        initial={false}
                         animate={isUrgent ? { scale: [1, 1.05, 1] } : {}}
                         transition={{ duration: 0.5, repeat: isUrgent ? Infinity : 0, repeatDelay: 2 }}
                         className={`flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold ${urgency.color}`}
@@ -167,102 +139,54 @@ export function MissionCard({ data, onClick }: MissionCardProps) {
                 </div>
             </div>
 
-            {/* ========== BODY - Mission Details ========== */}
-            <div className="p-5">
-                {/* Titre du Poste */}
-                <h3
-                    className="text-lg font-bold text-slate-900 leading-tight line-clamp-2 group-hover:text-rose-600 transition-colors"
-                    itemProp="title"
-                >
+            {/* BODY */}
+            <div className="p-5 flex-1">
+                <h3 className="text-lg font-bold text-slate-900 leading-tight line-clamp-2 group-hover:text-rose-600 transition-colors" itemProp="title">
                     {missionTitle}
                 </h3>
-
-                {/* Type de poste */}
                 {jobType && jobType !== missionTitle && (
                     <p className="text-sm text-rose-600 font-medium mt-1 flex items-center gap-1" itemProp="occupationalCategory">
                         {jobType}
-                        {isNightShift && (
-                            <span className="inline-flex items-center gap-0.5 ml-1 text-xs bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-md">
-                                <Moon className="w-3 h-3" />
-                                Nuit
-                            </span>
-                        )}
+                        {isNightShift && <span className="inline-flex items-center gap-0.5 ml-1 text-xs bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-md"><Moon className="w-3 h-3" />Nuit</span>}
                     </p>
                 )}
+                {description && <p className="text-sm text-slate-600 mt-2 line-clamp-2 leading-relaxed" itemProp="description">{description}</p>}
 
-                {/* Description courte */}
-                {description && (
-                    <p
-                        className="text-sm text-slate-600 mt-2 line-clamp-2 leading-relaxed"
-                        itemProp="description"
-                    >
-                        {description}
-                    </p>
-                )}
-
-                {/* ========== DATA GRID - Le focus ========== */}
+                {/* DATA GRID */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4">
-                    {/* Tarif */}
                     <div className="flex flex-col items-center gap-1 px-3 py-3 rounded-xl bg-rose-50 border border-rose-100 text-center">
                         <Euro className="w-4 h-4 text-rose-500" />
-                        <span className="text-sm font-bold text-rose-700" itemProp="baseSalary">
-                            {priceDisplay}
-                        </span>
+                        <span className="text-sm font-bold text-rose-700" itemProp="baseSalary">{priceDisplay}</span>
                     </div>
-
-                    {/* Lieu */}
                     <div className="flex flex-col items-center gap-1 px-3 py-3 rounded-xl bg-slate-50 border border-slate-100 text-center">
                         <MapPin className="w-4 h-4 text-slate-500" />
-                        <span className="text-xs font-medium text-slate-700 truncate w-full" itemProp="jobLocation">
-                            {city}
-                        </span>
+                        <span className="text-xs font-medium text-slate-700 truncate w-full" itemProp="jobLocation">{city}</span>
                     </div>
-
-                    {/* Date */}
                     <div className="flex flex-col items-center gap-1 px-3 py-3 rounded-xl bg-slate-50 border border-slate-100 text-center">
                         <Calendar className="w-4 h-4 text-slate-500" />
-                        <span className="text-xs font-medium text-slate-700">
-                            {startDate ? formatDate(startDate) : 'ASAP'}
-                        </span>
+                        <span className="text-xs font-medium text-slate-700">{startDate ? formatDate(startDate) : 'ASAP'}</span>
                     </div>
-
-                    {/* Heure */}
                     <div className="flex flex-col items-center gap-1 px-3 py-3 rounded-xl bg-slate-50 border border-slate-100 text-center">
                         {isNightShift ? <Moon className="w-4 h-4 text-indigo-500" /> : <Sun className="w-4 h-4 text-amber-500" />}
-                        <span className="text-xs font-medium text-slate-700">
-                            {startDate ? formatTime(startDate) : 'À définir'}
-                        </span>
+                        <span className="text-xs font-medium text-slate-700">{startDate ? formatTime(startDate) : 'À définir'}</span>
                     </div>
                 </div>
 
-                {/* Tags/Skills */}
                 {tags.length > 0 && (
-                    <ul className="flex flex-wrap gap-1.5 mt-3" aria-label="Compétences requises">
+                    <ul className="flex flex-wrap gap-1.5 mt-3">
                         {tags.map((tag, index) => (
-                            <li
-                                key={index}
-                                className="px-2.5 py-1 rounded-lg bg-slate-100 text-xs text-slate-600 font-medium"
-                                itemProp="skills"
-                            >
-                                {tag}
-                            </li>
+                            <li key={index} className="px-2.5 py-1 rounded-lg bg-slate-100 text-xs text-slate-600 font-medium">{tag}</li>
                         ))}
                     </ul>
                 )}
             </div>
 
-            {/* ========== FOOTER - CTA ========== */}
-            <div className="px-5 pb-5">
+            {/* FOOTER */}
+            <div className="px-5 pb-5 mt-auto">
                 <button
                     type="button"
                     onClick={handleViewMission}
-                    className="w-full inline-flex items-center justify-center gap-2 
-                               px-4 py-3 rounded-xl 
-                               bg-rose-500 hover:bg-rose-600
-                               text-white text-sm font-semibold
-                               shadow-sm hover:shadow-md
-                               active:scale-[0.98] transition-all"
-                    aria-label={`Postuler à ${missionTitle}`}
+                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold shadow-sm hover:shadow-md active:scale-[0.98] transition-all"
                 >
                     Postuler maintenant
                     <ArrowRight className="w-4 h-4" />
@@ -271,11 +195,5 @@ export function MissionCard({ data, onClick }: MissionCardProps) {
         </motion.article>
     );
 
-    return detailHref ? (
-        <Link href={detailHref} className="block h-full">
-            {card}
-        </Link>
-    ) : (
-        card
-    );
+    return detailHref ? <Link href={detailHref} className="block h-full">{card}</Link> : card;
 }
