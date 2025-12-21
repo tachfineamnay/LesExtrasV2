@@ -45,7 +45,7 @@ interface WallFeedClientProps {
     sidebarData?: SidebarData;
 }
 
-type FeedMode = 'renfort' | 'services';
+type FeedMode = 'all' | 'renfort' | 'services';
 
 const isType = (item: any, type: string) => String(item?.type || '').toUpperCase() === type;
 
@@ -75,23 +75,32 @@ function SectionEmptyState({ icon: Icon, title, description, action }: { icon: L
 }
 
 function FeedModeToggle({ mode, onChange }: { mode: FeedMode; onChange: (mode: FeedMode) => void }) {
+    const toggle = (target: 'services' | 'renfort') => {
+        if (mode === target) {
+            onChange('all');
+        } else {
+            onChange(target);
+        }
+    };
+
     return (
         <div className="inline-flex items-center p-1.5 rounded-2xl bg-white/90 backdrop-blur-md border border-white/60 shadow-xl">
             <motion.button
                 type="button"
-                onClick={() => onChange('renfort')}
-                className={`relative inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-colors ${mode === 'renfort' ? 'text-rose-700' : 'text-slate-600 hover:text-slate-900'}`}
-            >
-                {mode === 'renfort' && <motion.div layoutId="modeToggleBg" className="absolute inset-0 bg-rose-50 border border-rose-200 rounded-xl" transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }} />}
-                <span className="relative flex items-center gap-2"><MapPin className="w-4 h-4" />Renfort Terrain</span>
-            </motion.button>
-            <motion.button
-                type="button"
-                onClick={() => onChange('services')}
+                onClick={() => toggle('services')}
                 className={`relative inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-colors ${mode === 'services' ? 'text-teal-700' : 'text-slate-600 hover:text-slate-900'}`}
             >
                 {mode === 'services' && <motion.div layoutId="modeToggleBg" className="absolute inset-0 bg-teal-50 border border-teal-200 rounded-xl" transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }} />}
                 <span className="relative flex items-center gap-2"><Video className="w-4 h-4" />SocioLive & Ateliers</span>
+            </motion.button>
+
+            <motion.button
+                type="button"
+                onClick={() => toggle('renfort')}
+                className={`relative inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-colors ${mode === 'renfort' ? 'text-rose-700' : 'text-slate-600 hover:text-slate-900'}`}
+            >
+                {mode === 'renfort' && <motion.div layoutId="modeToggleBg" className="absolute inset-0 bg-rose-50 border border-rose-200 rounded-xl" transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }} />}
+                <span className="relative flex items-center gap-2"><MapPin className="w-4 h-4" />Renfort Terrain</span>
             </motion.button>
         </div>
     );
@@ -116,12 +125,18 @@ export function WallFeedClient({
         initialHasNextPage,
     });
 
-    const [feedMode, setFeedMode] = useState<FeedMode>('renfort');
+    const [feedMode, setFeedMode] = useState<FeedMode>('all');
 
     const missions = useMemo(() => feed.filter((item) => isType(item, 'MISSION')), [feed]);
     const services = useMemo(() => feed.filter((item) => isType(item, 'SERVICE')), [feed]);
     const urgentMissions = useMemo(() => missions.filter(isUrgentMission).slice(0, 12), [missions]);
-    const displayedItems = useMemo(() => feedMode === 'renfort' ? missions : services, [feedMode, missions, services]);
+
+    // Logic: 'all' shows everything (default), otherwise filter by type
+    const displayedItems = useMemo(() => {
+        if (feedMode === 'renfort') return missions;
+        if (feedMode === 'services') return services;
+        return feed;
+    }, [feedMode, missions, services, feed]);
 
     const urgentRailRef = useRef<HTMLDivElement>(null);
     const feedSectionRef = useRef<HTMLDivElement>(null);
@@ -148,42 +163,39 @@ export function WallFeedClient({
                 </div>
 
                 <div className="max-w-5xl mx-auto text-center">
-                    {/* Badge Pill */}
+                    {/* Titre H1 Major */}
                     <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6 }}
-                        className="mb-8"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                        className="mb-6 relative inline-block"
                     >
-                        <span className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-semibold shadow-xl">
-                            <Sparkles className="w-4 h-4" />
-                            Le réseau du Social
-                            <Sparkles className="w-4 h-4" />
-                        </span>
+                        <h1 className="text-6xl sm:text-7xl lg:text-8xl font-black tracking-tighter text-slate-900 leading-[0.9]">
+                            LE RÉSEAU <br className="sm:hidden" />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600 relative">
+                                DU SOCIAL
+                            </span>
+                        </h1>
                     </motion.div>
 
-                    {/* Titre H1 */}
-                    <motion.h1
-                        initial={{ opacity: 0, y: 30 }}
+                    {/* Punchline Secondary */}
+                    <motion.h2
+                        initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.1 }}
-                        className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1]"
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                        className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-slate-600 max-w-4xl mx-auto leading-tight"
                     >
-                        <span className="text-slate-900">Un renfort demain.</span>
-                        <br />
-                        <span className="bg-gradient-to-r from-indigo-600 via-indigo-500 to-teal-500 bg-clip-text text-transparent">
-                            Une Visio ou un Atelier maintenant.
-                        </span>
-                    </motion.h1>
+                        Un renfort demain. <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-teal-500">Une Visio ou un Atelier maintenant.</span>
+                    </motion.h2>
 
-                    {/* Subtitle */}
+                    {/* Mission Text */}
                     <motion.p
-                        initial={{ opacity: 0, y: 30 }}
+                        initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.15 }}
-                        className="mt-6 text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto"
+                        transition={{ duration: 0.6, delay: 0.3 }}
+                        className="mt-6 text-lg sm:text-xl font-medium text-slate-500 max-w-2xl mx-auto"
                     >
-                        La plateforme qui connecte établissements médico-sociaux et professionnels qualifiés.
+                        Le Réseau Social des professionnels de l'éducation spécialisée et du médico-social.
                     </motion.p>
 
                     {/* Mode Switcher */}
@@ -286,15 +298,19 @@ export function WallFeedClient({
                         <section>
                             <div className="flex items-center justify-between gap-4 mb-6">
                                 <div className="flex items-center gap-3">
-                                    <div className={`h-11 w-11 rounded-2xl grid place-items-center ${feedMode === 'renfort' ? 'bg-rose-50 border border-rose-100' : 'bg-teal-50 border border-teal-100'}`}>
-                                        {feedMode === 'renfort' ? <MapPin className="h-5 w-5 text-rose-500" /> : <Palette className="h-5 w-5 text-teal-600" />}
+                                    <div className={`h-11 w-11 rounded-2xl grid place-items-center ${feedMode === 'renfort' ? 'bg-rose-50 border border-rose-100' : feedMode === 'services' ? 'bg-teal-50 border border-teal-100' : 'bg-indigo-50 border border-indigo-100'}`}>
+                                        {feedMode === 'renfort' ? <MapPin className="h-5 w-5 text-rose-500" /> : feedMode === 'services' ? <Palette className="h-5 w-5 text-teal-600" /> : <Sparkles className="h-5 w-5 text-indigo-600" />}
                                     </div>
                                     <div>
-                                        <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">{feedMode === 'renfort' ? '📍 Missions terrain' : '✨ Experts & Ateliers'}</p>
-                                        <h2 className="text-lg font-bold tracking-tight text-slate-900">{feedMode === 'renfort' ? 'Offres de Renfort' : 'Catalogue SocioLive'}</h2>
+                                        <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">
+                                            {feedMode === 'renfort' ? '📍 Missions terrain' : feedMode === 'services' ? '✨ Experts & Ateliers' : '🌍 Tout le réseau'}
+                                        </p>
+                                        <h2 className="text-lg font-bold tracking-tight text-slate-900">
+                                            {feedMode === 'renfort' ? 'Offres de Renfort' : feedMode === 'services' ? 'Catalogue SocioLive' : 'Fil d\'actualité'}
+                                        </h2>
                                     </div>
                                 </div>
-                                {displayedItems.length > 0 && <span className="text-sm text-slate-500 font-medium">{displayedItems.length} {feedMode === 'renfort' ? 'missions' : 'services'}</span>}
+                                {displayedItems.length > 0 && <span className="text-sm text-slate-500 font-medium">{displayedItems.length} {feedMode === 'renfort' ? 'missions' : feedMode === 'services' ? 'services' : 'publications'}</span>}
                             </div>
 
                             {isLoading && displayedItems.length === 0 ? (
@@ -308,7 +324,7 @@ export function WallFeedClient({
                                     <motion.div key={feedMode} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 auto-rows-fr gap-6 [grid-auto-flow:dense]">
                                         {displayedItems.map((item, index) => (
                                             <motion.div key={String(item?.id ?? index)} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: index * 0.03 }} className={`h-full ${getMasonrySpan(index, displayedItems.length)}`}>
-                                                {feedMode === 'renfort' ? <MissionCard data={item} /> : <ServiceCard data={item} currentUserId={user?.id ?? undefined} />}
+                                                {isType(item, 'MISSION') ? <MissionCard data={item} /> : <ServiceCard data={item} currentUserId={user?.id ?? undefined} />}
                                             </motion.div>
                                         ))}
                                     </motion.div>
@@ -316,12 +332,12 @@ export function WallFeedClient({
                             ) : (
                                 <SectionEmptyState
                                     icon={feedMode === 'renfort' ? MapPin : Sparkles}
-                                    title={feedMode === 'renfort' ? 'Aucune mission disponible' : 'Aucun expert disponible'}
+                                    title={feedMode === 'renfort' ? 'Aucune mission disponible' : feedMode === 'services' ? 'Aucun expert disponible' : 'Aucune publication'}
                                     description="Affinez votre recherche ou revenez un peu plus tard."
                                     action={canPublish && user ? (
                                         <CreateActionModal user={user as unknown as CreateActionModalUser} trigger={
                                             <button type="button" className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-teal-500 px-5 py-3 text-sm font-semibold text-white shadow-soft">
-                                                <Plus className="h-4 w-4" />{feedMode === 'renfort' ? 'Publier une mission' : 'Proposer un service'}
+                                                <Plus className="h-4 w-4" />{feedMode === 'renfort' ? 'Publier une mission' : 'Publier une annonce'}
                                             </button>
                                         } />
                                     ) : undefined}
