@@ -19,6 +19,7 @@ import { PaymentsModule } from './payments/payments.module';
 import { HealthModule } from './health/health.module';
 import { GrowthModule } from './growth/growth.module';
 import { MissionHubModule } from './mission-hub/mission-hub.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
     imports: [
@@ -63,6 +64,7 @@ import { MissionHubModule } from './mission-hub/mission-hub.module';
         HealthModule,
         GrowthModule,
         MissionHubModule,
+        NotificationsModule,
     ],
     providers: [
         {

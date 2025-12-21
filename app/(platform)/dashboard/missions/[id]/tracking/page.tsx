@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
@@ -18,6 +18,7 @@ import {
     Building2
 } from 'lucide-react';
 import Link from 'next/link';
+import { useSocket } from '@/components/providers';
 
 // ========================================
 // TYPES
@@ -61,7 +62,8 @@ interface ChatMessage {
     id: string;
     content: string;
     type: 'TEXT' | 'SYSTEM';
-    createdAt: string;
+    createdAt: string | Date;
+    missionId?: string;
     sender?: {
         id: string;
         role: string;
@@ -263,8 +265,8 @@ function MissionChat({
                             >
                                 <div
                                     className={`max-w-[80%] rounded-2xl px-4 py-2 ${isOwn
-                                            ? 'bg-gradient-to-r from-indigo-600 to-teal-500 text-white'
-                                            : 'bg-slate-100 text-slate-900'
+                                        ? 'bg-gradient-to-r from-indigo-600 to-teal-500 text-white'
+                                        : 'bg-slate-100 text-slate-900'
                                         }`}
                                 >
                                     {!isOwn && msg.sender?.profile && (
@@ -420,6 +422,7 @@ function MissionReportForm({
 export default function MissionTrackingPage() {
     const params = useParams();
     const missionId = params.id as string;
+    const { joinMissionRoom, leaveMissionRoom, onMissionMessage, isConnected } = useSocket();
 
     const [mission, setMission] = useState<Mission | null>(null);
     const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
@@ -430,6 +433,34 @@ export default function MissionTrackingPage() {
 
     // TODO: Get from auth context
     const currentUserId = '';
+
+    // Join mission room for real-time chat
+    useEffect(() => {
+        if (isConnected && missionId) {
+            joinMissionRoom(missionId);
+            return () => {
+                leaveMissionRoom(missionId);
+            };
+        }
+    }, [isConnected, missionId, joinMissionRoom, leaveMissionRoom]);
+
+    // Subscribe to incoming chat messages
+    useEffect(() => {
+        const unsubscribe = onMissionMessage((incomingMessage) => {
+            // Only add messages for this mission and avoid duplicates
+            if (incomingMessage.missionId === missionId) {
+                setMessages((prev) => {
+                    // Check if message already exists
+                    if (prev.some((m) => m.id === incomingMessage.id)) {
+                        return prev;
+                    }
+                    return [...prev, incomingMessage];
+                });
+            }
+        });
+
+        return unsubscribe;
+    }, [missionId, onMissionMessage]);
 
     useEffect(() => {
         // TODO: Fetch mission data from API
@@ -639,8 +670,8 @@ export default function MissionTrackingPage() {
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
                                     className={`flex items-center gap-1.5 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${isActive
-                                            ? 'text-indigo-600 border-indigo-600'
-                                            : 'text-slate-500 border-transparent hover:text-slate-700'
+                                        ? 'text-indigo-600 border-indigo-600'
+                                        : 'text-slate-500 border-transparent hover:text-slate-700'
                                         }`}
                                 >
                                     <Icon className="w-4 h-4" />

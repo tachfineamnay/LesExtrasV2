@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { DesktopTopNav, MobileBottomNav } from "@/components/layout";
+import { SocketProvider } from "@/components/providers/SocketProvider";
 
 function PlatformFooter() {
     return (
@@ -29,13 +30,15 @@ function PlatformFooter() {
 
 export default function PlatformLayout({ children }: { children: ReactNode }) {
     return (
-        <div className="min-h-screen bg-canvas flex flex-col">
-            <DesktopTopNav />
-            <div className="flex-1 flex flex-col has-bottom-nav lg:pb-0">
-                <main className="flex-1">{children}</main>
-                <PlatformFooter />
+        <SocketProvider>
+            <div className="min-h-screen bg-canvas flex flex-col">
+                <DesktopTopNav />
+                <div className="flex-1 flex flex-col has-bottom-nav lg:pb-0">
+                    <main className="flex-1">{children}</main>
+                    <PlatformFooter />
+                </div>
+                <MobileBottomNav />
             </div>
-            <MobileBottomNav />
-        </div>
+        </SocketProvider>
     );
 }

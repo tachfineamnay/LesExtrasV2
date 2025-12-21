@@ -6,6 +6,7 @@ import {
     Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import {
     SubmitReportDto,
     SendMissionMessageDto,
@@ -17,7 +18,10 @@ import { MissionStatus, MissionMessageType, MissionTimelineEventType } from '@pr
 export class MissionHubService {
     private readonly logger = new Logger(MissionHubService.name);
 
-    constructor(private readonly prisma: PrismaService) { }
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly notificationsService: NotificationsService,
+    ) { }
 
     // ========================================
     // INSTRUCTIONS
@@ -106,6 +110,22 @@ export class MissionHubService {
         // Create system message
         await this.createSystemMessage(missionId, '✅ Le talent a validé les consignes de mission');
 
+        // Get talent name for notification
+        const talent = await this.prisma.user.findUnique({
+            where: { id: talentId },
+            select: { profile: { select: { firstName: true, lastName: true } } },
+        });
+        const talentName = talent?.profile
+            ? `${talent.profile.firstName} ${talent.profile.lastName}`
+            : 'Le talent';
+
+        // Notify client via WebSocket
+        await this.notificationsService.notifyInstructionsAcknowledged(
+            missionId,
+            mission.clientId,
+            talentName,
+        );
+
         this.logger.log(`Instructions acknowledged for mission ${missionId} by talent ${talentId}`);
 
         return { message: 'Consignes validées avec succès', instructions: updated };
@@ -144,6 +164,26 @@ export class MissionHubService {
 
         // Create system message
         await this.createSystemMessage(missionId, '🚀 La mission a été démarrée');
+
+        // Get talent name for notification
+        const talent = await this.prisma.user.findUnique({
+            where: { id: talentId },
+            select: { profile: { select: { firstName: true, lastName: true } } },
+        });
+        const talentName = talent?.profile
+            ? `${talent.profile.firstName} ${talent.profile.lastName}`
+            : 'Le talent';
+
+        // Notify client via WebSocket
+        await this.notificationsService.notifyMissionStarted(
+            missionId,
+            mission.clientId,
+            talentName,
+        );
+
+        // Refresh active missions count for both parties
+        await this.notificationsService.refreshActiveMissionsCount(mission.clientId);
+        await this.notificationsService.refreshActiveMissionsCount(talentId);
 
         this.logger.log(`Mission ${missionId} started by talent ${talentId}`);
 
@@ -200,6 +240,29 @@ export class MissionHubService {
 
         // Create system message
         await this.createSystemMessage(missionId, '📝 Le rapport de mission a été soumis');
+
+        // Get talent name for notification
+        const talent = await this.prisma.user.findUnique({
+            where: { id: talentId },
+            select: { profile: { select: { firstName: true, lastName: true } } },
+        });
+        const talentName = talent?.profile
+            ? `${talent.profile.firstName} ${talent.profile.lastName}`
+            : 'Le talent';
+
+        // Notify client via WebSocket
+        await this.notificationsService.notifyReportSubmitted(
+            missionId,
+            mission.clientId,
+            talentName,
+        );
+
+        // Emit closure warning (24h countdown starts)
+        await this.notificationsService.emitClosureWarningMessage(missionId);
+
+        // Refresh active missions count for both parties
+        await this.notificationsService.refreshActiveMissionsCount(mission.clientId);
+        await this.notificationsService.refreshActiveMissionsCount(talentId);
 
         this.logger.log(`Report submitted for mission ${missionId} by talent ${talentId}`);
 
@@ -287,6 +350,34 @@ export class MissionHubService {
 
         // Log timeline event
         await this.createTimelineEvent(missionId, senderId, MissionTimelineEventType.CHAT_MESSAGE);
+
+        // Emit message to mission room via WebSocket
+        this.notificationsService.emitMissionMessage(missionId, {
+            id: message.id,
+            missionId,
+            content: message.content,
+            type: message.type,
+            createdAt: message.createdAt,
+            sender: message.sender,
+        });
+
+        // Notify the other participant
+        const recipientId = mission.clientId === senderId
+            ? mission.assignedTalentId
+            : mission.clientId;
+
+        if (recipientId) {
+            const senderProfile = message.sender?.profile;
+            const senderName = senderProfile
+                ? `${senderProfile.firstName} ${senderProfile.lastName}`
+                : 'Un participant';
+
+            await this.notificationsService.notifyNewMissionMessage(
+                missionId,
+                recipientId,
+                senderName,
+            );
+        }
 
         return message;
     }

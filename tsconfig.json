@@ -19,6 +19,9 @@
     "plugins": [
       {
         "name": "SociopulseV2"
+      },
+      {
+        "name": "next"
       }
     ],
     "paths": {

@@ -13,6 +13,7 @@ import {
     ClipboardList
 } from 'lucide-react';
 import { useAuth } from '@/lib/useAuth';
+import { useSocket } from '@/components/providers';
 import { CreateActionModal } from '@/components/create/CreateActionModal';
 
 interface NavItem {
@@ -34,11 +35,12 @@ const NAV_ITEMS: NavItem[] = [
 export function MobileBottomNav() {
     const pathname = usePathname();
     const { user } = useAuth();
+    const { activeMissionsCount } = useSocket();
     const isAdmin = user?.role === 'ADMIN';
-    const canPublish = Boolean(user && (user.role === 'CLIENT' || user.role === 'TALENT'));
+    const canPublish = Boolean(user && (user.role === 'CLIENT' || user.role === 'EXTRA'));
 
-    // TODO: Fetch from API - /missions/active/count
-    const activeMissionCount = 0;
+    // Use real-time count from socket, fallback to 0
+    const activeMissionCount = activeMissionsCount;
 
     // Hide on auth pages and onboarding
     if (pathname.startsWith('/auth/') || pathname.startsWith('/onboarding')) {
@@ -98,8 +100,8 @@ export function MobileBottomNav() {
                                     <motion.div
                                         whileTap={{ scale: 0.9 }}
                                         className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg ${isActive
-                                                ? 'bg-gradient-to-br from-indigo-600 to-teal-500 shadow-indigo-500/30'
-                                                : 'bg-gradient-to-br from-indigo-500 to-teal-400 shadow-indigo-400/20'
+                                            ? 'bg-gradient-to-br from-indigo-600 to-teal-500 shadow-indigo-500/30'
+                                            : 'bg-gradient-to-br from-indigo-500 to-teal-400 shadow-indigo-400/20'
                                             }`}
                                     >
                                         <Icon className="w-6 h-6 text-white" />

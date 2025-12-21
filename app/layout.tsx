@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Outfit } from "next/font/google";
 import "./globals.css";
 import { SonnerToaster } from "@/components/ui/SonnerToaster";
+import { SocketProvider } from "@/components/providers";
 
 const outfit = Outfit({ subsets: ["latin"] });
 
@@ -27,7 +28,9 @@ export default function RootLayout({
     return (
         <html lang="fr" className="smooth-scroll">
             <body className={outfit.className}>
-                {children}
+                <SocketProvider>
+                    {children}
+                </SocketProvider>
                 <SonnerToaster />
             </body>
         </html>
