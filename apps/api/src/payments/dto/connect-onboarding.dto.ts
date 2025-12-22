@@ -7,7 +7,7 @@ export class ConnectOnboardingDto {
     @IsUrl()
     returnUrl?: string;
 
-    @ApiPropertyOptional({ description: \"URL de rafraichissement si l'onboarding est interrompu\" })
+    @ApiPropertyOptional({ description: "URL de rafraichissement si l'onboarding est interrompu" })
     @IsOptional()
     @IsUrl()
     refreshUrl?: string;

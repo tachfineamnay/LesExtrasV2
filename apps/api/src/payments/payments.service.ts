@@ -27,7 +27,7 @@ export class PaymentsService {
             this.logger.error('STRIPE_SECRET_KEY manquante - Stripe Connect/Paiements indisponibles');
             this.stripe = null;
         } else {
-            this.stripe = new Stripe(secretKey, { apiVersion: '2024-06-20' });
+            this.stripe = new Stripe(secretKey);
         }
     }
 

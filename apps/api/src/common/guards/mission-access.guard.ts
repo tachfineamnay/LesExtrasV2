@@ -19,13 +19,14 @@ export class MissionAccessGuard implements CanActivate {
         const request = context.switchToHttp().getRequest<Request>();
         const missionId = this.extractMissionId(request);
 
-        // If the route does not target a mission, skip silently
         if (!missionId) {
             return true;
         }
 
-        if (!request.user) {
-            throw new ForbiddenException('Authentification requise pour accéder à cette mission');
+        const user = request.user as { id?: string; role?: string } | undefined;
+
+        if (!user?.id) {
+            throw new ForbiddenException('Authentification requise pour acceder a cette mission');
         }
 
         const mission = await this.prisma.reliefMission.findUnique({
@@ -37,21 +38,19 @@ export class MissionAccessGuard implements CanActivate {
             throw new NotFoundException(`Mission ${missionId} introuvable`);
         }
 
-        // Admins bypass the mission membership check
-        if (request.user.role === 'ADMIN') {
+        if (user.role === 'ADMIN') {
             return true;
         }
 
         const isParticipant =
-            mission.clientId === request.user.id ||
-            mission.assignedTalentId === request.user.id;
+            mission.clientId === user.id || mission.assignedTalentId === user.id;
 
         if (!isParticipant) {
             this.logger.warn(
-                `Mission access denied for user ${request.user.id} on mission ${missionId}`,
+                `Mission access denied for user ${user.id} on mission ${missionId}`,
             );
             throw new ForbiddenException(
-                'Accès refusé : vous devez être client ou talent assigné de la mission',
+                'Acces refuse : vous devez etre client ou talent assigne de la mission',
             );
         }
 
@@ -65,7 +64,7 @@ export class MissionAccessGuard implements CanActivate {
         }
 
         if (typeof request.body === 'object' && request.body !== null) {
-            const missionId = request.body.missionId || request.body.mission_id;
+            const missionId = (request.body as any).missionId || (request.body as any).mission_id;
             if (missionId) {
                 return missionId;
             }

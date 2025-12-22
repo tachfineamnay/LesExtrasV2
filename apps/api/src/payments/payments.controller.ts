@@ -46,7 +46,7 @@ export class PaymentsController {
     @UseGuards(JwtAuthGuard, RolesGuard)
     @ApiBearerAuth()
     @Roles('TALENT')
-    @ApiOperation({ summary: 'Creer un lien d\\'onboarding Stripe Connect pour le talent' })
+    @ApiOperation({ summary: 'Creer un lien de onboarding Stripe Connect pour le talent' })
     async createOnboardingLink(
         @CurrentUser() user: CurrentUserPayload,
         @Body() dto: ConnectOnboardingDto,
