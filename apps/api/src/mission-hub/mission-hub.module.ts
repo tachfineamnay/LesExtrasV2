@@ -4,10 +4,9 @@ import { MissionHubService } from './mission-hub.service';
 import { PrismaModule } from '../common/prisma/prisma.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { MissionAccessGuard } from '../common/guards';
-import { AuthModule } from '../auth/auth.module';
 
 @Module({
-    imports: [PrismaModule, NotificationsModule, AuthModule],
+    imports: [PrismaModule, NotificationsModule],
     controllers: [MissionHubController],
     providers: [MissionHubService, MissionAccessGuard],
     exports: [MissionHubService],

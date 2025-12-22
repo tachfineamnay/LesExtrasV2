@@ -15,6 +15,7 @@ export class PaymentsService {
     private readonly logger = new Logger(PaymentsService.name);
     private readonly stripe: Stripe | null;
     private readonly frontendUrl: string;
+    private readonly stripeKey?: string;
 
     constructor(
         private readonly configService: ConfigService,
@@ -22,9 +23,10 @@ export class PaymentsService {
     ) {
         const secretKey = this.configService.get<string>('STRIPE_SECRET_KEY');
         this.frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
+        this.stripeKey = secretKey || undefined;
 
         if (!secretKey) {
-            this.logger.error('STRIPE_SECRET_KEY manquante - Stripe Connect/Paiements indisponibles');
+            this.logger.log('MODE PROTOTYPE : Stripe non configure, paiements simules.');
             this.stripe = null;
         } else {
             this.stripe = new Stripe(secretKey);
@@ -33,6 +35,11 @@ export class PaymentsService {
 
     async createIntent(dto: CreateIntentDto) {
         const stripe = this.ensureStripe();
+
+        if (!stripe) {
+            this.logger.log('Paiement simulateur : retour mock clientSecret');
+            return { clientSecret: 'pi_prototype_secret_123', paymentIntentId: 'pi_mock_123' };
+        }
 
         try {
             const paymentIntent = await stripe.paymentIntents.create({
@@ -53,6 +60,15 @@ export class PaymentsService {
 
     async createPaymentIntentForBooking(bookingId: string) {
         const stripe = this.ensureStripe();
+
+        if (!stripe) {
+            this.logger.log(`Paiement simulateur pour booking ${bookingId}`);
+            return {
+                clientSecret: 'pi_prototype_secret_123',
+                paymentIntentId: 'pi_mock_booking',
+                amount: 0,
+            };
+        }
 
         try {
             const booking = await this.prisma.booking.findUnique({
@@ -119,6 +135,16 @@ export class PaymentsService {
 
     async confirmPaymentIntentForBooking(bookingId: string) {
         const stripe = this.ensureStripe();
+
+        if (!stripe) {
+            this.logger.log(`Confirmation simulateur pour booking ${bookingId}`);
+            return {
+                success: true,
+                bookingId,
+                status: 'PAID',
+                paymentIntentId: 'pi_mock_booking',
+            };
+        }
 
         try {
             const booking = await this.prisma.booking.findUnique({

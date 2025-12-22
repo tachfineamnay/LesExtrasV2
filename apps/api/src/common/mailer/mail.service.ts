@@ -25,7 +25,7 @@ export class MailService {
         this.from = this.configService.get<string>('MAIL_FROM') || 'no-reply@lesextras.fr';
 
         if (!host) {
-            this.logger.warn('SMTP not configured - email fallback disabled');
+            this.logger.log('MODE PROTOTYPE : SMTP absent, envoi des emails en console.');
             return;
         }
 
@@ -39,7 +39,7 @@ export class MailService {
 
     async sendMail(params: MailParams) {
         if (!this.transporter) {
-            this.logger.warn(`Email not sent (transporter missing): ${params.subject}`);
+            this.logger.log('[MAIL MOCK]', { to: params.to, subject: params.subject, html: params.html, text: params.text });
             return;
         }
 
