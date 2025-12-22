@@ -12,7 +12,7 @@ import {
     SendMissionMessageDto,
     CreateInstructionsDto,
 } from './dto';
-import { MissionStatus, MissionMessageType, MissionTimelineEventType } from '@prisma/client';
+import { MissionStatus, MissionMessageType, MissionTimelineEventType, Prisma } from '@prisma/client';
 
 @Injectable()
 export class MissionHubService {
@@ -518,7 +518,7 @@ export class MissionHubService {
                 missionId,
                 userId,
                 type,
-                metadata: metadata || null,
+                metadata: (metadata as Prisma.InputJsonValue) || Prisma.JsonNull,
             },
         });
     }
