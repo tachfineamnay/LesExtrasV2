@@ -289,9 +289,15 @@ export class VideoBookingService {
     }
 
     private async createAccessToken(roomName: string, participantName: string, isHost: boolean): Promise<string> {
+        if (!this.LIVEKIT_API_KEY || !this.LIVEKIT_API_SECRET) {
+            throw new InternalServerErrorException('LiveKit API credentials are missing');
+        }
+
+        const identity = participantName || `participant-${uuidv4()}`;
+
         const at = new AccessToken(this.LIVEKIT_API_KEY, this.LIVEKIT_API_SECRET, {
-            identity: participantName,
-            ttl: '2h',
+            identity,
+            ttl: 2 * 60 * 60, // 2 hours
         });
 
         at.addGrant({

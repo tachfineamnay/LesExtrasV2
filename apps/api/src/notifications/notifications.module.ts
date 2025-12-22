@@ -4,6 +4,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaModule } from '../common/prisma/prisma.module';
 import { NotificationsGateway } from './notifications.gateway';
 import { NotificationsService } from './notifications.service';
+import { NotificationsController } from './notifications.controller';
 
 @Module({
     imports: [
@@ -19,6 +20,7 @@ import { NotificationsService } from './notifications.service';
             }),
         }),
     ],
+    controllers: [NotificationsController],
     providers: [
         NotificationsGateway,
         NotificationsService,

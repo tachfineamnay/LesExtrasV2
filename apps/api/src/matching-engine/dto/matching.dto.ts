@@ -1,5 +1,6 @@
-import { IsString, IsNumber, IsOptional, IsEnum, IsArray, Min, Max } from 'class-validator';
+import { IsString, IsNumber, IsOptional, IsEnum, IsArray, Min, Max, IsBoolean } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 
 export enum MissionUrgency {
     LOW = 'LOW',
@@ -18,6 +19,7 @@ export class FindCandidatesDto {
     @ApiPropertyOptional({ description: 'Rayon de recherche en km', default: 30 })
     @IsOptional()
     @IsNumber()
+    @Type(() => Number)
     @Min(1)
     @Max(200)
     radiusKm?: number;
@@ -25,6 +27,7 @@ export class FindCandidatesDto {
     @ApiPropertyOptional({ description: 'Nombre maximum de candidats', default: 10 })
     @IsOptional()
     @IsNumber()
+    @Type(() => Number)
     @Min(1)
     @Max(50)
     limit?: number;
@@ -100,10 +103,13 @@ export class CreateMissionDto {
 
     @ApiProperty({ description: 'Taux horaire en EUR' })
     @IsNumber()
+    @Type(() => Number)
     hourlyRate: number;
 
     @ApiPropertyOptional({ description: 'Mission de nuit', default: false })
     @IsOptional()
+    @IsBoolean()
+    @Type(() => Boolean)
     isNightShift?: boolean;
 
     @ApiProperty({ enum: MissionUrgency, default: MissionUrgency.HIGH })
@@ -140,16 +146,19 @@ export class CreateMissionDto {
     @ApiPropertyOptional({ description: 'Latitude' })
     @IsOptional()
     @IsNumber()
+    @Type(() => Number)
     latitude?: number;
 
     @ApiPropertyOptional({ description: 'Longitude' })
     @IsOptional()
     @IsNumber()
+    @Type(() => Number)
     longitude?: number;
 
     @ApiPropertyOptional({ description: 'Rayon de recherche', default: 30 })
     @IsOptional()
     @IsNumber()
+    @Type(() => Number)
     radiusKm?: number;
 
     @ApiPropertyOptional({ description: 'Compétences requises', type: [String] })

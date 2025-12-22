@@ -16,7 +16,7 @@ import {
 } from '@nestjs/swagger';
 import { MatchingEngineService } from './matching-engine.service';
 import { FindCandidatesDto, MatchingResultDto, CreateMissionDto } from './dto';
-import { JwtAuthGuard, RolesGuard } from '../common/guards';
+import { JwtAuthGuard, MissionAccessGuard, RolesGuard } from '../common/guards';
 import { Roles, CurrentUser, CurrentUserPayload } from '../common/decorators';
 
 @ApiTags('matching')
@@ -38,7 +38,7 @@ export class MatchingEngineController {
     }
 
     @Get('missions/:missionId/candidates')
-    @UseGuards(JwtAuthGuard, RolesGuard)
+    @UseGuards(JwtAuthGuard, MissionAccessGuard, RolesGuard)
     @ApiBearerAuth()
     @Roles('CLIENT', 'ADMIN')
     @ApiOperation({ summary: 'Trouver des candidats pour une mission SOS' })
@@ -52,6 +52,7 @@ export class MatchingEngineController {
     }
 
     @Get('missions/:missionId')
+    @UseGuards(JwtAuthGuard, MissionAccessGuard)
     @ApiOperation({ summary: 'Obtenir les détails d\'une mission avec les candidatures' })
     @ApiParam({ name: 'missionId', description: 'ID de la mission' })
     async getMission(@Param('missionId') missionId: string) {

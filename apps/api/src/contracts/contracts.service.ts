@@ -8,12 +8,16 @@ import {
 import { PrismaService } from '../common/prisma/prisma.service';
 import { SignContractDto } from './dto';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import { MailService } from '../common/mailer';
 
 @Injectable()
 export class ContractsService {
     private readonly logger = new Logger(ContractsService.name);
 
-    constructor(private readonly prisma: PrismaService) { }
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly mailService: MailService,
+    ) { }
 
     /**
      * Get all contracts for a user
@@ -180,6 +184,21 @@ export class ContractsService {
                 this.logger.error(`PDF generation failed: ${message}`);
                 // Don't fail the whole signing process if PDF generation fails
             }
+
+            const participants = await this.prisma.user.findMany({
+                where: { id: { in: [mission.clientId, talentId] } },
+                select: { id: true, email: true },
+            });
+
+            const clientEmail = participants.find((p) => p.id === mission.clientId)?.email;
+            const talentEmail = participants.find((p) => p.id === talentId)?.email;
+
+            await this.mailService.sendContractReadyEmail({
+                reference: contract.reference,
+                clientEmail,
+                talentEmail,
+                missionTitle: mission.title,
+            });
 
             return contract;
         } catch (error) {

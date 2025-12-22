@@ -321,8 +321,10 @@ export class MissionHubService {
 
         // Verify user is part of this mission
         if (mission.clientId !== senderId && mission.assignedTalentId !== senderId) {
-            throw new ForbiddenException('Accès non autorisé à cette conversation');
+            throw new ForbiddenException('Acces non autorise a cette conversation');
         }
+
+        await this.ensureMissionChatOpen(missionId);
 
         const message = await this.prisma.missionMessage.create({
             data: {
@@ -495,13 +497,33 @@ export class MissionHubService {
     // HELPERS
     // ========================================
 
+    private async ensureMissionChatOpen(missionId: string) {
+        const report = await this.prisma.missionReport.findUnique({
+            where: { missionId },
+            select: { createdAt: true },
+        });
+
+        if (!report) {
+            return;
+        }
+
+        const twentyFourHoursMs = 24 * 60 * 60 * 1000;
+        const elapsed = Date.now() - report.createdAt.getTime();
+
+        if (elapsed >= twentyFourHoursMs) {
+            throw new ForbiddenException(
+                'Le chat est verrouille 24h apres le depot du rapport de mission',
+            );
+        }
+    }
+
     private async findMissionOrThrow(missionId: string) {
         const mission = await this.prisma.reliefMission.findUnique({
             where: { id: missionId },
         });
 
         if (!mission) {
-            throw new NotFoundException(`Mission ${missionId} non trouvée`);
+            throw new NotFoundException(`Mission ${missionId} non trouvee`);
         }
 
         return mission;

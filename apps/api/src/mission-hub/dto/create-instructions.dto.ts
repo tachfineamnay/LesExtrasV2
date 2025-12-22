@@ -1,12 +1,14 @@
-import { IsString, IsArray, IsOptional, MinLength, ValidateNested } from 'class-validator';
+import { IsString, IsArray, IsOptional, MinLength, ValidateNested, IsNotEmpty } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
 class ChecklistItem {
     @IsString()
+    @IsNotEmpty()
     id: string;
 
     @IsString()
+    @IsNotEmpty()
     text: string;
 }
 

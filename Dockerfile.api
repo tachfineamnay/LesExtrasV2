@@ -1,63 +1,55 @@
 FROM node:20-slim AS base
 
-# System deps needed for Prisma/Nest builds and runtime
-RUN apt-get update -y && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
 
-# 1. Install dependencies only when needed
+# Base system deps for Prisma/Nest
+RUN apt-get update -y \
+    && apt-get install -y openssl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install full workspace dependencies (dev + prod)
 FROM base AS deps
 WORKDIR /app
 
-# Copy root package files
 COPY package.json package-lock.json ./
-
-# Copy packages (shared-types)
 COPY packages ./packages
-
-# Copy API package.json
 COPY apps/api/package.json ./apps/api/package.json
 
-# Install dependencies (including workspace linkage)
 RUN npm ci
 
-# 2. Rebuild the source code only when needed
+# Build artefacts
 FROM base AS builder
 WORKDIR /app
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Install TypeScript globally for builds
-RUN npm install -g typescript @nestjs/cli
-
-# Generate Prisma Client (needed for types)
+# Generate Prisma client for types/runtime
 RUN npx prisma generate
 
-# Build shared-types package
-RUN cd packages/shared-types && tsc
+# Build shared types then API
+RUN cd packages/shared-types && npm run build
+RUN npm run api:build
 
-# Build API
-RUN cd apps/api && nest build
+# Prune to production dependencies only
+RUN npm prune --omit=dev
 
-# 3. Production image, copy all the files and run next
+# Runtime image
 FROM base AS runner
 WORKDIR /app
 
-ENV NODE_ENV production
-ENV PORT 4000
+ENV NODE_ENV=production
+ENV PORT=4000
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nestjs
+RUN addgroup --system --gid 1001 nodejs \
+    && adduser --system --uid 1001 nestjs
 
-# Copy dependencies
+# Copy production node_modules and compiled artefacts
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./
-# Copy shared packages explicitly to ensure availability at runtime
-COPY --from=builder /app/packages ./packages
-
-# Copy built application
-COPY --from=builder /app/apps/api/dist ./dist
+COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/apps/api/package.json ./apps/api/package.json
-
-# Copy Prisma schema (if needed for runtime operations, usually generic is enough for client)
+COPY --from=builder /app/packages/shared-types ./packages/shared-types
+COPY --from=builder /app/apps/api/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 
 USER nestjs

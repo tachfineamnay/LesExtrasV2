@@ -3,9 +3,12 @@ import {
     NotFoundException,
     InternalServerErrorException,
     Logger,
+    BadRequestException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { FindCandidatesDto, CandidateResultDto, MatchingResultDto, CreateMissionDto } from './dto';
+import { MailService } from '../common/mailer';
 
 interface GeoPoint {
     latitude: number;
@@ -16,7 +19,10 @@ interface GeoPoint {
 export class MatchingEngineService {
     private readonly logger = new Logger(MatchingEngineService.name);
 
-    constructor(private readonly prisma: PrismaService) { }
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly mailService: MailService,
+    ) { }
 
     /**
      * Create a relief mission (SOS Renfort)
@@ -53,6 +59,21 @@ export class MatchingEngineService {
 
             this.logger.log(`Mission created: ${mission.id} by client ${clientId}`);
 
+            if (mission.urgencyLevel === 'CRITICAL') {
+                const client = await this.prisma.user.findUnique({
+                    where: { id: clientId },
+                    select: { email: true },
+                });
+
+                await this.mailService.sendCriticalMissionAlert({
+                    title: mission.title,
+                    jobTitle: mission.jobTitle,
+                    city: mission.city,
+                    startDate: mission.startDate,
+                    clientEmail: client?.email,
+                });
+            }
+
             return mission;
         } catch (error) {
             this.logger.error(`createMission failed: ${error.message}`);
@@ -72,30 +93,73 @@ export class MatchingEngineService {
         missionId: string,
         options: FindCandidatesDto = {},
     ): Promise<MatchingResultDto> {
-        const { skills = [], radiusKm = 30, limit = 10 } = options;
+        const { skills = [], radiusKm, limit = 10 } = options;
 
         try {
             // 1. Get the mission details
             const mission = await this.prisma.reliefMission.findUnique({
                 where: { id: missionId },
-                include: {
-                    client: {
-                        include: { establishment: true },
-                    },
+                select: {
+                    id: true,
+                    title: true,
+                    latitude: true,
+                    longitude: true,
+                    radiusKm: true,
+                    requiredSkills: true,
+                    requiredDiplomas: true,
+                    startDate: true,
+                    isNightShift: true,
                 },
             });
 
             if (!mission) {
-                throw new NotFoundException(`Mission ${missionId} non trouvée`);
+                throw new NotFoundException(`Mission ${missionId} non trouvee`);
+            }
+
+            if (mission.latitude === null || mission.longitude === null) {
+                throw new BadRequestException(
+                    'La mission doit contenir des coordonnées GPS pour trouver des talents',
+                );
             }
 
             this.logger.log(`Finding candidates for mission: ${mission.title}`);
 
-            // 2. Get all TALENT users with their profiles
+            const searchRadius = radiusKm ?? mission.radiusKm ?? 30;
+            const missionLocation: GeoPoint = {
+                latitude: mission.latitude,
+                longitude: mission.longitude,
+            };
+            const boundingBox = this.calculateBoundingBox(missionLocation, searchRadius);
+
+            const missionSkills = ((mission.requiredSkills as string[]) || []).filter(Boolean);
+            const requiredSkills = Array.from(
+                new Set([...missionSkills, ...skills].filter(Boolean)),
+            );
+            const requiredDiplomas = (mission.requiredDiplomas as string[]) || [];
+
+            const profileFilters: Prisma.ProfileWhereInput = {
+                latitude: { gte: boundingBox.minLat, lte: boundingBox.maxLat },
+                longitude: { gte: boundingBox.minLng, lte: boundingBox.maxLng },
+            };
+
+            const specialtiesFilters: Prisma.ProfileWhereInput[] = requiredSkills.map((skill) => ({
+                specialties: { array_contains: skill },
+            }));
+
+            if (specialtiesFilters.length) {
+                profileFilters.AND = specialtiesFilters;
+            }
+
+            const fetchSize = Math.max(limit * 3, limit);
+
+            // 2. Fetch TALENT users filtered directly in DB
             const talents = await this.prisma.user.findMany({
                 where: {
                     role: 'TALENT',
                     status: 'VERIFIED',
+                    profile: {
+                        is: profileFilters,
+                    },
                 },
                 include: {
                     profile: {
@@ -104,16 +168,10 @@ export class MatchingEngineService {
                         },
                     },
                 },
+                take: fetchSize,
             });
 
             // 3. Filter and score candidates
-            const missionLocation: GeoPoint = {
-                latitude: mission.latitude || 0,
-                longitude: mission.longitude || 0,
-            };
-
-            const requiredSkills = mission.requiredSkills as string[] || [];
-            const requiredDiplomas = mission.requiredDiplomas as string[] || [];
             const missionDate = mission.startDate;
 
             const candidates: CandidateResultDto[] = [];
@@ -123,15 +181,15 @@ export class MatchingEngineService {
 
                 const profile = talent.profile;
                 const profileLocation: GeoPoint = {
-                    latitude: profile.latitude || 0,
-                    longitude: profile.longitude || 0,
+                    latitude: profile.latitude ?? 0,
+                    longitude: profile.longitude ?? 0,
                 };
 
                 // a. Calculate geographic distance
                 const distance = this.calculateDistance(missionLocation, profileLocation);
 
                 // Skip if outside radius
-                if (distance > (mission.radiusKm || radiusKm)) {
+                if (distance > searchRadius) {
                     continue;
                 }
 
@@ -153,7 +211,7 @@ export class MatchingEngineService {
                 // e. Calculate match score (0-100)
                 const matchScore = this.calculateMatchScore({
                     distance,
-                    maxDistance: radiusKm,
+                    maxDistance: searchRadius,
                     skillsMatch,
                     diplomasMatch,
                     isAvailable,
@@ -191,11 +249,11 @@ export class MatchingEngineService {
             return {
                 candidates: sortedCandidates,
                 totalFound: candidates.length,
-                searchRadius: radiusKm,
+                searchRadius,
                 missionId,
             };
         } catch (error) {
-            if (error instanceof NotFoundException) {
+            if (error instanceof NotFoundException || error instanceof BadRequestException) {
                 throw error;
             }
             this.logger.error(`findCandidates failed: ${error.message}`, error.stack);
@@ -209,9 +267,32 @@ export class MatchingEngineService {
      * Calculate distance between two geographic points using Haversine formula
      * Returns distance in kilometers
      */
+    private calculateBoundingBox(center: GeoPoint, radiusKm: number) {
+        const earthRadiusKmPerDegree = 111;
+        const latDelta = radiusKm / earthRadiusKmPerDegree;
+        const safeCos = Math.max(Math.cos(this.toRad(center.latitude)), 0.0001);
+        const lngDelta = radiusKm / (earthRadiusKmPerDegree * safeCos);
+
+        return {
+            minLat: Math.max(-90, center.latitude - latDelta),
+            maxLat: Math.min(90, center.latitude + latDelta),
+            minLng: Math.max(-180, center.longitude - lngDelta),
+            maxLng: Math.min(180, center.longitude + lngDelta),
+        };
+    }
+
     private calculateDistance(point1: GeoPoint, point2: GeoPoint): number {
         // If no coordinates, return max distance
-        if (!point1.latitude || !point1.longitude || !point2.latitude || !point2.longitude) {
+        if (
+            point1.latitude === undefined ||
+            point1.latitude === null ||
+            point1.longitude === undefined ||
+            point1.longitude === null ||
+            point2.latitude === undefined ||
+            point2.latitude === null ||
+            point2.longitude === undefined ||
+            point2.longitude === null
+        ) {
             return Infinity;
         }
 

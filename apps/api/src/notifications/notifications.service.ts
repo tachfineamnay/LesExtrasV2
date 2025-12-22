@@ -78,6 +78,29 @@ export class NotificationsService {
         }
     }
 
+    async listNotifications(userId: string, unreadOnly = false) {
+        return this.prisma.notification.findMany({
+            where: {
+                userId,
+                ...(unreadOnly ? { isRead: false } : {}),
+            },
+            orderBy: { createdAt: 'desc' },
+            take: 100,
+        });
+    }
+
+    async markAllAsRead(userId: string) {
+        const result = await this.prisma.notification.updateMany({
+            where: { userId, isRead: false },
+            data: {
+                isRead: true,
+                readAt: new Date(),
+            },
+        });
+
+        return { updated: result.count };
+    }
+
     // ========================================
     // MISSION CHAT
     // ========================================
